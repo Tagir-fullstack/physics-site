@@ -1,0 +1,11 @@
+.page-content {
+  padding-left: 200px;
+  padding-right: 200px;
+}
+
+@media (max-width: 1074px) {
+  .page-content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}

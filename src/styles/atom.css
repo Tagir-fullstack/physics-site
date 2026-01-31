@@ -1,0 +1,177 @@
+.atom-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  margin: auto;
+}
+
+.nucleus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 35px;
+  height: 35px;
+  background: radial-gradient(circle, #ff6b6b, #d63031, #8b0000);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.8), inset 0 0 10px rgba(139, 0, 0, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.nucleus::before {
+  content: 'U238';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 2px solid rgba(74, 144, 226, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* K shell (2 electrons) */
+.orbit-1 {
+  width: 80px;
+  height: 80px;
+  animation: rotate 2s linear infinite;
+}
+
+/* L shell (8 electrons) */
+.orbit-2 {
+  width: 130px;
+  height: 130px;
+  animation: rotate 3s linear infinite reverse;
+}
+
+/* M shell (18 electrons) */
+.orbit-3 {
+  width: 180px;
+  height: 180px;
+  animation: rotate 4s linear infinite;
+}
+
+/* N shell (32 electrons) */
+.orbit-4 {
+  width: 230px;
+  height: 230px;
+  animation: rotate 5s linear infinite reverse;
+}
+
+/* O shell (21 electrons) */
+.orbit-5 {
+  width: 280px;
+  height: 280px;
+  animation: rotate 6s linear infinite;
+}
+
+/* P shell (9 electrons) */
+.orbit-6 {
+  width: 330px;
+  height: 330px;
+  animation: rotate 7s linear infinite reverse;
+}
+
+/* Q shell (2 electrons) */
+.orbit-7 {
+  width: 380px;
+  height: 380px;
+  animation: rotate 8s linear infinite;
+}
+
+.electron {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #4a90e2, #0984e3);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(74, 144, 226, 0.8);
+}
+
+/* K shell electrons */
+.electron-k1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-k2 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+
+/* L shell electrons */
+.electron-l1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-l2 { top: 30%; right: -3px; }
+.electron-l3 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.electron-l4 { top: 30%; left: -3px; }
+.electron-l5 { top: 15%; right: 15%; }
+.electron-l6 { bottom: 15%; right: 15%; }
+.electron-l7 { bottom: 15%; left: 15%; }
+.electron-l8 { top: 15%; left: 15%; }
+
+/* M shell electrons (showing 8 for visual clarity) */
+.electron-m1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-m2 { top: 20%; right: -3px; }
+.electron-m3 { top: 50%; right: -3px; }
+.electron-m4 { bottom: 20%; right: -3px; }
+.electron-m5 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.electron-m6 { bottom: 20%; left: -3px; }
+.electron-m7 { top: 50%; left: -3px; }
+.electron-m8 { top: 20%; left: -3px; }
+
+/* N shell electrons (showing 10 for visual clarity) */
+.electron-n1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-n2 { top: 15%; right: 10%; }
+.electron-n3 { top: 35%; right: -3px; }
+.electron-n4 { top: 65%; right: -3px; }
+.electron-n5 { bottom: 15%; right: 10%; }
+.electron-n6 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.electron-n7 { bottom: 15%; left: 10%; }
+.electron-n8 { top: 65%; left: -3px; }
+.electron-n9 { top: 35%; left: -3px; }
+.electron-n10 { top: 15%; left: 10%; }
+
+/* O shell electrons (showing 8 for visual clarity) */
+.electron-o1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-o2 { top: 25%; right: -3px; }
+.electron-o3 { bottom: 25%; right: -3px; }
+.electron-o4 { bottom: -3px; right: 25%; }
+.electron-o5 { bottom: -3px; left: 25%; }
+.electron-o6 { bottom: 25%; left: -3px; }
+.electron-o7 { top: 25%; left: -3px; }
+.electron-o8 { top: -3px; right: 25%; }
+
+/* P shell electrons (showing 6 for visual clarity) */
+.electron-p1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-p2 { top: 30%; right: -3px; }
+.electron-p3 { bottom: 30%; right: -3px; }
+.electron-p4 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.electron-p5 { bottom: 30%; left: -3px; }
+.electron-p6 { top: 30%; left: -3px; }
+
+/* Q shell electrons */
+.electron-q1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.electron-q2 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+
+@keyframes rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+@media (max-width: 595px) {
+  .atom-container {
+    width: 300px;
+    height: 300px;
+  }
+
+  .orbit-3 {
+    width: 250px;
+    height: 250px;
+  }
+}

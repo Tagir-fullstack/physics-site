@@ -1,0 +1,21 @@
+.hero-section {
+  padding-left: 200px;
+  padding-right: 200px;
+}
+
+@media (max-width: 1074px) {
+  .hero-section {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2rem !important;
+  }
+
+  .hero-section p {
+    font-size: 1rem !important;
+  }
+}

@@ -1,0 +1,22 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html {
+  height: 100%;
+  background-color: #ffffff;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: #ffffff;
+}
