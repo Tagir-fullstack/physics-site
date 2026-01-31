@@ -131,7 +131,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
             marginTop: '1rem',
             fontStyle: 'italic'
           }}>
-            Все неточности в видео или пожелания можете написать на почту: <a href="mailto:tagir@example.com" style={{ color: '#667eea' }}>tagir@example.com</a>
+            Все неточности в видео или пожелания можете написать на почту: <a href="mailto:tgr.aimurza@gmail.com" style={{ color: '#667eea' }}>tgr.aimurza@gmail.com</a>
           </p>
         </div>
 
