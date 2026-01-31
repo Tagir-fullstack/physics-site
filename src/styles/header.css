@@ -176,6 +176,7 @@
     gap: 0;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: all 0.3s ease;
     padding: 2rem;
     z-index: 1001;
@@ -184,6 +185,7 @@
   .nav-menu.open {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
   .nav-item {

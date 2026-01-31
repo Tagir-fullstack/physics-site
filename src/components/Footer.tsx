@@ -91,8 +91,11 @@ export default function Footer() {
           <p style={{ margin: 0 }}>
             © {currentYear} Physez | Aimurza Tagir. Все права защищены.
           </p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem' }}>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>
             Диссертационное исследование
+          </p>
+          <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.85rem', color: '#bbb' }}>
+            Научный руководитель: Амренова Асем Уахитовна
           </p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>
             <a href="/terms" style={{
