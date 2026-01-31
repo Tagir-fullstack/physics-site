@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { sections } from '../data/topics';
 import '../styles/header.css';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
+
+  const handleLinkClick = (path: string) => {
+    setIsMenuOpen(false);
+    navigate(path);
+  };
 
   return (
     <header className="header">
@@ -24,20 +30,27 @@ export default function Header() {
           <span></span>
         </button>
 
+        {/* Overlay for closing menu */}
+        {isMenuOpen && (
+          <div
+            className="menu-overlay"
+            onClick={() => setIsMenuOpen(false)}
+          />
+        )}
+
         <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
           {visibleSections.map((section) => (
             <div key={section.title} className="nav-item">
               <span className="nav-title">{section.title}</span>
               <div className="dropdown">
                 {section.topics.map((topic) => (
-                  <Link
+                  <button
                     key={topic.path}
-                    to={topic.path}
                     className="dropdown-item"
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={() => handleLinkClick(topic.path)}
                   >
                     {topic.title}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </div>
