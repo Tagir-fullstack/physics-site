@@ -15,6 +15,7 @@ import HalfLife from './pages/nuclear/HalfLife';
 import Interactions from './pages/nuclear/Interactions';
 import Decay from './pages/nuclear/Decay';
 import Chain from './pages/nuclear/Chain';
+import Quiz from './pages/nuclear/Quiz';
 
 // Quantum Physics pages
 import PlanckHypothesis from './pages/quantum/PlanckHypothesis';
@@ -51,6 +52,7 @@ function App() {
               <Route path="/nuclear/interactions" element={<Interactions />} />
               <Route path="/nuclear/decay" element={<Decay />} />
               <Route path="/nuclear/chain" element={<Chain />} />
+              <Route path="/nuclear/quiz" element={<Quiz />} />
 
               {/* Quantum Physics Routes */}
               <Route path="/quantum/planck" element={<PlanckHypothesis />} />
