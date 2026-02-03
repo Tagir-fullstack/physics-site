@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { SITE_VERSION } from '../config/version';
 import '../styles/footer.css';
 
 export default function Footer() {
@@ -109,6 +111,19 @@ export default function Footer() {
             >
               Условия использования
             </a>
+          </p>
+          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem' }}>
+            <Link to="/changelog" style={{
+              color: '#888',
+              textDecoration: 'none',
+              borderBottom: '1px solid transparent',
+              transition: 'border-color 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#888'}
+            onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
+            >
+              {SITE_VERSION}
+            </Link>
           </p>
         </div>
       </div>

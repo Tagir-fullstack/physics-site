@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Terms from './pages/Terms';
+import Changelog from './pages/Changelog';
 
 // Nuclear Physics pages
 import Rutherford from './pages/nuclear/Rutherford';
@@ -41,6 +42,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/changelog" element={<Changelog />} />
 
               {/* Nuclear Physics Routes */}
               <Route path="/nuclear/rutherford" element={<Rutherford />} />
