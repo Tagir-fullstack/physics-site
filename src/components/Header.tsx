@@ -17,7 +17,9 @@ export default function Header() {
     <header className="header">
       <nav className="nav-container">
         <Link to="/" className="logo" onClick={() => setIsMenuOpen(false)}>
-          Physez
+          <img src="/favicon1.png" alt="" className="logo-icon" />
+          <span className="logo-phys">Phys</span>
+          <span className="logo-ez">ez</span>
         </Link>
 
         <button

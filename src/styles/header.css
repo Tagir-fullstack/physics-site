@@ -24,6 +24,24 @@
   font-weight: bold;
   color: #ffffff;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+}
+
+.logo-phys {
+  color: #FC6255;
+  margin-right: -0.3em;
+}
+
+.logo-ez {
+  color: #ffffff;
 }
 
 .burger {
