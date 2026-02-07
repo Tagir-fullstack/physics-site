@@ -110,7 +110,7 @@ export default function Home() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      style={{ minHeight: '100vh', backgroundColor: '#0a0a0a' }}
+      style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', position: 'relative' }}
     >
       {/* ===== HERO SECTION ===== */}
       <motion.div
