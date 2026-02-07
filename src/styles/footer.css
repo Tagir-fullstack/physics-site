@@ -39,9 +39,16 @@
     grid-template-columns: 1fr !important;
   }
 
+  .footer-grid > div {
+    text-align: center;
+  }
+
+  .footer-grid .logo {
+    justify-content: center;
+  }
+
   .footer-grid > div:last-child {
     max-width: 100%;
-    text-align: left;
   }
 
   .footer-content h3 {

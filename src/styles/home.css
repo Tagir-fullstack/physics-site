@@ -177,6 +177,12 @@
   .particles-grid {
     grid-template-columns: 1fr;
   }
+
+  .particles-grid .particle-card:last-child {
+    grid-column: auto;
+    max-width: 100%;
+    justify-self: stretch;
+  }
 }
 
 /* ========== TOPICS SWIPER ========== */
@@ -454,6 +460,12 @@
 @media (max-width: 600px) {
   .particles-grid {
     grid-template-columns: 1fr;
+  }
+
+  .particles-grid .particle-card:last-child {
+    grid-column: auto;
+    max-width: 100%;
+    justify-self: stretch;
   }
 
   .home-hero-title {
