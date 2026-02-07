@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '../styles/atom-models.css';
 
@@ -246,8 +246,6 @@ function BohrModel() {
     let last = performance.now();
     let timer = 0;
     const ORBIT_TIME = 2.5; // seconds on orbit before transition
-    const TRANSITION_DURATION = 0.4;
-    const PHOTON_DURATION = 1.0;
 
     const animate = (now: number) => {
       const dt = (now - last) / 1000;
