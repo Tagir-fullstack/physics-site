@@ -1,3 +1,35 @@
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #888888;
+  --proton-red: #FC6255;
+  --electron-blue: #4a90e2;
+  --neutron-white: #ffffff;
+  --glow-red: rgba(252, 98, 85, 0.4);
+  --glow-blue: rgba(74, 144, 226, 0.4);
+}
+
+@font-face {
+  font-family: 'CCUltimatum';
+  src: url('/fonts/CCUltimatum-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CCUltimatum';
+  src: url('/fonts/CCUltimatum-Heavy.ttf') format('truetype');
+  font-weight: 900;
+  font-display: swap;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'CCUltimatum', Arial, sans-serif;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,17 +38,18 @@
 
 body {
   font-family: 'Arial', sans-serif;
-  background-color: #ffffff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
 html {
   height: 100%;
-  background-color: #ffffff;
+  background-color: var(--bg-primary);
 }
 
 #root {
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: var(--bg-primary);
 }

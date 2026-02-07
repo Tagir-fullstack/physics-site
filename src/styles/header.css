@@ -1,13 +1,17 @@
 .header {
-  background-color: #000000;
+  background-color: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: #ffffff;
-  padding: 1rem 2rem;
+  padding: 0.6rem 2rem;
   position: fixed;
   top: 10px;
-  left: 100px;
-  right: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, calc(100% - 80px));
   z-index: 1000;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
 }
 
@@ -15,13 +19,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1000px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-family: 'CCUltimatum', Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
   color: #ffffff;
   text-decoration: none;
   display: flex;
@@ -37,7 +42,7 @@
 
 .logo-phys {
   color: #FC6255;
-  margin-right: -0.3em;
+  margin-right: -0.26em;
 }
 
 .logo-ez {
@@ -145,7 +150,7 @@
 .dropdown-item:hover {
   background-color: #333333;
   color: #ffffff;
-  border-left-color: #667eea;
+  border-left-color: #FC6255;
 }
 
 /* Tablet */
@@ -215,7 +220,7 @@
   .nav-title {
     font-size: 1.2rem;
     padding: 1rem;
-    color: #667eea;
+    color: #FC6255;
     font-weight: bold;
   }
 
@@ -243,6 +248,6 @@
   .dropdown-item:hover,
   .dropdown-item:active {
     border-left: none;
-    background-color: rgba(102, 126, 234, 0.3);
+    background-color: rgba(252, 98, 85, 0.15);
   }
 }

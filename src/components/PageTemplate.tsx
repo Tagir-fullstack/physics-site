@@ -33,7 +33,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
       }}>
         <div style={{
           marginBottom: '0.5rem',
-          color: '#666',
+          color: '#888',
           fontSize: '0.85rem',
           textTransform: 'uppercase',
           letterSpacing: '1px',
@@ -44,7 +44,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
 
         <h1 style={{
           fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
-          color: '#000',
+          color: '#ffffff',
           marginBottom: '1.5rem',
           fontWeight: 'bold',
           textAlign: 'center'
@@ -76,21 +76,21 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
         {/* Description */}
         {description && (
           <div style={{
-            backgroundColor: '#f8f9fa',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '10px',
             padding: 'clamp(1rem, 3vw, 1.5rem)',
             marginBottom: '1.5rem',
-            border: '1px solid #e0e0e0'
+            border: '1px solid rgba(255, 255, 255, 0.08)'
           }}>
             <h3 style={{
               fontSize: '1.2rem',
               marginBottom: '0.75rem',
-              color: '#333'
+              color: '#ffffff'
             }}>
               Описание
             </h3>
             <p style={{
-              color: '#444',
+              color: '#cccccc',
               fontSize: '1rem',
               lineHeight: '1.7'
             }}>
@@ -101,21 +101,21 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
 
         {/* Instructions */}
         <div style={{
-          backgroundColor: '#fffbf0',
+          backgroundColor: 'rgba(255, 255, 255, 0.02)',
           borderRadius: '10px',
           padding: 'clamp(1rem, 3vw, 1.5rem)',
-          border: '2px solid #f0e6d2',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           marginBottom: '1.5rem'
         }}>
           <h3 style={{
             fontSize: '1.1rem',
             marginBottom: '0.75rem',
-            color: '#333'
+            color: '#ffffff'
           }}>
             Как использовать видео
           </h3>
           <ol style={{
-            color: '#555',
+            color: '#cccccc',
             fontSize: '0.95rem',
             lineHeight: '1.8',
             paddingLeft: '1.2rem',
@@ -126,12 +126,12 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
             <li>Описывайте процесс на видео для интерактивности с учениками</li>
           </ol>
           <p style={{
-            color: '#666',
+            color: '#888',
             fontSize: '0.9rem',
             marginTop: '1rem',
             fontStyle: 'italic'
           }}>
-            Все неточности в видео или пожелания можете написать на почту: <a href="mailto:tgr.aimurza@gmail.com" style={{ color: '#667eea' }}>tgr.aimurza@gmail.com</a>
+            Все неточности в видео или пожелания можете написать на почту: <a href="mailto:tgr.aimurza@gmail.com" style={{ color: '#FC6255' }}>tgr.aimurza@gmail.com</a>
           </p>
         </div>
 
@@ -148,7 +148,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                backgroundColor: '#667eea',
+                backgroundColor: '#FC6255',
                 color: 'white',
                 padding: '0.875rem 1.5rem',
                 borderRadius: '8px',
@@ -157,8 +157,8 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
                 fontWeight: '500',
                 transition: 'background-color 0.2s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#5a6fd6'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#667eea'}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e04e43'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FC6255'}
             >
               Следующее: {nextLink.title}
               <span style={{ fontSize: '1.2rem' }}>→</span>

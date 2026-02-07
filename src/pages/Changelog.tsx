@@ -9,6 +9,17 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    date: '07.02.2026',
+    changes: [
+      'Полный редизайн сайта: новый шрифт, обновлённая цветовая схема',
+      'Добавили чередующиеся модели атомов',
+      'Обновили дизайн футера: чёрный фон, логотип Physez, новая компоновка',
+      'Перенесли информацию о диссертации в футер',
+      'Обновили страницу «Условия использования» — тёмная тема',
+      'Обновили страницу «История изменений» — тёмная тема',
+    ],
+  },
+  {
     date: '04.02.2026',
     changes: [
       'Обновили анимацию бета-распада',
@@ -55,7 +66,7 @@ export default function Changelog() {
         <h1
           style={{
             fontSize: '2.5rem',
-            color: '#000',
+            color: '#fff',
             marginBottom: '0.5rem',
             textAlign: 'center',
           }}
@@ -65,7 +76,7 @@ export default function Changelog() {
         <p
           style={{
             textAlign: 'center',
-            color: '#667eea',
+            color: '#FC6255',
             fontSize: '1.1rem',
             marginBottom: '2rem',
             fontWeight: 500,
@@ -76,10 +87,10 @@ export default function Changelog() {
 
         <div
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: '#111',
             padding: '2.5rem',
             borderRadius: '15px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+            border: '1px solid #222',
             lineHeight: '1.8',
           }}
         >
@@ -91,7 +102,7 @@ export default function Changelog() {
                 paddingBottom: index < changelog.length - 1 ? '2rem' : 0,
                 borderBottom:
                   index < changelog.length - 1
-                    ? '1px solid #eee'
+                    ? '1px solid #333'
                     : 'none',
               }}
             >
@@ -99,14 +110,14 @@ export default function Changelog() {
                 style={{
                   fontSize: '1.3rem',
                   marginBottom: '0.75rem',
-                  color: '#000',
+                  color: '#fff',
                 }}
               >
                 {entry.date}
               </h2>
               <ul
                 style={{
-                  color: '#333',
+                  color: '#ccc',
                   paddingLeft: '1.5rem',
                   margin: 0,
                 }}

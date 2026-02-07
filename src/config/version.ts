@@ -10,4 +10,4 @@
  * When making changes, update the version here and add a corresponding
  * entry to the Changelog page (src/pages/Changelog.tsx).
  */
-export const SITE_VERSION = 'v0.1.9.3';
+export const SITE_VERSION = 'v1.1.9.4';

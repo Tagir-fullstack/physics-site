@@ -7,8 +7,9 @@ export default function Footer() {
 
   return (
     <footer style={{
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0a0a',
       color: '#ffffff',
+      borderTop: '1px solid #333',
       paddingTop: '3rem',
       paddingBottom: '2rem',
       marginTop: 'auto'
@@ -25,12 +26,16 @@ export default function Footer() {
         }}>
           {/* О сайте */}
           <div>
-            <h3 style={{
+            <h3 className="logo" style={{
               fontSize: '1.2rem',
               marginBottom: '1rem',
-              color: '#fff'
+              fontFamily: "'CCUltimatum', sans-serif",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0'
             }}>
-              Physez
+              <span style={{ color: '#FC6255' }}>Phys</span>
+              <span style={{ color: '#fff' }}>ez</span>
             </h3>
             <p style={{
               fontSize: '0.9rem',
@@ -56,29 +61,26 @@ export default function Footer() {
               color: '#cccccc'
             }}>
               <p>📧 Email: tgr.aimurza@gmail.com</p>
-              <p>📱 Телефон: +7 (XXX) XXX-XX-XX</p>
               <p>🏛️ Организация: Farabi University КазНУ</p>
             </div>
           </div>
 
-          {/* Быстрые ссылки */}
+          {/* Диссертация */}
           <div>
             <h3 style={{
               fontSize: '1.2rem',
               marginBottom: '1rem',
               color: '#fff'
             }}>
-              Разделы
+              Диссертационное исследование
             </h3>
-            <div style={{
+            <p style={{
               fontSize: '0.9rem',
-              lineHeight: '1.8',
-              color: '#cccccc'
+              lineHeight: '1.6',
+              color: '#bbb'
             }}>
-              <p>• Физика Атомного ядра</p>
-              {/* <p>• Квантовая физика</p>
-              <p>• Методические материалы</p> */}
-            </div>
+              Научный руководитель:<br />Амренова Асем Уахитовна
+            </p>
           </div>
         </div>
 
@@ -90,34 +92,33 @@ export default function Footer() {
           color: '#999',
           fontSize: '0.9rem'
         }}>
-          <p style={{ margin: 0 }}>
-            © {currentYear} Physez | Aimurza Tagir. Все права защищены.
-          </p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>
-            Диссертационное исследование
-          </p>
-          <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.85rem', color: '#bbb' }}>
-            Научный руководитель: Амренова Асем Уахитовна
-          </p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>
+          <p style={{
+            margin: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.5rem'
+          }}>
+            <span>© {currentYear} Physez | Aimurza Tagir. Все права защищены.</span>
+            <span style={{ color: '#666' }}>|</span>
             <a href="/terms" style={{
-              color: '#667eea',
+              color: '#FC6255',
               textDecoration: 'none',
               borderBottom: '1px solid transparent',
               transition: 'border-color 0.3s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#667eea'}
+            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#FC6255'}
             onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
             >
               Условия использования
             </a>
-          </p>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem' }}>
             <Link to="/changelog" style={{
               color: '#888',
               textDecoration: 'none',
               borderBottom: '1px solid transparent',
-              transition: 'border-color 0.3s ease'
+              transition: 'border-color 0.3s ease',
+              fontSize: '0.85rem'
             }}
             onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#888'}
             onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
