@@ -5,8 +5,26 @@
 
 @media (max-width: 1074px) {
   .footer-content {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .footer-grid > div {
+    text-align: center;
+  }
+
+  .footer-grid .logo {
+    justify-content: center;
+  }
+
+  .footer-grid > div:last-child {
+    grid-column: 1 / -1;
+    max-width: 50%;
+    justify-self: center;
   }
 }
 
@@ -15,6 +33,15 @@
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     font-size: 0.8rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .footer-grid > div:last-child {
+    max-width: 100%;
+    text-align: left;
   }
 
   .footer-content h3 {

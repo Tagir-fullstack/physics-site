@@ -95,8 +95,8 @@ export default function Home() {
     target: heroRef,
     offset: ['start start', 'end start']
   });
-  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1]);
 
   const nuclearTopics = sections.find(s => s.title === "Физика Атомного ядра")?.topics ?? [];
 

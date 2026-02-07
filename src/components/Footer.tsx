@@ -18,9 +18,9 @@ export default function Footer() {
         maxWidth: '1400px',
         margin: '0 auto'
       }}>
-        <div style={{
+        <div className="footer-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '2rem',
           marginBottom: '2rem'
         }}>
@@ -60,8 +60,8 @@ export default function Footer() {
               lineHeight: '1.8',
               color: '#cccccc'
             }}>
-              <p>📧 Email: tgr.aimurza@gmail.com</p>
-              <p>🏛️ Организация: Farabi University КазНУ</p>
+              <p>Email: tgr.aimurza@gmail.com</p>
+              <p>Организация: Farabi University КазНУ</p>
             </div>
           </div>
 

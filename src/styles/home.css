@@ -38,6 +38,7 @@
   color: var(--neutron-white);
   margin-bottom: 0.5rem;
   line-height: 1;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 60px rgba(252, 98, 85, 0.25), 0 0 120px rgba(252, 98, 85, 0.15);
 }
 
 .home-hero-subtitle {
@@ -388,6 +389,12 @@
 @media (max-width: 900px) {
   .particles-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .particles-grid .particle-card:last-child {
+    grid-column: 1 / -1;
+    max-width: 50%;
+    justify-self: center;
   }
 
   .home-hero-title {
