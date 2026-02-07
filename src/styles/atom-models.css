@@ -295,12 +295,10 @@
 /* ========== RESPONSIVE ========== */
 @media (max-width: 595px) {
   .atom-model-container {
-    width: 300px;
-    height: 300px;
+    transform: scale(0.75);
+    transform-origin: center center;
   }
 
   .dalton-sphere { width: 120px; height: 120px; }
   .thomson-pudding { width: 150px; height: 150px; }
-  .bohr-orbit-4 { width: 260px; height: 260px; }
-  .sommerfeld-orbit-4 { width: 270px; height: 200px; }
 }

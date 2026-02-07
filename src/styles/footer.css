@@ -9,3 +9,20 @@
     padding-right: 10px;
   }
 }
+
+@media (max-width: 600px) {
+  .footer-content {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    font-size: 0.8rem;
+  }
+
+  .footer-content h3 {
+    font-size: 1rem !important;
+  }
+
+  .footer-content p,
+  .footer-content div {
+    font-size: 0.8rem !important;
+  }
+}
