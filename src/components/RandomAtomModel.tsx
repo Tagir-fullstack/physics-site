@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '../styles/atom-models.css';
 
@@ -514,7 +514,7 @@ function QuantumModel() {
   );
 }
 
-const modelComponents: Record<string, () => JSX.Element> = {
+const modelComponents: Record<string, () => ReturnType<typeof DaltonModel>> = {
   dalton: DaltonModel,
   thomson: ThomsonModel,
   rutherford: RutherfordModel,
