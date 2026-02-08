@@ -43,6 +43,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
         </div>
 
         <h1 style={{
+          fontFamily: "'CCUltimatum', Arial, sans-serif",
           fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
           color: '#ffffff',
           marginBottom: '1.5rem',
@@ -151,7 +152,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
                 backgroundColor: '#FC6255',
                 color: 'white',
                 padding: '0.875rem 1.5rem',
-                borderRadius: '8px',
+                borderRadius: '50px',
                 textDecoration: 'none',
                 fontSize: '1rem',
                 fontWeight: '500',
