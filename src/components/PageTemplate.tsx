@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import SpeakButton from './SpeakButton';
 import '../styles/page-layout.css';
 
 interface PageTemplateProps {
@@ -83,13 +84,16 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
             marginBottom: '1.5rem',
             border: '1px solid rgba(255, 255, 255, 0.08)'
           }}>
-            <h3 style={{
-              fontSize: '1.2rem',
-              marginBottom: '0.75rem',
-              color: '#ffffff'
-            }}>
-              Описание
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <h3 style={{
+                fontSize: '1.2rem',
+                color: '#ffffff',
+                margin: 0
+              }}>
+                Описание
+              </h3>
+              <SpeakButton text={description} />
+            </div>
             <p style={{
               color: '#cccccc',
               fontSize: '1rem',
@@ -145,6 +149,7 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
           }}>
             <Link
               to={nextLink.path}
+              className="next-link-btn"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -154,8 +159,9 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
                 padding: '0.875rem 1.5rem',
                 borderRadius: '50px',
                 textDecoration: 'none',
-                fontSize: '1rem',
-                fontWeight: '500',
+                fontSize: '1.3rem',
+                fontWeight: '700',
+                fontFamily: "'CCUltimatum', Arial, sans-serif",
                 transition: 'background-color 0.2s'
               }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e04e43'}

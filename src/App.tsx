@@ -39,10 +39,12 @@ import SchrodingerEquation from './pages/quantum/SchrodingerEquation';
 import QuantumNumbers from './pages/quantum/QuantumNumbers';
 import ElectronSpin from './pages/quantum/ElectronSpin';
 
+import { AccessibilityProvider } from './context/AccessibilityContext';
 import './styles/global.css';
 
 function App() {
   return (
+    <AccessibilityProvider>
     <Router>
       <ScrollToTop />
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -83,6 +85,7 @@ function App() {
         <Footer />
       </div>
     </Router>
+    </AccessibilityProvider>
   );
 }
 

@@ -1,0 +1,596 @@
+/* ===== Accessibility Panel ===== */
+
+.a11y-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1100;
+}
+
+.a11y-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 95vw;
+  background: #1a1a1a;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1101;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.a11y-panel--open {
+  transform: translateX(0);
+}
+
+.a11y-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.a11y-panel__title {
+  font-family: 'CCUltimatum', Arial, sans-serif;
+  font-size: 1.3rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.a11y-panel__close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.a11y-panel__close:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.a11y-panel__content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Section row */
+.a11y-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.a11y-section__label {
+  color: #cccccc;
+  font-size: 1rem;
+}
+
+/* Font size buttons */
+.a11y-font-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.a11y-font-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.a11y-font-btn--large {
+  font-size: 0.95rem;
+}
+
+.a11y-font-btn--xlarge {
+  font-size: 1.05rem;
+}
+
+.a11y-font-btn--active {
+  background: #FC6255;
+  color: #ffffff;
+  border-color: #FC6255;
+}
+
+.a11y-font-btn:hover:not(.a11y-font-btn--active) {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Toggle */
+.a11y-toggle {
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.a11y-toggle--on {
+  background: #FC6255;
+}
+
+.a11y-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.2s;
+}
+
+.a11y-toggle--on .a11y-toggle__thumb {
+  transform: translateX(24px);
+}
+
+/* Reset button */
+.a11y-reset-btn {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.a11y-reset-btn:hover {
+  border-color: #FC6255;
+  color: #FC6255;
+}
+
+/* Speak button */
+.a11y-speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #FC6255;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.a11y-speak-btn:hover {
+  background: rgba(252, 98, 85, 0.15);
+  border-color: #FC6255;
+}
+
+/* Header a11y button — centered on desktop, inline on mobile */
+.a11y-header-btn {
+  background: none;
+  border: none;
+  color: #f5c542;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.2s, transform 0.2s;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.a11y-header-btn:hover {
+  background-color: rgba(245, 197, 66, 0.15);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.a11y-icon {
+  width: 38px;
+  height: 38px;
+}
+
+/* ===== Focus outlines (always, for keyboard users) ===== */
+.a11y-enabled *:focus-visible {
+  outline: 3px solid #FC6255 !important;
+  outline-offset: 2px !important;
+}
+
+/* ===== Font Size Overrides (on <html> for rem scaling) ===== */
+
+html.a11y-font-large {
+  font-size: 125% !important; /* 20px base */
+  overflow-x: hidden !important;
+}
+
+html.a11y-font-xlarge {
+  font-size: 150% !important; /* 24px base */
+  overflow-x: hidden !important;
+}
+
+/* Compact header at xlarge font */
+html.a11y-font-xlarge .header {
+  padding: 0.3rem 1.5rem !important;
+}
+
+/* ===== Light Theme ===== */
+/* Classes on <body>. Inline styles require !important everywhere. */
+
+/* --- Global backgrounds --- */
+.a11y-light-theme,
+.a11y-light-theme #root {
+  background-color: #f5f5f5 !important;
+  color: #1a1a1a !important;
+}
+
+/* Override ALL dark inline backgrounds on any element */
+.a11y-light-theme main,
+.a11y-light-theme .page-content,
+.a11y-light-theme section {
+  background-color: #f5f5f5 !important;
+  background-image: none !important;
+  background: #f5f5f5 !important;
+}
+
+/* --- Text colors --- */
+.a11y-light-theme h1,
+.a11y-light-theme h2,
+.a11y-light-theme h3,
+.a11y-light-theme h4 {
+  color: #1a1a1a !important;
+}
+
+.a11y-light-theme p,
+.a11y-light-theme span,
+.a11y-light-theme div,
+.a11y-light-theme li,
+.a11y-light-theme ol,
+.a11y-light-theme ul,
+.a11y-light-theme label {
+  color: #333333 !important;
+}
+
+.a11y-light-theme a {
+  color: #1a6bc4 !important;
+}
+
+/* --- Preserve accent colors --- */
+.a11y-light-theme .logo-phys,
+.a11y-light-theme .home-section-title span,
+.a11y-light-theme .about-tag.red {
+  color: #FC6255 !important;
+}
+
+.a11y-light-theme .home-hero-free,
+.a11y-light-theme .topic-slide-number,
+.a11y-light-theme .about-tag.blue {
+  color: #4a90e2 !important;
+}
+
+/* Particle card name colors */
+.a11y-light-theme .particle-card--proton .particle-name {
+  color: #d94438 !important;
+}
+.a11y-light-theme .particle-card--neutron .particle-name {
+  color: #555555 !important;
+}
+.a11y-light-theme .particle-card--electron .particle-name {
+  color: #3578c4 !important;
+}
+
+/* Particle prop values (strong) */
+.a11y-light-theme .particle-prop strong {
+  color: #1a1a1a !important;
+}
+
+/* Keep white text on colored buttons/links */
+.a11y-light-theme .home-hero-cta,
+.a11y-light-theme .topic-slide-btn,
+.a11y-light-theme a[style*="background-color: #FC6255"],
+.a11y-light-theme a[style*="background-color: rgb(252, 98, 85)"],
+.a11y-light-theme a[style*="backgroundColor: #FC6255"] {
+  color: #ffffff !important;
+}
+
+/* Next page link button */
+.a11y-light-theme .page-content a[style*="background-color"] {
+  color: #1a1a1a !important;
+}
+.a11y-light-theme .page-content a[style*="background-color"] span {
+  color: #1a1a1a !important;
+}
+
+/* --- Home page --- */
+
+/* Particle cards: borders + light bg */
+.a11y-light-theme .particle-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.a11y-light-theme .particle-card:hover {
+  border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+.a11y-light-theme .particle-discovery {
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Topic slide cards */
+.a11y-light-theme .topic-slide-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* About section — same as main page bg */
+.a11y-light-theme .about-section {
+  background: #f5f5f5 !important;
+}
+
+.a11y-light-theme .about-tag {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #333333 !important;
+}
+
+.a11y-light-theme .about-tag.red {
+  border-color: #FC6255 !important;
+  color: #FC6255 !important;
+}
+
+.a11y-light-theme .about-tag.blue {
+  border-color: #4a90e2 !important;
+  color: #4a90e2 !important;
+}
+
+/* Swiper pagination */
+.a11y-light-theme .swiper-pagination-bullet {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.a11y-light-theme .swiper-pagination-bullet-active {
+  background: #4a90e2 !important;
+}
+
+.a11y-light-theme .swiper-button-next,
+.a11y-light-theme .swiper-button-prev {
+  color: #333333 !important;
+}
+
+/* --- Terms & Changelog pages --- */
+/* These use inline backgroundColor: '#111' and '#1a1a1a' */
+.a11y-light-theme div[style*="background-color: #111"],
+.a11y-light-theme div[style*="background-color: rgb(17, 17, 17)"],
+.a11y-light-theme div[style*="background-color: #1a1a1a"],
+.a11y-light-theme div[style*="background-color: rgb(26, 26, 26)"],
+.a11y-light-theme div[style*="background-color: #0a0a0a"],
+.a11y-light-theme div[style*="background-color: rgb(10, 10, 10)"] {
+  background-color: #eaeaea !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Also for inline rgba dark cards */
+.a11y-light-theme div[style*="rgba(255, 255, 255, 0.03)"],
+.a11y-light-theme div[style*="rgba(255, 255, 255, 0.02)"],
+.a11y-light-theme div[style*="rgba(255, 255, 255, 0.05)"] {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Sections inside Terms/Changelog containers should be transparent */
+.a11y-light-theme div[style*="background-color: #111"] section,
+.a11y-light-theme div[style*="background-color: rgb(17, 17, 17)"] section {
+  background: transparent !important;
+}
+
+/* Terms border-left accent */
+.a11y-light-theme div[style*="border-left: 4px solid #FC6255"] {
+  background-color: #fff8f7 !important;
+}
+
+/* Changelog entry borders */
+.a11y-light-theme div[style*="border-bottom: 1px solid #333"] {
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* --- Header --- */
+.a11y-light-theme .header {
+  background-color: rgba(245, 245, 245, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.a11y-light-theme .logo-ez {
+  color: #1a1a1a !important;
+}
+
+.a11y-light-theme .burger span {
+  background-color: #1a1a1a !important;
+}
+
+.a11y-light-theme .nav-item {
+  color: #1a1a1a !important;
+}
+
+.a11y-light-theme .nav-item:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.a11y-light-theme .dropdown {
+  background-color: #ffffff !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+.a11y-light-theme .dropdown-item {
+  color: #333333 !important;
+}
+
+.a11y-light-theme .dropdown-item:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #1a1a1a !important;
+}
+
+/* --- Inputs --- */
+.a11y-light-theme input,
+.a11y-light-theme textarea {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* --- Quiz --- */
+.a11y-light-theme button[style*="text-align: left"] {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #1a1a1a !important;
+}
+
+/* --- Footer --- */
+.a11y-light-theme footer {
+  background-color: #e8e8e8 !important;
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Footer links */
+.a11y-light-theme footer a {
+  color: #FC6255 !important;
+}
+
+/* --- Panel stays dark --- */
+.a11y-light-theme .a11y-panel,
+.a11y-light-theme .a11y-panel div,
+.a11y-light-theme .a11y-panel span,
+.a11y-light-theme .a11y-panel button,
+.a11y-light-theme .a11y-panel h2 {
+  color: unset;
+}
+.a11y-light-theme .a11y-panel {
+  background: #1a1a1a !important;
+}
+.a11y-light-theme .a11y-panel__title {
+  color: #ffffff !important;
+}
+.a11y-light-theme .a11y-section__label {
+  color: #cccccc !important;
+}
+.a11y-light-theme .a11y-panel__close {
+  color: #888 !important;
+}
+.a11y-light-theme .a11y-reset-btn {
+  color: #cccccc !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.a11y-light-theme .a11y-font-btn {
+  color: #cccccc !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+.a11y-light-theme .a11y-font-btn--active {
+  color: #ffffff !important;
+  background: #FC6255 !important;
+  border-color: #FC6255 !important;
+}
+.a11y-light-theme .a11y-overlay {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* --- Header a11y button --- */
+.a11y-light-theme .a11y-header-btn {
+  color: #d4a017 !important;
+}
+
+/* --- Mobile menu --- */
+@media (max-width: 600px) {
+  .a11y-light-theme .nav-menu {
+    background-color: rgba(245, 245, 245, 0.98) !important;
+  }
+
+  .a11y-light-theme .dropdown-item:hover,
+  .a11y-light-theme .dropdown-item:active {
+    background-color: rgba(252, 98, 85, 0.1) !important;
+  }
+}
+
+/* --- PageTemplate description/instruction cards --- */
+.a11y-light-theme .page-content div[style*="border: 1px solid rgba(255"] {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ===== High Contrast ===== */
+
+.a11y-high-contrast *:not(.a11y-panel):not(.a11y-panel *) {
+  border-color: currentColor !important;
+}
+
+.a11y-high-contrast .header {
+  border-width: 2px !important;
+}
+
+.a11y-high-contrast .page-content h1,
+.a11y-high-contrast .page-content h2,
+.a11y-high-contrast .page-content h3 {
+  text-decoration: underline;
+  text-decoration-color: #FC6255;
+}
+
+.a11y-high-contrast a {
+  text-decoration: underline !important;
+}
+
+.a11y-high-contrast button:not(.a11y-toggle):not(.a11y-font-btn):not(.a11y-panel__close):not(.a11y-reset-btn),
+.a11y-high-contrast input {
+  border: 2px solid currentColor !important;
+}
+
+/* ===== Reduced Motion ===== */
+
+.a11y-reduced-motion *,
+.a11y-reduced-motion *::before,
+.a11y-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* ===== Speak button in light theme ===== */
+.a11y-light-theme .a11y-speak-btn {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.a11y-light-theme .a11y-speak-btn:hover {
+  background: rgba(252, 98, 85, 0.1);
+}

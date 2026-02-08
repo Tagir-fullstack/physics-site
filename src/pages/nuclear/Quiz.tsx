@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { saveQuizResult } from '../../lib/supabase';
+import SpeakButton from '../../components/SpeakButton';
 import '../../styles/page-layout.css';
 
 interface Question {
@@ -431,14 +432,17 @@ export default function Quiz() {
             </div>
 
             {/* Question */}
-            <h3 style={{
-              fontSize: '1.4rem',
-              color: '#ffffff',
-              marginBottom: '1.5rem',
-              lineHeight: '1.6'
-            }}>
-              {shuffledQuestions[currentQuestion].question}
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{
+                fontSize: '1.4rem',
+                color: '#ffffff',
+                lineHeight: '1.6',
+                flex: 1
+              }}>
+                {shuffledQuestions[currentQuestion].question}
+              </h3>
+              <SpeakButton text={shuffledQuestions[currentQuestion].question} />
+            </div>
 
             {/* Options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', flex: '1 1 auto' }}>

@@ -21,6 +21,7 @@
   align-items: center;
   max-width: 100%;
   margin: 0 auto;
+  position: relative;
 }
 
 .logo {
@@ -80,6 +81,12 @@
 
 .burger.active span:nth-child(3) {
   transform: rotate(-45deg) translate(6px, -6px);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .nav-menu {
@@ -180,6 +187,36 @@
   .burger {
     display: flex;
     z-index: 1002;
+  }
+
+  .header .logo {
+    font-size: 32px !important;
+    gap: 8px !important;
+    flex-shrink: 0;
+  }
+
+  .header .logo-phys {
+    margin-right: -8px !important;
+  }
+
+  .header .logo-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .a11y-header-btn {
+    position: static !important;
+    transform: none !important;
+    z-index: 1002;
+  }
+
+  .a11y-header-btn:hover {
+    transform: scale(1.1) !important;
+  }
+
+  .a11y-icon {
+    width: 25px !important;
+    height: 25px !important;
   }
 
   .menu-overlay {
