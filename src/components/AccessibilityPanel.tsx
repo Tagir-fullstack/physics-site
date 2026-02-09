@@ -103,8 +103,8 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
             <input
               type="range"
               className="a11y-range"
-              min="0.5"
-              max="2"
+              min="0.3"
+              max="2.5"
               step="0.1"
               value={speechRate}
               onChange={(e) => setSpeechRate(parseFloat(e.target.value))}

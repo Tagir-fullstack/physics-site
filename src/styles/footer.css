@@ -51,12 +51,37 @@
     max-width: 100%;
   }
 
-  .footer-content h3 {
-    font-size: 1rem !important;
+  .footer-grid {
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
   }
 
-  .footer-content p,
-  .footer-content div {
+  .footer-grid h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .footer-grid p {
     font-size: 0.8rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .footer-grid div[style] {
+    line-height: 1.4 !important;
+  }
+
+  footer {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  footer > div > div:last-child {
+    padding-top: 0.75rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  footer > div > div:last-child span,
+  footer > div > div:last-child a {
+    font-size: 0.7rem !important;
   }
 }

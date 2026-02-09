@@ -12,8 +12,10 @@ export default function SpeakButton({ text }: Props) {
   const handleSpeak = useCallback(() => {
     if (!('speechSynthesis' in window)) return;
 
-    if (speechSynthesis.speaking) {
-      speechSynthesis.cancel();
+    // Always cancel first — Chrome bug: rate not applied without cancel
+    speechSynthesis.cancel();
+
+    if (speaking) {
       setSpeaking(false);
       return;
     }
@@ -23,9 +25,13 @@ export default function SpeakButton({ text }: Props) {
     utterance.rate = speechRate;
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
-    setSpeaking(true);
-    speechSynthesis.speak(utterance);
-  }, [text, speechRate]);
+
+    // Small delay after cancel for Chrome to pick up new rate
+    setTimeout(() => {
+      setSpeaking(true);
+      speechSynthesis.speak(utterance);
+    }, 50);
+  }, [text, speechRate, speaking]);
 
   if (!enabled) return null;
 

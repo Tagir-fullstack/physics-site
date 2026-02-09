@@ -49,7 +49,7 @@ const models: AtomModel[] = [
     author: 'Нильс Бор',
     status: 'partial',
     statusText: 'Почти верная — работает для водорода',
-    duration: 20000
+    duration: 10000
   },
   {
     id: 'sommerfeld',
@@ -209,11 +209,9 @@ function RutherfordModel() {
 // Bohr: hydrogen atom with electron transitions and photon emission/absorption
 const bohrOrbitRadii = [50, 90, 140, 180]; // n=1..4
 const bohrTransitions = [
-  { from: 0, to: 2 }, // absorb: n=1 → n=3
-  { from: 2, to: 0 }, // emit: n=3 → n=1
-  { from: 0, to: 3 }, // absorb: n=1 → n=4
-  { from: 3, to: 1 }, // emit: n=4 → n=2
-  { from: 1, to: 0 }, // emit: n=2 → n=1
+  { from: 0, to: 3 }, // absorb UV: n=1 → n=4
+  { from: 3, to: 1 }, // emit blue: n=4 → n=2
+  { from: 1, to: 0 }, // emit red:  n=2 → n=1
 ];
 
 // Photon colors based on transition energy
@@ -245,7 +243,7 @@ function BohrModel() {
     let frameId: number;
     let last = performance.now();
     let timer = 0;
-    const ORBIT_TIME = 2.5; // seconds on orbit before transition
+    const ORBIT_TIME = 1.5; // seconds on orbit before transition
 
     const animate = (now: number) => {
       const dt = (now - last) / 1000;
