@@ -125,8 +125,7 @@ function ThomsonModel() {
   return (
     <div className="atom-model-container">
       <div className="thomson-pudding">
-        <span className="thomson-pudding-label">+ заряд</span>
-        {electrons.map((pos, i) => (
+{electrons.map((pos, i) => (
           <div
             key={i}
             className="thomson-electron"
@@ -369,7 +368,7 @@ function BohrModel() {
           />
         ))}
         {/* Energy level labels */}
-        {bohrOrbitRadii.map((r, i) => (
+        {bohrOrbitRadii.slice(0, -1).map((r, i) => (
           <text
             key={`label-${i}`}
             x={cx + r + 8}
@@ -608,11 +607,12 @@ const modelComponents: Record<string, () => ReturnType<typeof DaltonModel>> = {
   quantum: QuantumModel
 };
 
-const DEFAULT_INTERVAL = 8000;
+const DEFAULT_INTERVAL = 6000;
 
 export default function RandomAtomModel() {
   const [index, setIndex] = useState(0);
-  const [hovered, setHovered] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const isTouchRef = useRef(false);
   const elapsedRef = useRef(0);
   const lastTimeRef = useRef(performance.now());
 
@@ -624,9 +624,9 @@ export default function RandomAtomModel() {
     lastTimeRef.current = performance.now();
   }, [index]);
 
-  // Timer: runs when not hovered, pauses when hovered
+  // Timer: runs when not paused
   useEffect(() => {
-    if (hovered) return;
+    if (paused) return;
 
     const remaining = duration - elapsedRef.current;
     lastTimeRef.current = performance.now();
@@ -639,7 +639,7 @@ export default function RandomAtomModel() {
       elapsedRef.current += performance.now() - lastTimeRef.current;
       clearTimeout(timer);
     };
-  }, [hovered, index, duration]);
+  }, [paused, index, duration]);
 
   const model = models[index];
   const ModelComponent = modelComponents[model.id];
@@ -653,8 +653,10 @@ export default function RandomAtomModel() {
   return (
     <div
       className="atom-model-wrapper"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onTouchStart={() => { isTouchRef.current = true; }}
+      onMouseEnter={() => { if (!isTouchRef.current) setPaused(true); }}
+      onMouseLeave={() => { if (!isTouchRef.current) setPaused(false); }}
+      onClick={() => { if (isTouchRef.current) setPaused(prev => !prev); }}
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -686,7 +688,7 @@ export default function RandomAtomModel() {
               className="atom-model-status-fill"
               style={{
                 animationDuration: `${duration}ms`,
-                animationPlayState: hovered ? 'paused' : 'running',
+                animationPlayState: paused ? 'paused' : 'running',
                 background: statusColor,
               }}
             />

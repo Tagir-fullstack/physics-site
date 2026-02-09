@@ -561,6 +561,83 @@ html.a11y-font-xlarge .header {
   background: rgba(0, 0, 0, 0.5) !important;
 }
 
+/* --- Atom models --- */
+.a11y-light-theme .atom-model-name {
+  color: #1a1a1a !important;
+}
+
+.a11y-light-theme .atom-model-nickname {
+  color: #555555 !important;
+}
+
+.a11y-light-theme .atom-model-year {
+  color: #1a6bc4 !important;
+}
+
+.a11y-light-theme .atom-model-status.outdated {
+  color: #c0392b !important;
+  border-color: rgba(192, 57, 43, 0.4) !important;
+  background: rgba(192, 57, 43, 0.08) !important;
+}
+
+.a11y-light-theme .atom-model-status.partial {
+  color: #c47f17 !important;
+  border-color: rgba(196, 127, 23, 0.4) !important;
+  background: rgba(196, 127, 23, 0.08) !important;
+}
+
+.a11y-light-theme .atom-model-status.current {
+  color: #1e8e3e !important;
+  border-color: rgba(30, 142, 62, 0.4) !important;
+  background: rgba(30, 142, 62, 0.08) !important;
+}
+
+.a11y-light-theme .atom-model-status-text {
+  color: inherit !important;
+}
+
+.a11y-light-theme .atom-model-status.outdated .atom-model-status-fill {
+  background: rgba(192, 57, 43, 0.2) !important;
+}
+
+.a11y-light-theme .atom-model-status.partial .atom-model-status-fill {
+  background: rgba(196, 127, 23, 0.2) !important;
+}
+
+.a11y-light-theme .atom-model-status.current .atom-model-status-fill {
+  background: rgba(30, 142, 62, 0.2) !important;
+}
+
+/* Orbit SVG strokes — more visible on light bg */
+.a11y-light-theme .atom-model-container svg circle,
+.a11y-light-theme .atom-model-container svg ellipse {
+  stroke-opacity: 0.6;
+}
+
+.a11y-light-theme .atom-model-container svg path {
+  stroke-opacity: 0.85;
+}
+
+/* Energy level labels */
+.a11y-light-theme .atom-model-container svg text {
+  fill: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Dalton sphere */
+.a11y-light-theme .dalton-sphere {
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Thomson pudding */
+.a11y-light-theme .thomson-pudding {
+  border-color: rgba(192, 57, 43, 0.4) !important;
+  background: radial-gradient(circle, rgba(252, 98, 85, 0.3), rgba(252, 98, 85, 0.18), rgba(252, 98, 85, 0.06)) !important;
+}
+
+.a11y-light-theme .thomson-pudding-label {
+  color: rgba(192, 57, 43, 0.7) !important;
+}
+
 /* --- Header a11y button --- */
 .a11y-light-theme .a11y-header-btn {
   color: #d4a017 !important;
