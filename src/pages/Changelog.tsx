@@ -98,9 +98,9 @@ export default function Changelog() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       style={{
-        marginTop: '120px',
-        minHeight: 'calc(100vh - 120px)',
-        paddingTop: '2rem',
+        marginTop: '80px',
+        minHeight: 'calc(100vh - 80px)',
+        paddingTop: '1rem',
         paddingBottom: '4rem',
       }}
     >
