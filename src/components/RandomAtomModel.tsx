@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '../styles/atom-models.css';
 
@@ -59,6 +59,15 @@ const models: AtomModel[] = [
     author: 'Арнольд Зоммерфельд',
     status: 'partial',
     statusText: 'Почти верная — уточнение модели Бора'
+  },
+  {
+    id: 'debroglie',
+    name: 'Модель де Бройля',
+    nickname: '«Волновые орбиты»',
+    year: 1924,
+    author: 'Луи де Бройль',
+    status: 'partial',
+    statusText: 'Почти верная — волновая природа электрона'
   },
   {
     id: 'quantum',
@@ -486,6 +495,83 @@ function SommerfeldModel() {
   );
 }
 
+// De Broglie: standing waves on circular orbits (nλ = 2πr)
+const debroglieOrbits = [
+  { r: 50,  n: 1, color: '#e74c3c' },
+  { r: 90,  n: 2, color: '#f39c12' },
+  { r: 130, n: 3, color: '#27ae60' },
+  { r: 170, n: 4, color: '#2980b9' },
+];
+
+function generateWavePath(cx: number, cy: number, r: number, n: number, amplitude: number, steps = 360): string {
+  const parts: string[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const theta = (i / steps) * Math.PI * 2;
+    const wave = amplitude * Math.sin(n * theta);
+    const currentR = r + wave;
+    const x = cx + currentR * Math.cos(theta);
+    const y = cy + currentR * Math.sin(theta);
+    parts.push(i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`);
+  }
+  parts.push('Z');
+  return parts.join(' ');
+}
+
+function DeBroglieModel() {
+  const size = 400;
+  const cx = size / 2;
+  const cy = size / 2;
+  const baseAmplitude = 12;
+
+  const [time, setTime] = useState(0);
+
+  useEffect(() => {
+    let frameId: number;
+    let last = performance.now();
+    const animate = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      setTime(prev => prev + dt);
+      frameId = requestAnimationFrame(animate);
+    };
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
+  return (
+    <div className="atom-model-container">
+      <svg width={size} height={size} style={{ position: 'absolute', top: 0, left: 0 }}>
+        {debroglieOrbits.map((orb, i) => {
+          const amp = baseAmplitude * Math.sin(time * 3 + i * 0.7);
+          const d = generateWavePath(cx, cy, orb.r, orb.n, amp);
+          return (
+            <g key={i}>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={orb.r}
+                fill="none"
+                stroke={orb.color}
+                strokeWidth="1"
+                opacity={0.2}
+                strokeDasharray="4 4"
+              />
+              <path
+                d={d}
+                fill="none"
+                stroke={orb.color}
+                strokeWidth="2"
+                opacity={0.7}
+              />
+            </g>
+          );
+        })}
+      </svg>
+      <div className="debroglie-nucleus" />
+    </div>
+  );
+}
+
 function QuantumModel() {
   const dots = useMemo(() => generateQuantumDots(60, 170), []);
 
@@ -518,6 +604,7 @@ const modelComponents: Record<string, () => ReturnType<typeof DaltonModel>> = {
   rutherford: RutherfordModel,
   bohr: BohrModel,
   sommerfeld: SommerfeldModel,
+  debroglie: DeBroglieModel,
   quantum: QuantumModel
 };
 
@@ -525,20 +612,50 @@ const DEFAULT_INTERVAL = 8000;
 
 export default function RandomAtomModel() {
   const [index, setIndex] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const elapsedRef = useRef(0);
+  const lastTimeRef = useRef(performance.now());
 
+  const duration = models[index].duration ?? DEFAULT_INTERVAL;
+
+  // Reset elapsed on model change
   useEffect(() => {
-    const duration = models[index].duration ?? DEFAULT_INTERVAL;
+    elapsedRef.current = 0;
+    lastTimeRef.current = performance.now();
+  }, [index]);
+
+  // Timer: runs when not hovered, pauses when hovered
+  useEffect(() => {
+    if (hovered) return;
+
+    const remaining = duration - elapsedRef.current;
+    lastTimeRef.current = performance.now();
+
     const timer = setTimeout(() => {
       setIndex(prev => (prev + 1) % models.length);
-    }, duration);
-    return () => clearTimeout(timer);
-  }, [index]);
+    }, remaining);
+
+    return () => {
+      elapsedRef.current += performance.now() - lastTimeRef.current;
+      clearTimeout(timer);
+    };
+  }, [hovered, index, duration]);
 
   const model = models[index];
   const ModelComponent = modelComponents[model.id];
 
+  const statusColor = model.status === 'current'
+    ? 'rgba(76, 217, 100, 0.35)'
+    : model.status === 'partial'
+      ? 'rgba(245, 166, 35, 0.35)'
+      : 'rgba(252, 98, 85, 0.35)';
+
   return (
-    <div className="atom-model-wrapper">
+    <div
+      className="atom-model-wrapper"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={model.id}
@@ -564,7 +681,16 @@ export default function RandomAtomModel() {
           <div className="atom-model-nickname">{model.nickname}</div>
           <div className="atom-model-year">{model.author}, {model.year} г.</div>
           <span className={`atom-model-status ${model.status}`}>
-            {model.statusText}
+            <span
+              key={model.id}
+              className="atom-model-status-fill"
+              style={{
+                animationDuration: `${duration}ms`,
+                animationPlayState: hovered ? 'paused' : 'running',
+                background: statusColor,
+              }}
+            />
+            <span className="atom-model-status-text">{model.statusText}</span>
           </span>
         </motion.div>
       </AnimatePresence>
