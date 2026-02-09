@@ -10,8 +10,28 @@
   }
 }
 
+.description-content p {
+  margin: 0.75rem 0;
+}
+
+.description-content h4 {
+  margin: 1.5rem 0 0.5rem;
+  color: #ffffff;
+}
+
+.description-content ul,
+.description-content ol {
+  padding-left: 2rem;
+  margin: 0.5rem 0;
+}
+
+.description-content li {
+  margin: 0.4rem 0;
+}
+
 @media (max-width: 600px) {
-  .next-link-btn {
+  .next-link-btn,
+  .prev-link-btn {
     font-size: 1rem !important;
     padding: 0.75rem 1.25rem !important;
   }

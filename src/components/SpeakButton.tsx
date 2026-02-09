@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type RefObject } from 'react';
 import { useAccessibility } from '../context/AccessibilityContext';
 
 interface Props {
-  text: string;
+  text?: string;
+  textRef?: RefObject<HTMLElement | null>;
 }
 
-export default function SpeakButton({ text }: Props) {
+export default function SpeakButton({ text, textRef }: Props) {
   const { enabled, speechRate } = useAccessibility();
   const [speaking, setSpeaking] = useState(false);
 
@@ -20,7 +21,10 @@ export default function SpeakButton({ text }: Props) {
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const resolvedText = text || textRef?.current?.textContent || '';
+    if (!resolvedText) return;
+
+    const utterance = new SpeechSynthesisUtterance(resolvedText);
     utterance.lang = 'ru-RU';
     utterance.rate = speechRate;
     utterance.onend = () => setSpeaking(false);
@@ -31,7 +35,7 @@ export default function SpeakButton({ text }: Props) {
       setSpeaking(true);
       speechSynthesis.speak(utterance);
     }, 50);
-  }, [text, speechRate, speaking]);
+  }, [text, textRef, speechRate, speaking]);
 
   if (!enabled) return null;
 

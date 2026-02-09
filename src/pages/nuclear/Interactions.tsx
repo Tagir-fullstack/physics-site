@@ -7,7 +7,8 @@ export default function Interactions() {
       section="Физика Атомного ядра"
       videoSrc="/videos/nuclear/7_interactions.mp4"
       description="Анимация демонстрирует сильное ядерное взаимодействие — фундаментальную силу, удерживающую протоны и нейтроны в ядре. Показано, как ядерные силы действуют на малых расстояниях, преодолевая электростатическое отталкивание протонов. Ядерные силы обладают свойством насыщения и зарядовой независимости."
-      nextLink={{ path: '/nuclear/decay', title: 'Деление ядра' }}
+      prevLink={{ path: '/nuclear/halflife', title: 'Период полураспада' }}
+      nextLink={{ path: '/nuclear/droplet', title: 'Капельная модель ядра' }}
     />
   );
 }

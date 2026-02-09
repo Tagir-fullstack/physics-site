@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import SpeakButton from './SpeakButton';
@@ -7,11 +8,13 @@ interface PageTemplateProps {
   title: string;
   section: string;
   videoSrc?: string;
-  description?: string;
+  description?: string | React.ReactNode;
+  prevLink?: { path: string; title: string };
   nextLink?: { path: string; title: string };
 }
 
-export default function PageTemplate({ title, section, videoSrc, description, nextLink }: PageTemplateProps) {
+export default function PageTemplate({ title, section, videoSrc, description, prevLink, nextLink }: PageTemplateProps) {
+  const descriptionRef = useRef<HTMLDivElement>(null);
   return (
     <motion.main
       className="page-content"
@@ -92,15 +95,15 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
               }}>
                 Описание
               </h3>
-              <SpeakButton text={description} />
+              <SpeakButton textRef={descriptionRef} />
             </div>
-            <p style={{
+            <div ref={descriptionRef} className="description-content" style={{
               color: '#cccccc',
               fontSize: '1rem',
               lineHeight: '1.7'
             }}>
               {description}
-            </p>
+            </div>
           </div>
         )}
 
@@ -140,36 +143,66 @@ export default function PageTemplate({ title, section, videoSrc, description, ne
           </p>
         </div>
 
-        {/* Next Video Button */}
-        {nextLink && (
+        {/* Navigation Buttons */}
+        {(prevLink || nextLink) && (
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            marginTop: '1rem'
+            alignItems: 'center',
+            gap: '1rem',
+            marginTop: '1rem',
+            flexWrap: 'wrap'
           }}>
-            <Link
-              to={nextLink.path}
-              className="next-link-btn"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                backgroundColor: '#FC6255',
-                color: 'white',
-                padding: '0.875rem 1.5rem',
-                borderRadius: '50px',
-                textDecoration: 'none',
-                fontSize: '1.3rem',
-                fontWeight: '700',
-                fontFamily: "'CCUltimatum', Arial, sans-serif",
-                transition: 'background-color 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e04e43'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FC6255'}
-            >
-              Следующее: {nextLink.title}
-              <span style={{ fontSize: '1.2rem' }}>→</span>
-            </Link>
+            {prevLink && (
+              <Link
+                to={prevLink.path}
+                className="prev-link-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#555',
+                  color: 'white',
+                  padding: '0.875rem 1.5rem',
+                  borderRadius: '50px',
+                  textDecoration: 'none',
+                  fontSize: '1.3rem',
+                  fontWeight: '700',
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#444'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#555'}
+              >
+                <span style={{ fontSize: '1.2rem' }}>←</span>
+                {prevLink.title}
+              </Link>
+            )}
+            {nextLink && (
+              <Link
+                to={nextLink.path}
+                className="next-link-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#FC6255',
+                  color: 'white',
+                  padding: '0.875rem 1.5rem',
+                  borderRadius: '50px',
+                  textDecoration: 'none',
+                  fontSize: '1.3rem',
+                  fontWeight: '700',
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e04e43'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FC6255'}
+              >
+                Следующее: {nextLink.title}
+                <span style={{ fontSize: '1.2rem' }}>→</span>
+              </Link>
+            )}
           </div>
         )}
       </div>
