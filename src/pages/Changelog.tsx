@@ -4,12 +4,14 @@ import '../styles/page-layout.css';
 
 interface ChangelogEntry {
   date: string;
+  version?: string;
   changes: string[];
 }
 
 const changelog: ChangelogEntry[] = [
   {
     date: '09.02.2026',
+    version: 'v1.2.7',
     changes: [
       'Новая возможность: режим доступности (инклюзивный режим)',
       'Кнопка доступности в хедере — открывает панель настроек',
@@ -29,6 +31,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     date: '08.02.2026',
+    version: 'v1.1.9.6',
     changes: [
       'Модель Зоммерфельда: 5 разноцветных эллиптических орбит (n=5) с физически верными пропорциями',
       'Новый блок «Субатомные частицы» — карточки протона, нейтрона и электрона с характеристиками и историей открытия',
@@ -44,6 +47,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     date: '07.02.2026',
+    version: 'v1.0.9.2',
     changes: [
       'Полный редизайн сайта: новый шрифт, обновлённая цветовая схема',
       'Добавили чередующиеся модели атомов',
@@ -55,6 +59,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     date: '04.02.2026',
+    version: 'v1.0.9.1',
     changes: [
       'Обновили анимацию бета-распада',
       'Добавили иконку и двухцветное название в хедере',
@@ -62,12 +67,14 @@ const changelog: ChangelogEntry[] = [
   },
   {
     date: '03.02.2026',
+    version: 'v1.0.7.0',
     changes: [
       'Добавили систему версионирования',
     ],
   },
   {
     date: '02.02.2026',
+    version: 'v0.9.7',
     changes: [
       'Изменили анимацию капельной модели ядра',
       'Добавили иконку сайта',
@@ -75,6 +82,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     date: '01.02.2026',
+    version: 'v0.9.5',
     changes: [
       'Добавили страницу теста по ядерной физике с сохранением результатов в Supabase',
     ],
@@ -145,9 +153,17 @@ export default function Changelog() {
                   fontSize: '1.3rem',
                   marginBottom: '0.75rem',
                   color: '#fff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
                 {entry.date}
+                {entry.version && (
+                  <span style={{ fontSize: '0.9rem', color: '#FC6255', fontWeight: 500 }}>
+                    {entry.version}
+                  </span>
+                )}
               </h2>
               <ul
                 style={{
