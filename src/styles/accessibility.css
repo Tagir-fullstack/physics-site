@@ -170,14 +170,48 @@
   color: #FC6255;
 }
 
+/* Range slider */
+.a11y-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+  cursor: pointer;
+}
+
+.a11y-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FC6255;
+  cursor: pointer;
+  border: none;
+}
+
+.a11y-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FC6255;
+  cursor: pointer;
+  border: none;
+}
+
 /* Speak button */
 .a11y-speak-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
+  aspect-ratio: 1;
   border-radius: 50%;
+  box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.05);
   color: #FC6255;
@@ -185,6 +219,7 @@
   transition: all 0.2s;
   flex-shrink: 0;
   margin-left: 0.5rem;
+  padding: 0;
 }
 
 .a11y-speak-btn:hover {
@@ -587,10 +622,15 @@ html.a11y-font-xlarge .header {
 
 /* ===== Speak button in light theme ===== */
 .a11y-light-theme .a11y-speak-btn {
-  border-color: rgba(0, 0, 0, 0.15);
-  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: #FC6255 !important;
+}
+
+.a11y-light-theme .a11y-speak-btn svg {
+  color: #FC6255 !important;
 }
 
 .a11y-light-theme .a11y-speak-btn:hover {
-  background: rgba(252, 98, 85, 0.1);
+  background: rgba(252, 98, 85, 0.1) !important;
 }

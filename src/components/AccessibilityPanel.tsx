@@ -12,6 +12,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
     highContrast, setHighContrast,
     reducedMotion, setReducedMotion,
     lightTheme, setLightTheme,
+    speechRate, setSpeechRate,
     resetAll,
   } = useAccessibility();
 
@@ -91,6 +92,27 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
             >
               <span className="a11y-toggle__thumb" />
             </button>
+          </div>
+
+          {/* Speech Rate */}
+          <div className="a11y-section" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="a11y-section__label">Скорость озвучки</span>
+              <span className="a11y-section__label" style={{ fontSize: '0.85rem' }}>×{speechRate.toFixed(1)}</span>
+            </div>
+            <input
+              type="range"
+              className="a11y-range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={speechRate}
+              onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999' }}>
+              <span>Медленно</span>
+              <span>Быстро</span>
+            </div>
           </div>
 
           {/* Reset */}

@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default function SpeakButton({ text }: Props) {
-  const { enabled } = useAccessibility();
+  const { enabled, speechRate } = useAccessibility();
   const [speaking, setSpeaking] = useState(false);
 
   const handleSpeak = useCallback(() => {
@@ -20,12 +20,12 @@ export default function SpeakButton({ text }: Props) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ru-RU';
-    utterance.rate = 0.9;
+    utterance.rate = speechRate;
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     setSpeaking(true);
     speechSynthesis.speak(utterance);
-  }, [text]);
+  }, [text, speechRate]);
 
   if (!enabled) return null;
 

@@ -8,6 +8,7 @@ interface AccessibilityState {
   highContrast: boolean;
   reducedMotion: boolean;
   lightTheme: boolean;
+  speechRate: number;
 }
 
 interface AccessibilityContextType extends AccessibilityState {
@@ -16,6 +17,7 @@ interface AccessibilityContextType extends AccessibilityState {
   setHighContrast: (v: boolean) => void;
   setReducedMotion: (v: boolean) => void;
   setLightTheme: (v: boolean) => void;
+  setSpeechRate: (v: number) => void;
   resetAll: () => void;
 }
 
@@ -25,6 +27,7 @@ const defaults: AccessibilityState = {
   highContrast: false,
   reducedMotion: false,
   lightTheme: false,
+  speechRate: 0.9,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
@@ -73,6 +76,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setHighContrast: (v) => setState((s) => ({ ...s, highContrast: v })),
     setReducedMotion: (v) => setState((s) => ({ ...s, reducedMotion: v })),
     setLightTheme: (v) => setState((s) => ({ ...s, lightTheme: v })),
+    setSpeechRate: (v) => setState((s) => ({ ...s, speechRate: v })),
     resetAll: () => setState({ ...defaults }),
   };
 
