@@ -10,7 +10,6 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
   const {
     fontSize, setFontSize,
     highContrast, setHighContrast,
-    reducedMotion, setReducedMotion,
     lightTheme, setLightTheme,
     speechRate, setSpeechRate,
     resetAll,
@@ -81,18 +80,6 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
             </button>
           </div>
 
-          {/* Reduced Motion */}
-          <div className="a11y-section">
-            <span className="a11y-section__label">Без анимаций</span>
-            <button
-              className={`a11y-toggle ${reducedMotion ? 'a11y-toggle--on' : ''}`}
-              onClick={() => setReducedMotion(!reducedMotion)}
-              role="switch"
-              aria-checked={reducedMotion}
-            >
-              <span className="a11y-toggle__thumb" />
-            </button>
-          </div>
 
           {/* Speech Rate */}
           <div className="a11y-section" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
