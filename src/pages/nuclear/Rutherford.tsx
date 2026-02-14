@@ -56,6 +56,7 @@ export default function Rutherford() {
         </>
       }
       nextLink={{ path: '/nuclear/alpha', title: 'Альфа-распад' }}
+      animationStatus="green"
     />
   );
 }

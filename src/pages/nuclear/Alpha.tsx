@@ -5,7 +5,7 @@ export default function Alpha() {
     <PageTemplate
       title="Альфа-распад"
       section="Физика Атомного ядра"
-      videoSrc="/videos/nuclear/3_AlphaDecay.mp4"
+      videoSrc="/videos/nuclear/3_AlphaDecay_1.mp4"
       description={
         <>
           <h4><strong>Историческая справка</strong></h4>
@@ -67,6 +67,7 @@ export default function Alpha() {
       }
       prevLink={{ path: '/nuclear/rutherford', title: 'Опыт Резерфорда' }}
       nextLink={{ path: '/nuclear/beta', title: 'Бета-распад' }}
+      animationStatus="green"
     />
   );
 }
