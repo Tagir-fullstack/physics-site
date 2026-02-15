@@ -11,35 +11,35 @@
   z-index: 9999;
 }
 
-.loading-atom-tiny {
+.loading-atom-rutherford {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.loading-nucleus-tiny {
+.loading-rutherford-nucleus {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  background: radial-gradient(circle, #e85d54, #d64a42);
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #FC6255, #e04e43);
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(232, 93, 84, 0.4);
+  box-shadow: 0 0 15px rgba(252, 98, 85, 0.5), 0 0 30px rgba(252, 98, 85, 0.2);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
 }
 
-.loading-electron-tiny {
+.loading-rutherford-electron {
   position: absolute;
-  width: 5px;
-  height: 5px;
-  background: radial-gradient(circle, #5a9ee8, #3d7fc2);
+  width: 7px;
+  height: 7px;
+  background: radial-gradient(circle, #4a90e2, #2e6cb8);
   border-radius: 50%;
-  box-shadow: 0 0 6px rgba(90, 158, 232, 0.4);
+  box-shadow: 0 0 8px rgba(74, 144, 226, 0.5);
   transform: translate(-50%, -50%);
   z-index: 5;
 }
