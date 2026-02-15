@@ -66,15 +66,16 @@ function App() {
     }
   }, []);
 
-  if (isInitialLoading) {
-    return <LoadingScreen onComplete={() => setIsInitialLoading(false)} />;
-  }
-
   return (
     <AccessibilityProvider>
+      {isInitialLoading && <LoadingScreen onComplete={() => setIsInitialLoading(false)} />}
       <Router>
         <ScrollToTop />
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{
+          display: isInitialLoading ? 'none' : 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh'
+        }}>
           <Header />
           <div style={{ flex: 1 }}>
             <Suspense fallback={<PageLoadingFallback />}>
