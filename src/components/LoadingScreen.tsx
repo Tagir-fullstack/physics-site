@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import '../styles/loading-screen.css';
 
-// Миниатюрная модель атома Резерфорда
-function RutherfordModelMini() {
+// Крошечная модель атома Резерфорда
+function RutherfordModelTiny() {
   const [angle, setAngle] = useState(0);
 
   useEffect(() => {
@@ -18,21 +18,28 @@ function RutherfordModelMini() {
     return () => cancelAnimationFrame(frameId);
   }, []);
 
-  const size = 80;
+  const size = 60;
   const cx = size / 2;
   const cy = size / 2;
-  const orbitR = 30;
+  const orbitR = 22;
 
   const ex = cx + orbitR * Math.cos(angle);
   const ey = cy + orbitR * Math.sin(angle);
 
   return (
-    <div className="loading-atom-mini">
+    <div className="loading-atom-tiny">
       <svg width={size} height={size} style={{ position: 'absolute' }}>
-        <circle cx={cx} cy={cy} r={orbitR} fill="none" stroke="rgba(74,144,226,0.4)" strokeWidth="1" />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={orbitR}
+          fill="none"
+          stroke="rgba(74,144,226,0.35)"
+          strokeWidth="0.8"
+        />
       </svg>
-      <div className="loading-nucleus-mini" />
-      <div className="loading-electron-mini" style={{ left: ex, top: ey }} />
+      <div className="loading-nucleus-tiny" />
+      <div className="loading-electron-tiny" style={{ left: ex, top: ey }} />
     </div>
   );
 }
@@ -53,7 +60,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
   return (
     <div className="loading-screen">
-      <RutherfordModelMini />
+      <RutherfordModelTiny />
     </div>
   );
 }

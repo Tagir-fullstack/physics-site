@@ -11,35 +11,35 @@
   z-index: 9999;
 }
 
-.loading-atom-mini {
+.loading-atom-tiny {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.loading-nucleus-mini {
+.loading-nucleus-tiny {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background: radial-gradient(circle, #FC6255, #e04e43);
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #e85d54, #d64a42);
   border-radius: 50%;
-  box-shadow: 0 0 12px rgba(252, 98, 85, 0.5), 0 0 24px rgba(252, 98, 85, 0.2);
+  box-shadow: 0 0 8px rgba(232, 93, 84, 0.4);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
 }
 
-.loading-electron-mini {
+.loading-electron-tiny {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, #4a90e2, #2e6cb8);
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #5a9ee8, #3d7fc2);
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(74, 144, 226, 0.5);
+  box-shadow: 0 0 6px rgba(90, 158, 232, 0.4);
   transform: translate(-50%, -50%);
   z-index: 5;
 }
