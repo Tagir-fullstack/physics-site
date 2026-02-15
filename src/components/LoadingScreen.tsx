@@ -80,12 +80,38 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   useEffect(() => {
-    // Автоматически завершаем загрузку через минимальное время
-    const timer = setTimeout(() => {
-      if (onComplete) onComplete();
-    }, 1500);
+    // Минимальное время показа - 1 секунда (чтобы анимация была видна)
+    const minDisplayTime = 1000;
+    const startTime = Date.now();
 
-    return () => clearTimeout(timer);
+    // Ждём полной загрузки страницы
+    const checkReady = () => {
+      const elapsed = Date.now() - startTime;
+
+      // Если прошло минимальное время И страница загрузилась
+      if (elapsed >= minDisplayTime && document.readyState === 'complete') {
+        if (onComplete) onComplete();
+      } else {
+        // Проверяем снова через небольшой интервал
+        requestAnimationFrame(checkReady);
+      }
+    };
+
+    // Начинаем проверку
+    if (document.readyState === 'complete') {
+      // Если уже загружено, ждём только минимальное время
+      setTimeout(() => {
+        if (onComplete) onComplete();
+      }, minDisplayTime);
+    } else {
+      // Иначе ждём загрузки
+      window.addEventListener('load', checkReady);
+      checkReady();
+    }
+
+    return () => {
+      window.removeEventListener('load', checkReady);
+    };
   }, [onComplete]);
 
   return (

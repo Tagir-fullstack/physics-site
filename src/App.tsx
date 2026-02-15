@@ -45,23 +45,9 @@ const SchrodingerEquation = lazy(() => import('./pages/quantum/SchrodingerEquati
 const QuantumNumbers = lazy(() => import('./pages/quantum/QuantumNumbers'));
 const ElectronSpin = lazy(() => import('./pages/quantum/ElectronSpin'));
 
-// Компонент для показа LoadingScreen при переходах между страницами
+// Невидимый fallback - LoadingScreen уже показывает процесс загрузки
 function PageLoadingFallback() {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh'
-    }}>
-      <div style={{
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: '1.1rem'
-      }}>
-        Загрузка...
-      </div>
-    </div>
-  );
+  return <div style={{ minHeight: '50vh' }} />;
 }
 
 function App() {
