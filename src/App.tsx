@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
+import LoadingScreen from './components/LoadingScreen';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -10,81 +11,123 @@ function ScrollToTop() {
   }, [pathname]);
   return null;
 }
+
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Terms from './pages/Terms';
-import Changelog from './pages/Changelog';
-
-// Nuclear Physics pages
-import Rutherford from './pages/nuclear/Rutherford';
-import Droplet from './pages/nuclear/Droplet';
-import Alpha from './pages/nuclear/Alpha';
-import Beta from './pages/nuclear/Beta';
-import Gamma from './pages/nuclear/Gamma';
-import HalfLife from './pages/nuclear/HalfLife';
-import Interactions from './pages/nuclear/Interactions';
-import Decay from './pages/nuclear/Decay';
-import Chain from './pages/nuclear/Chain';
-import Quiz from './pages/nuclear/Quiz';
-
-// Quantum Physics pages
-import PlanckHypothesis from './pages/quantum/PlanckHypothesis';
-import PhotoelectricEffect from './pages/quantum/PhotoelectricEffect';
-import ComptonEffect from './pages/quantum/ComptonEffect';
-import WaveParticleDuality from './pages/quantum/WaveParticleDuality';
-import BohrModel from './pages/quantum/BohrModel';
-import UncertaintyPrinciple from './pages/quantum/UncertaintyPrinciple';
-import WaveFunction from './pages/quantum/WaveFunction';
-import SchrodingerEquation from './pages/quantum/SchrodingerEquation';
-import QuantumNumbers from './pages/quantum/QuantumNumbers';
-import ElectronSpin from './pages/quantum/ElectronSpin';
-
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import './styles/global.css';
 
+// Lazy load pages
+const Home = lazy(() => import('./pages/Home'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Changelog = lazy(() => import('./pages/Changelog'));
+
+// Nuclear Physics pages - lazy loaded
+const Rutherford = lazy(() => import('./pages/nuclear/Rutherford'));
+const Droplet = lazy(() => import('./pages/nuclear/Droplet'));
+const Alpha = lazy(() => import('./pages/nuclear/Alpha'));
+const Beta = lazy(() => import('./pages/nuclear/Beta'));
+const Gamma = lazy(() => import('./pages/nuclear/Gamma'));
+const HalfLife = lazy(() => import('./pages/nuclear/HalfLife'));
+const Interactions = lazy(() => import('./pages/nuclear/Interactions'));
+const Decay = lazy(() => import('./pages/nuclear/Decay'));
+const Chain = lazy(() => import('./pages/nuclear/Chain'));
+const Quiz = lazy(() => import('./pages/nuclear/Quiz'));
+
+// Quantum Physics pages - lazy loaded
+const PlanckHypothesis = lazy(() => import('./pages/quantum/PlanckHypothesis'));
+const PhotoelectricEffect = lazy(() => import('./pages/quantum/PhotoelectricEffect'));
+const ComptonEffect = lazy(() => import('./pages/quantum/ComptonEffect'));
+const WaveParticleDuality = lazy(() => import('./pages/quantum/WaveParticleDuality'));
+const BohrModel = lazy(() => import('./pages/quantum/BohrModel'));
+const UncertaintyPrinciple = lazy(() => import('./pages/quantum/UncertaintyPrinciple'));
+const WaveFunction = lazy(() => import('./pages/quantum/WaveFunction'));
+const SchrodingerEquation = lazy(() => import('./pages/quantum/SchrodingerEquation'));
+const QuantumNumbers = lazy(() => import('./pages/quantum/QuantumNumbers'));
+const ElectronSpin = lazy(() => import('./pages/quantum/ElectronSpin'));
+
+// Компонент для показа LoadingScreen при переходах между страницами
+function PageLoadingFallback() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '50vh'
+    }}>
+      <div style={{
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: '1.1rem'
+      }}>
+        Загрузка...
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  useEffect(() => {
+    // Проверяем, был ли пользователь на сайте в этой сессии
+    const hasVisited = sessionStorage.getItem('hasVisitedThisSession');
+
+    if (hasVisited) {
+      // Если уже был, не показываем загрузочный экран
+      setIsInitialLoading(false);
+    } else {
+      // Показываем LoadingScreen при первом визите
+      sessionStorage.setItem('hasVisitedThisSession', 'true');
+    }
+  }, []);
+
+  if (isInitialLoading) {
+    return <LoadingScreen onComplete={() => setIsInitialLoading(false)} />;
+  }
+
   return (
     <AccessibilityProvider>
-    <Router>
-      <ScrollToTop />
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <div style={{ flex: 1 }}>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/changelog" element={<Changelog />} />
+      <Router>
+        <ScrollToTop />
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <Header />
+          <div style={{ flex: 1 }}>
+            <Suspense fallback={<PageLoadingFallback />}>
+              <AnimatePresence mode="wait">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/changelog" element={<Changelog />} />
 
-              {/* Nuclear Physics Routes */}
-              <Route path="/nuclear/rutherford" element={<Rutherford />} />
-              <Route path="/nuclear/droplet" element={<Droplet />} />
-              <Route path="/nuclear/alpha" element={<Alpha />} />
-              <Route path="/nuclear/beta" element={<Beta />} />
-              <Route path="/nuclear/gamma" element={<Gamma />} />
-              <Route path="/nuclear/halflife" element={<HalfLife />} />
-              <Route path="/nuclear/interactions" element={<Interactions />} />
-              <Route path="/nuclear/decay" element={<Decay />} />
-              <Route path="/nuclear/chain" element={<Chain />} />
-              <Route path="/nuclear/quiz" element={<Quiz />} />
+                  {/* Nuclear Physics Routes */}
+                  <Route path="/nuclear/rutherford" element={<Rutherford />} />
+                  <Route path="/nuclear/droplet" element={<Droplet />} />
+                  <Route path="/nuclear/alpha" element={<Alpha />} />
+                  <Route path="/nuclear/beta" element={<Beta />} />
+                  <Route path="/nuclear/gamma" element={<Gamma />} />
+                  <Route path="/nuclear/halflife" element={<HalfLife />} />
+                  <Route path="/nuclear/interactions" element={<Interactions />} />
+                  <Route path="/nuclear/decay" element={<Decay />} />
+                  <Route path="/nuclear/chain" element={<Chain />} />
+                  <Route path="/nuclear/quiz" element={<Quiz />} />
 
-              {/* Quantum Physics Routes */}
-              <Route path="/quantum/planck" element={<PlanckHypothesis />} />
-              <Route path="/quantum/photoelectric" element={<PhotoelectricEffect />} />
-              <Route path="/quantum/compton" element={<ComptonEffect />} />
-              <Route path="/quantum/wave-particle" element={<WaveParticleDuality />} />
-              <Route path="/quantum/bohr" element={<BohrModel />} />
-              <Route path="/quantum/uncertainty" element={<UncertaintyPrinciple />} />
-              <Route path="/quantum/wave-function" element={<WaveFunction />} />
-              <Route path="/quantum/schrodinger" element={<SchrodingerEquation />} />
-              <Route path="/quantum/quantum-numbers" element={<QuantumNumbers />} />
-              <Route path="/quantum/electron-spin" element={<ElectronSpin />} />
-            </Routes>
-          </AnimatePresence>
+                  {/* Quantum Physics Routes */}
+                  <Route path="/quantum/planck" element={<PlanckHypothesis />} />
+                  <Route path="/quantum/photoelectric" element={<PhotoelectricEffect />} />
+                  <Route path="/quantum/compton" element={<ComptonEffect />} />
+                  <Route path="/quantum/wave-particle" element={<WaveParticleDuality />} />
+                  <Route path="/quantum/bohr" element={<BohrModel />} />
+                  <Route path="/quantum/uncertainty" element={<UncertaintyPrinciple />} />
+                  <Route path="/quantum/wave-function" element={<WaveFunction />} />
+                  <Route path="/quantum/schrodinger" element={<SchrodingerEquation />} />
+                  <Route path="/quantum/quantum-numbers" element={<QuantumNumbers />} />
+                  <Route path="/quantum/electron-spin" element={<ElectronSpin />} />
+                </Routes>
+              </AnimatePresence>
+            </Suspense>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    </Router>
+      </Router>
     </AccessibilityProvider>
   );
 }
