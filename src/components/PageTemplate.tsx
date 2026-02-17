@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import SpeakButton from './SpeakButton';
 import PreQuiz from './PreQuiz';
-import { hasCompletedPreQuiz, setPreQuizCompleted, getUserCode } from '../lib/supabase';
+import { hasCompletedPreQuiz, setPreQuizCompleted } from '../lib/supabase';
 import { useAccessibility } from '../context/AccessibilityContext';
 import '../styles/page-layout.css';
 
@@ -52,7 +52,6 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
   const [showPreQuiz, setShowPreQuiz] = useState(false);
   const [showPreQuizWithCode, setShowPreQuizWithCode] = useState(false); // Для повторного прохождения
-  const [showPreQuizInfo, setShowPreQuizInfo] = useState(false);
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const isLightTheme = a11yEnabled && lightTheme;
 
@@ -86,7 +85,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
       {/* Входной тест с полем кода - для повторного прохождения */}
       {showPreQuizWithCode && (
         <PreQuiz
-          onComplete={(code) => {
+          onComplete={() => {
             setShowPreQuizWithCode(false);
           }}
           showCodeField={true}

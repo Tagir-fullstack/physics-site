@@ -259,7 +259,7 @@ export default function Quiz() {
 
   const shuffledQuestions = useMemo(() => shuffleQuestions(questions), []);
 
-  const { lightTheme, enabled: a11yEnabled, fontSize } = useAccessibility();
+  const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const { setQuizActive } = useQuizMode();
   const isLightTheme = a11yEnabled && lightTheme;
   const [isMobile, setIsMobile] = useState(false);
