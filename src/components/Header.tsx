@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { useQuizMode } from '../context/QuizModeContext';
 import AccessibilityPanel from './AccessibilityPanel';
 import '../styles/header.css';
 import '../styles/accessibility.css';
@@ -10,10 +11,12 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const { enabled, setEnabled } = useAccessibility();
+  const { isQuizActive } = useQuizMode();
   const navigate = useNavigate();
   const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
 
   const handleLinkClick = (path: string) => {
+    if (isQuizActive) return; // Блокируем навигацию во время теста
     setIsMenuOpen(false);
     navigate(path);
   };
@@ -22,14 +25,20 @@ export default function Header() {
     <>
       <header className="header">
         <nav className="nav-container">
-          <Link to="/" className="logo" onClick={() => setIsMenuOpen(false)}>
+          <Link to="/" className="logo" onClick={(e) => {
+            if (isQuizActive) {
+              e.preventDefault();
+              return;
+            }
+            setIsMenuOpen(false);
+          }} style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
             <img src="/favicon1.png" alt="" className="logo-icon" />
             <span className="logo-phys">Phys</span>
             <span className="logo-ez">ez</span>
           </Link>
 
           <div className="nav-right">
-            <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
+            <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`} style={isQuizActive ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
               {visibleSections.map((section) => (
                 <div key={section.title} className="nav-item">
                   <span className="nav-title">{section.title}</span>
@@ -66,8 +75,9 @@ export default function Header() {
 
             <button
               className={`burger ${isMenuOpen ? 'active' : ''}`}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => !isQuizActive && setIsMenuOpen(!isMenuOpen)}
               aria-label="Меню"
+              style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
             >
               <span></span>
               <span></span>

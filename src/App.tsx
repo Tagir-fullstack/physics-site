@@ -14,6 +14,7 @@ function ScrollToTop() {
 
 import Footer from './components/Footer';
 import { AccessibilityProvider } from './context/AccessibilityContext';
+import { QuizModeProvider } from './context/QuizModeContext';
 import './styles/global.css';
 
 // Lazy load pages
@@ -68,6 +69,7 @@ function App() {
 
   return (
     <AccessibilityProvider>
+      <QuizModeProvider>
       {isInitialLoading && <LoadingScreen onComplete={() => setIsInitialLoading(false)} />}
       <Router>
         <ScrollToTop />
@@ -115,6 +117,7 @@ function App() {
           <Footer />
         </div>
       </Router>
+      </QuizModeProvider>
     </AccessibilityProvider>
   );
 }

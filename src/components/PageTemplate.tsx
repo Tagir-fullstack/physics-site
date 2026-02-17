@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import SpeakButton from './SpeakButton';
+import PreQuiz from './PreQuiz';
+import { hasCompletedPreQuiz, setPreQuizCompleted, getUserCode } from '../lib/supabase';
 import { useAccessibility } from '../context/AccessibilityContext';
 import '../styles/page-layout.css';
 
@@ -48,8 +50,24 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   const [showConstants, setShowConstants] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
+  const [showPreQuiz, setShowPreQuiz] = useState(false);
+  const [showPreQuizWithCode, setShowPreQuizWithCode] = useState(false); // Для повторного прохождения
+  const [showPreQuizInfo, setShowPreQuizInfo] = useState(false);
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const isLightTheme = a11yEnabled && lightTheme;
+
+  // Проверяем, нужно ли показать входной тест
+  useEffect(() => {
+    // Показываем PreQuiz только для страниц ядерной физики
+    if (section === 'Физика Атомного ядра' && !hasCompletedPreQuiz()) {
+      setShowPreQuiz(true);
+    }
+  }, [section]);
+
+  const handlePreQuizComplete = () => {
+    setPreQuizCompleted();
+    setShowPreQuiz(false);
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -61,21 +79,36 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   return (
-    <motion.main
-      className="page-content"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5 }}
-      style={{
-        marginTop: '80px',
-        minHeight: 'calc(100vh - 80px)',
-        padding: '1.25rem 1rem 2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}
-    >
+    <>
+      {/* Входной тест - показывается перед первым просмотром анимации */}
+      {showPreQuiz && <PreQuiz onComplete={handlePreQuizComplete} />}
+
+      {/* Входной тест с полем кода - для повторного прохождения */}
+      {showPreQuizWithCode && (
+        <PreQuiz
+          onComplete={(code) => {
+            setShowPreQuizWithCode(false);
+          }}
+          showCodeField={true}
+          onClose={() => setShowPreQuizWithCode(false)}
+        />
+      )}
+
+      <motion.main
+        className="page-content"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.5 }}
+        style={{
+          marginTop: '80px',
+          minHeight: 'calc(100vh - 80px)',
+          padding: '1.25rem 1rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+      >
       <div style={{
         width: '100%',
         maxWidth: '1100px'
@@ -876,6 +909,31 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 {prevLink.title}
               </Link>
             )}
+            {/* Кнопка входного среза - только на первой странице раздела */}
+            {!prevLink && section === 'Физика Атомного ядра' && (
+              <button
+                onClick={() => setShowPreQuizWithCode(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#4a90e2',
+                  color: 'white',
+                  padding: '0.875rem 1.5rem',
+                  borderRadius: '50px',
+                  border: 'none',
+                  fontSize: isMobile ? '1rem' : '1.3rem',
+                  fontWeight: '700',
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3a7bc8'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4a90e2'}
+              >
+                Пройти входной срез
+              </button>
+            )}
             {nextLink && (
               <Link
                 to={nextLink.path}
@@ -903,7 +961,9 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
             )}
           </div>
         )}
+
       </div>
     </motion.main>
+    </>
   );
 }
