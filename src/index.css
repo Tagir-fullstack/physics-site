@@ -1,5 +1,23 @@
+@font-face {
+  font-family: 'Radiant';
+  src: url('/fonts/Radiant.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 130%;
+}
+
+@font-face {
+  font-family: 'Radiant';
+  src: url('/fonts/Radiant%20Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 130%;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Radiant', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 

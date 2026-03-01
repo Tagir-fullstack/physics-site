@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
+import { hasCompletedPreQuiz } from '../lib/supabase';
 import AccessibilityPanel from './AccessibilityPanel';
 import '../styles/header.css';
 import '../styles/accessibility.css';
@@ -23,8 +24,28 @@ export default function Header() {
 
   return (
     <>
-      <header className="header">
-        <nav className="nav-container">
+      {/* Overlay for closing menu - outside header */}
+      {isMenuOpen && (
+        <div
+          className="menu-overlay"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      <header className="header" onClick={(e) => {
+        // Закрыть панели при клике на пустое место header'а
+        if (e.target === e.currentTarget) {
+          setIsMenuOpen(false);
+          setIsA11yOpen(false);
+        }
+      }}>
+        <nav className="nav-container" onClick={(e) => {
+          // Закрыть панели при клике на пустое место nav-container
+          if (e.target === e.currentTarget) {
+            setIsMenuOpen(false);
+            setIsA11yOpen(false);
+          }
+        }}>
           <Link to="/" className="logo" onClick={(e) => {
             if (isQuizActive) {
               e.preventDefault();
@@ -38,7 +59,15 @@ export default function Header() {
           </Link>
 
           <div className="nav-right">
-            <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`} style={isQuizActive ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+            <div
+              className={`nav-menu ${isMenuOpen && !isQuizActive ? 'open' : ''}`}
+              onClick={(e) => {
+                // Закрыть меню при клике на фон (не на элементы меню)
+                if (e.target === e.currentTarget) {
+                  setIsMenuOpen(false);
+                }
+              }}
+            >
               {visibleSections.map((section) => (
                 <div key={section.title} className="nav-item">
                   <span className="nav-title">{section.title}</span>
@@ -55,12 +84,19 @@ export default function Header() {
                   </div>
                 </div>
               ))}
+              <button
+                className="nav-quiz-btn"
+                onClick={() => handleLinkClick(hasCompletedPreQuiz() ? '/nuclear/quiz' : '/nuclear/rutherford')}
+              >
+                {hasCompletedPreQuiz() ? 'Итоговый тест' : 'Входной срез'}
+              </button>
             </div>
 
             <button
               className="a11y-header-btn"
               onClick={() => {
                 if (!enabled) setEnabled(true);
+                setIsMenuOpen(false); // Закрыть бургер-меню
                 setIsA11yOpen(!isA11yOpen);
               }}
               aria-label="Режим доступности"
@@ -75,7 +111,12 @@ export default function Header() {
 
             <button
               className={`burger ${isMenuOpen ? 'active' : ''}`}
-              onClick={() => !isQuizActive && setIsMenuOpen(!isMenuOpen)}
+              onClick={() => {
+                if (!isQuizActive) {
+                  setIsA11yOpen(false); // Закрыть панель доступности
+                  setIsMenuOpen(!isMenuOpen);
+                }
+              }}
               aria-label="Меню"
               style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
             >
@@ -84,14 +125,6 @@ export default function Header() {
               <span></span>
             </button>
           </div>
-
-          {/* Overlay for closing menu */}
-          {isMenuOpen && (
-            <div
-              className="menu-overlay"
-              onClick={() => setIsMenuOpen(false)}
-            />
-          )}
         </nav>
       </header>
       <AccessibilityPanel isOpen={isA11yOpen} onClose={() => setIsA11yOpen(false)} />

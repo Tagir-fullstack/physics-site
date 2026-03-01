@@ -27,7 +27,7 @@ const defaults: AccessibilityState = {
   highContrast: false,
   reducedMotion: false,
   lightTheme: false,
-  speechRate: 0.9,
+  speechRate: 1.0,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null);

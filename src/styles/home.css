@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4rem;
+  gap: 64px;
   position: relative;
   overflow: hidden;
   padding: 2rem 6rem;
@@ -100,7 +100,7 @@
 .particles-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 32px;
 }
 
 .particle-card {
@@ -121,7 +121,7 @@
 .particle-header {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 16px;
   margin-bottom: 1rem;
 }
 
@@ -209,7 +209,7 @@
 
 .topic-slide-card {
   display: flex;
-  gap: 2.5rem;
+  gap: 40px;
   padding: 2.5rem;
   height: 100%;
   background: var(--bg-card);

@@ -62,3 +62,20 @@
     justify-content: center;
   }
 }
+
+/* Placeholder styles */
+input::placeholder {
+  color: rgba(150, 150, 150, 0.6) !important;
+}
+
+/* Navigation button text - always white */
+.prev-link-btn,
+.prev-link-btn span,
+.next-link-btn,
+.next-link-btn span {
+  color: #ffffff !important;
+}
+
+textarea::placeholder {
+  color: rgba(150, 150, 150, 0.6) !important;
+}

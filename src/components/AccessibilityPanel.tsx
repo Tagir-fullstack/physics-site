@@ -17,15 +17,10 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
 
   return (
     <>
-      {isOpen && <div className="a11y-overlay" onClick={onClose} />}
+      {isOpen && <div style={{ position: 'fixed', inset: 0, zIndex: 900 }} onClick={onClose} />}
       <div className={`a11y-panel ${isOpen ? 'a11y-panel--open' : ''}`}>
         <div className="a11y-panel__header">
           <h2 className="a11y-panel__title">Доступность</h2>
-          <button className="a11y-panel__close" onClick={onClose} aria-label="Закрыть">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
         </div>
 
         <div className="a11y-panel__content">
@@ -90,8 +85,8 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
             <input
               type="range"
               className="a11y-range"
-              min="0.3"
-              max="2.5"
+              min="0.5"
+              max="2.0"
               step="0.1"
               value={speechRate}
               onChange={(e) => setSpeechRate(parseFloat(e.target.value))}

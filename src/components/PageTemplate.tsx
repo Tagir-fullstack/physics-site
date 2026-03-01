@@ -231,51 +231,19 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
           )}
         </div>
 
-        {/* Video Player with Side Buttons */}
+        {/* Video Player with Buttons Below */}
         <div style={{
           display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
+          flexDirection: 'column',
           alignItems: 'stretch',
           justifyContent: 'center',
           gap: '10px',
           width: '100%',
-          maxWidth: isMobile ? '100%' : '1200px',
-          margin: '0 auto 1.5rem',
-          padding: isMobile ? '0' : '0'
+          maxWidth: '1000px',
+          margin: '0 auto 1.5rem'
         }}>
-          {/* Left Button - Periodic Table (desktop only) */}
-          {!isMobile && (
-            <button
-              onClick={() => setShowPeriodicTable(true)}
-              style={{
-                width: '36px',
-                minHeight: '300px',
-                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-                flexShrink: 0
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title="Таблица Менделеева"
-            >
-              <span style={{ fontSize: '1.1rem', opacity: isLightTheme ? 0.7 : 0.5, color: isLightTheme ? '#333' : 'inherit' }}>⊞</span>
-            </button>
-          )}
-
           {/* Video */}
-          <div style={{ flex: 1, maxWidth: isMobile ? '100%' : '1000px', width: '100%' }}>
+          <div style={{ width: '100%' }}>
             {videoSrc && (
               <video
                 controls
@@ -292,13 +260,22 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
             )}
           </div>
 
-          {/* Right Button - Constants Table (desktop only) */}
-          {!isMobile && (
+          {/* Buttons - Below Video */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isVerySmallScreen ? 'column' : 'row',
+            alignItems: 'stretch',
+            gap: '10px',
+            width: '100%',
+            padding: isMobile ? '0 10px' : '0'
+          }}>
             <button
-              onClick={() => setShowConstants(true)}
+              onClick={() => setShowPeriodicTable(true)}
               style={{
-                width: '36px',
-                minHeight: '300px',
+                flex: isVerySmallScreen ? 'none' : '1 1 0',
+                width: isVerySmallScreen ? '100%' : 'auto',
+                minHeight: '44px',
+                padding: '10px 12px',
                 backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
                 border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
                 borderRadius: '8px',
@@ -306,8 +283,44 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: '8px',
                 transition: 'all 0.2s',
-                flexShrink: 0
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+              }}
+              title="Таблица Менделеева"
+            >
+              <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>⊞</span>
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>Таблица Менделеева</span>
+            </button>
+            <button
+              onClick={() => setShowConstants(true)}
+              style={{
+                flex: isVerySmallScreen ? 'none' : '1 1 0',
+                width: isVerySmallScreen ? '100%' : 'auto',
+                minHeight: '44px',
+                padding: '10px 12px',
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
@@ -319,72 +332,10 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
               }}
               title="Константы"
             >
-              <span style={{ fontSize: '1.1rem', opacity: isLightTheme ? 0.7 : 0.5, color: isLightTheme ? '#333' : 'inherit' }}>≡</span>
+              <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>≡</span>
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>Константы</span>
             </button>
-          )}
-
-          {/* Mobile Buttons - Below Video */}
-          {isMobile && (
-            <div style={{
-              display: 'flex',
-              flexDirection: isVerySmallScreen ? 'column' : 'row',
-              alignItems: 'stretch',
-              gap: '10px',
-              width: '100%',
-              padding: '0 10px'
-            }}>
-              <button
-                onClick={() => setShowPeriodicTable(true)}
-                style={{
-                  flex: isVerySmallScreen ? 'none' : '1 1 0',
-                  width: isVerySmallScreen ? '100%' : 'auto',
-                  minHeight: '44px',
-                  padding: '10px 12px',
-                  backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-                title="Таблица Менделеева"
-              >
-                <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>⊞</span>
-                <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>Таблица Менделеева</span>
-              </button>
-              <button
-                onClick={() => setShowConstants(true)}
-                style={{
-                  flex: isVerySmallScreen ? 'none' : '1 1 0',
-                  width: isVerySmallScreen ? '100%' : 'auto',
-                  minHeight: '44px',
-                  padding: '10px 12px',
-                  backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-                title="Константы"
-              >
-                <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>≡</span>
-                <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>Константы</span>
-              </button>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Periodic Table Modal */}
@@ -892,20 +843,21 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                   alignItems: 'center',
                   gap: '0.5rem',
                   backgroundColor: '#555',
-                  color: 'white',
+                  color: '#ffffff',
                   padding: '0.875rem 1.5rem',
                   borderRadius: '50px',
+                  border: 'none',
                   textDecoration: 'none',
                   fontSize: '1.3rem',
                   fontWeight: '700',
                   fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  lineHeight: 1,
                   transition: 'background-color 0.2s'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#444'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#555'}
               >
-                <span style={{ fontSize: '1.2rem' }}>←</span>
-                {prevLink.title}
+                ← {prevLink.title}
               </Link>
             )}
             {/* Кнопка входного среза - только на первой странице раздела */}
@@ -921,9 +873,10 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                   padding: '0.875rem 1.5rem',
                   borderRadius: '50px',
                   border: 'none',
-                  fontSize: isMobile ? '1rem' : '1.3rem',
+                  fontSize: '1.3rem',
                   fontWeight: '700',
                   fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  lineHeight: 1,
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
@@ -942,20 +895,21 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                   alignItems: 'center',
                   gap: '0.5rem',
                   backgroundColor: '#FC6255',
-                  color: 'white',
+                  color: '#ffffff',
                   padding: '0.875rem 1.5rem',
                   borderRadius: '50px',
+                  border: 'none',
                   textDecoration: 'none',
                   fontSize: '1.3rem',
                   fontWeight: '700',
                   fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  lineHeight: 1,
                   transition: 'background-color 0.2s'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e04e43'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FC6255'}
               >
-                Следующее: {nextLink.title}
-                <span style={{ fontSize: '1.2rem' }}>→</span>
+                Следующее: {nextLink.title} →
               </Link>
             )}
           </div>

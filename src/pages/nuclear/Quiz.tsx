@@ -414,20 +414,7 @@ export default function Quiz() {
         backgroundColor: isLightTheme ? '#ffffff' : '#0a0a0a'
       }}
     >
-      <div style={{ width: '100%', maxWidth: '700px' }}>
-        <div style={{
-          marginBottom: '0.5rem',
-          color: '#4a90e2',
-          fontSize: '0.85rem',
-          textTransform: 'uppercase',
-          letterSpacing: '3px',
-          textAlign: 'center',
-          fontFamily: "'CCUltimatum', Arial, sans-serif",
-          fontWeight: 700
-        }}>
-          Физика Атомного ядра
-        </div>
-
+      <div style={{ width: '100%', maxWidth: '850px' }}>
         <h1 style={{
           fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
           color: isLightTheme ? '#1a1a1a' : '#ffffff',
@@ -436,8 +423,11 @@ export default function Quiz() {
           textAlign: 'center',
           fontFamily: "'CCUltimatum', Arial, sans-serif"
         }}>
-          {stage === 'survey' ? 'Анкета для ' : 'Итоговый тест по ядерной '}
-          <span style={{ color: '#FC6255' }}>{stage === 'survey' ? 'учителей' : 'физике'}</span>
+          {stage === 'survey' ? (
+            <>Анкета для <span style={{ color: '#FC6255' }}>учителей</span></>
+          ) : (
+            <>Итоговый тест по <span style={{ color: '#FC6255' }}>Физике Атомного Ядра</span></>
+          )}
         </h1>
 
         {/* Student Info Form */}
@@ -448,13 +438,13 @@ export default function Quiz() {
             style={{
               backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)',
               borderRadius: '16px',
-              padding: '2rem',
+              padding: '1.5rem',
               border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.06)',
               backdropFilter: 'blur(10px)'
             }}
           >
             <h2 style={{
-              marginBottom: '1.5rem',
+              marginBottom: '1rem',
               color: isLightTheme ? '#1a1a1a' : '#ffffff',
               fontSize: '1.3rem',
               fontFamily: "'CCUltimatum', Arial, sans-serif"
@@ -489,55 +479,58 @@ export default function Quiz() {
                   Если вы не проходили входной тест, оставьте поле пустым
                 </p>
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                  Имя *
-                </label>
-                <input
-                  type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  required
-                  onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Пожалуйста, заполните это поле.')}
-                  onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
-                  placeholder="Например: Тагир"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
-                    fontSize: '1rem',
-                    boxSizing: 'border-box',
-                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
-                    color: isLightTheme ? '#1a1a1a' : '#ffffff',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                  Класс *
-                </label>
-                <input
-                  type="text"
-                  value={studentClass}
-                  onChange={(e) => setStudentClass(e.target.value)}
-                  required
-                  onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Пожалуйста, заполните это поле.')}
-                  onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
-                  placeholder="Например: 11б"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
-                    fontSize: '1rem',
-                    boxSizing: 'border-box',
-                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
-                    color: isLightTheme ? '#1a1a1a' : '#ffffff',
-                    outline: 'none'
-                  }}
-                />
+              {/* Имя и Класс в одну строку */}
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ flex: 2 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                    Имя *
+                  </label>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    required
+                    onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Пожалуйста, заполните это поле.')}
+                    onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
+                    placeholder="Например: Тагир"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
+                      color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                    Класс *
+                  </label>
+                  <input
+                    type="text"
+                    value={studentClass}
+                    onChange={(e) => setStudentClass(e.target.value)}
+                    required
+                    onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Пожалуйста, заполните это поле.')}
+                    onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
+                    placeholder="11б"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
+                      color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
@@ -564,7 +557,7 @@ export default function Quiz() {
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '1rem' }}>
                 <label style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -581,6 +574,23 @@ export default function Quiz() {
                   Я учитель
                 </label>
               </div>
+
+              {/* Дисклеймер о конфиденциальности */}
+              <div style={{
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '10px',
+                padding: '0.9rem',
+                marginBottom: '1.5rem',
+                border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                <p style={{ color: isLightTheme ? '#666' : '#888', margin: 0, fontSize: '0.8rem', lineHeight: 1.5 }}>
+                  <span style={{ color: '#4a90e2', fontWeight: 500 }}>Анонимность:</span> Тестирование проводится анонимно.
+                  Вы можете указать любое имя — эти данные нужны только для удобства вашего преподавателя.
+                  Результаты будут использованы в статистике научного проекта.
+                  После завершения исследования все данные будут удалены и никогда не будут переданы третьим лицам.
+                </p>
+              </div>
+
               <button
                 type="submit"
                 style={{
@@ -600,6 +610,30 @@ export default function Quiz() {
               >
                 Начать тест
               </button>
+
+              {/* Кнопка анкетирования для учителей */}
+              {isTeacher && (
+                <button
+                  type="button"
+                  onClick={() => setStage('survey')}
+                  style={{
+                    width: '100%',
+                    marginTop: '0.75rem',
+                    backgroundColor: 'transparent',
+                    color: '#4a90e2',
+                    padding: '0.875rem',
+                    borderRadius: '50px',
+                    border: '1px solid #4a90e2',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    fontFamily: "'CCUltimatum', Arial, sans-serif"
+                  }}
+                >
+                  Пройти анкетирование
+                </button>
+              )}
             </form>
           </motion.div>
         )}
@@ -614,7 +648,7 @@ export default function Quiz() {
               borderRadius: '16px',
               padding: '2rem',
               border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.06)',
-              minHeight: '580px',
+              height: '620px',
               display: 'flex',
               flexDirection: 'column'
             }}
@@ -668,13 +702,14 @@ export default function Quiz() {
                     style={{
                       padding: '1rem',
                       borderRadius: '10px',
-                      border: isSelected ? '2px solid #FC6255' : isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
-                      backgroundColor: isSelected ? 'rgba(252, 98, 85, 0.1)' : isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.03)',
+                      border: isSelected ? '2px solid #4a90e2' : isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      backgroundColor: isSelected ? 'rgba(74, 144, 226, 0.15)' : isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.03)',
                       textAlign: 'left',
                       fontSize: '1rem',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      color: isLightTheme ? '#1a1a1a' : '#ffffff'
+                      color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                      outline: 'none'
                     }}
                   >
                     <span style={{
@@ -682,7 +717,7 @@ export default function Quiz() {
                       width: '26px',
                       height: '26px',
                       borderRadius: '50%',
-                      backgroundColor: isSelected ? '#FC6255' : isLightTheme ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: isSelected ? '#4a90e2' : isLightTheme ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)',
                       color: isSelected ? 'white' : isLightTheme ? '#666' : '#888',
                       textAlign: 'center',
                       lineHeight: '26px',

@@ -13,6 +13,22 @@
 }
 
 @font-face {
+  font-family: 'Radiant';
+  src: url('/fonts/Radiant.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  size-adjust: 130%;
+}
+
+@font-face {
+  font-family: 'Radiant';
+  src: url('/fonts/Radiant%20Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  size-adjust: 130%;
+}
+
+@font-face {
   font-family: 'CCUltimatum';
   src: url('/fonts/CCUltimatum-Bold.ttf') format('truetype');
   font-weight: 700;
@@ -30,6 +46,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'CCUltimatum', Arial, sans-serif;
 }
 
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -37,7 +54,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Radiant', Arial, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
