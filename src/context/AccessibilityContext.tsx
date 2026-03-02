@@ -77,7 +77,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setReducedMotion: (v) => setState((s) => ({ ...s, reducedMotion: v })),
     setLightTheme: (v) => setState((s) => ({ ...s, lightTheme: v })),
     setSpeechRate: (v) => setState((s) => ({ ...s, speechRate: v })),
-    resetAll: () => setState({ ...defaults }),
+    resetAll: () => setState((s) => ({ ...defaults, enabled: s.enabled })),
   };
 
   return (
