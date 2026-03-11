@@ -283,8 +283,8 @@
 }
 
 .a11y-icon {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
 }
 
 /* ===== Focus outlines (always, for keyboard users) ===== */
@@ -345,6 +345,18 @@ html.a11y-font-xlarge .header {
 .a11y-light-theme ul,
 .a11y-light-theme label {
   color: #333333 !important;
+}
+
+/* Decay tooltip - light background with black text in light theme */
+.a11y-light-theme .decay-tooltip {
+  background-color: #ffffff !important;
+  border: 1px solid #ddd !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+.a11y-light-theme .decay-tooltip div,
+.a11y-light-theme .decay-tooltip span {
+  color: #333333 !important;
+  background-color: transparent !important;
 }
 
 .a11y-light-theme a {
@@ -458,16 +470,17 @@ html.a11y-font-xlarge .header {
 
 /* --- Terms & Changelog pages --- */
 /* These use inline backgroundColor: '#111' and '#1a1a1a' */
-.a11y-light-theme div[style*="background-color: #111"],
-.a11y-light-theme div[style*="background-color: rgb(17, 17, 17)"],
-.a11y-light-theme div[style*="background-color: #1a1a1a"],
-.a11y-light-theme div[style*="background-color: rgb(26, 26, 26)"],
-.a11y-light-theme div[style*="background-color: #0a0a0a"],
-.a11y-light-theme div[style*="background-color: rgb(10, 10, 10)"] {
+.a11y-light-theme div[style*="background-color: #111"]:not(.decay-tooltip),
+.a11y-light-theme div[style*="background-color: rgb(17, 17, 17)"]:not(.decay-tooltip),
+.a11y-light-theme div[style*="background-color: #1a1a1a"]:not(.decay-tooltip),
+.a11y-light-theme div[style*="background-color: rgb(26, 26, 26)"]:not(.decay-tooltip),
+.a11y-light-theme div[style*="background-color: #0a0a0a"]:not(.decay-tooltip),
+.a11y-light-theme div[style*="background-color: rgb(10, 10, 10)"]:not(.decay-tooltip) {
   background-color: #eaeaea !important;
   border-color: rgba(0, 0, 0, 0.12) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
+
 
 /* Also for inline rgba dark cards */
 .a11y-light-theme div[style*="rgba(255, 255, 255, 0.03)"],

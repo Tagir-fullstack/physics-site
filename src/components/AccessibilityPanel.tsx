@@ -1,12 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import { useAccessibility } from '../context/AccessibilityContext';
+// TODO: LANGUAGE_SWITCHER - Раскомментировать когда будет готов полный перевод сайта
+// import LanguageSwitcher from './LanguageSwitcher';
 import '../styles/accessibility.css';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export default function AccessibilityPanel({ isOpen, onClose }: Props) {
+export default function AccessibilityPanel({ isOpen, onClose, onMouseEnter, onMouseLeave }: Props) {
+  const { t } = useTranslation();
   const {
     fontSize, setFontSize,
     highContrast, setHighContrast,
@@ -18,15 +24,21 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
   return (
     <>
       {isOpen && <div style={{ position: 'fixed', inset: 0, zIndex: 900 }} onClick={onClose} />}
-      <div className={`a11y-panel ${isOpen ? 'a11y-panel--open' : ''}`}>
-        <div className="a11y-panel__header">
-          <h2 className="a11y-panel__title">Доступность</h2>
+      <div
+        className={`a11y-panel ${isOpen ? 'a11y-panel--open' : ''}`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        <div className="a11y-panel__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 className="a11y-panel__title">{t('accessibility.title')}</h2>
+          {/* TODO: LANGUAGE_SWITCHER - Раскомментировать когда будет готов полный перевод сайта */}
+          {/* <LanguageSwitcher compact /> */}
         </div>
 
         <div className="a11y-panel__content">
           {/* Font Size */}
           <div className="a11y-section">
-            <span className="a11y-section__label">Размер шрифта</span>
+            <span className="a11y-section__label">{t('accessibility.fontSize')}</span>
             <div className="a11y-font-buttons">
               <button
                 className={`a11y-font-btn ${fontSize === 'normal' ? 'a11y-font-btn--active' : ''}`}
@@ -51,7 +63,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
 
           {/* Light Theme */}
           <div className="a11y-section">
-            <span className="a11y-section__label">Светлая тема</span>
+            <span className="a11y-section__label">{t('accessibility.lightTheme')}</span>
             <button
               className={`a11y-toggle ${lightTheme ? 'a11y-toggle--on' : ''}`}
               onClick={() => setLightTheme(!lightTheme)}
@@ -64,7 +76,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
 
           {/* High Contrast */}
           <div className="a11y-section">
-            <span className="a11y-section__label">Высокий контраст</span>
+            <span className="a11y-section__label">{t('accessibility.highContrast')}</span>
             <button
               className={`a11y-toggle ${highContrast ? 'a11y-toggle--on' : ''}`}
               onClick={() => setHighContrast(!highContrast)}
@@ -79,7 +91,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
           {/* Speech Rate */}
           <div className="a11y-section" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="a11y-section__label">Скорость озвучки</span>
+              <span className="a11y-section__label">{t('accessibility.speechRate')}</span>
               <span className="a11y-section__label" style={{ fontSize: '0.85rem' }}>×{speechRate.toFixed(1)}</span>
             </div>
             <input
@@ -92,14 +104,14 @@ export default function AccessibilityPanel({ isOpen, onClose }: Props) {
               onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999' }}>
-              <span>Медленно</span>
-              <span>Быстро</span>
+              <span>{t('accessibility.slow')}</span>
+              <span>{t('accessibility.fast')}</span>
             </div>
           </div>
 
           {/* Reset */}
           <button className="a11y-reset-btn" onClick={resetAll}>
-            Сбросить все
+            {t('accessibility.resetAll')}
           </button>
         </div>
       </div>

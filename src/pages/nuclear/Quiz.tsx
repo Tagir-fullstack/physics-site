@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { savePostQuizResult, saveTeacherSurvey, getUserCode } from '../../lib/supabase';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { useQuizMode } from '../../context/QuizModeContext';
@@ -181,9 +182,9 @@ const questions: Question[] = [
 ];
 
 function calculateGrade(percentage: number): string {
-  if (percentage >= 90) return '5 (Отлично)';
-  if (percentage >= 70) return '4 (Хорошо)';
-  if (percentage >= 50) return '3 (Удовлетворительно)';
+  if (percentage >= 80) return '5 (Отлично)';
+  if (percentage >= 60) return '4 (Хорошо)';
+  if (percentage >= 40) return '3 (Удовлетворительно)';
   return '2 (Неудовлетворительно)';
 }
 
@@ -244,6 +245,7 @@ const surveyQuestions: SurveyQuestion[] = [
 ];
 
 export default function Quiz() {
+  const { t } = useTranslation();
   const [stage, setStage] = useState<'info' | 'quiz' | 'result' | 'survey' | 'complete'>('info');
   const [studentName, setStudentName] = useState('');
   const [studentClass, setStudentClass] = useState('');
@@ -424,9 +426,9 @@ export default function Quiz() {
           fontFamily: "'CCUltimatum', Arial, sans-serif"
         }}>
           {stage === 'survey' ? (
-            <>Анкета для <span style={{ color: '#FC6255' }}>учителей</span></>
+            <>{t('survey.title')} <span style={{ color: '#FC6255' }}>{t('survey.titleHighlight')}</span></>
           ) : (
-            <>Итоговый тест по <span style={{ color: '#FC6255' }}>Физике Атомного Ядра</span></>
+            <>{t('quiz.title')} <span style={{ color: '#FC6255' }}>{t('quiz.titleHighlight')}</span></>
           )}
         </h1>
 
@@ -449,12 +451,12 @@ export default function Quiz() {
               fontSize: '1.3rem',
               fontFamily: "'CCUltimatum', Arial, sans-serif"
             }}>
-              Введите ваши данные
+              {t('quiz.enterData')}
             </h2>
             <form onSubmit={handleStartQuiz}>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                  Ваш код (из входного теста)
+                  {t('quiz.yourCode')}
                 </label>
                 <input
                   type="text"
@@ -476,14 +478,14 @@ export default function Quiz() {
                   }}
                 />
                 <p style={{ color: isLightTheme ? '#888' : '#666', fontSize: '0.8rem', marginTop: '0.3rem' }}>
-                  Если вы не проходили входной тест, оставьте поле пустым
+                  {t('quiz.codeHint')}
                 </p>
               </div>
               {/* Имя и Класс в одну строку */}
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ flex: 2 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                    Имя *
+                    {t('quiz.name')} *
                   </label>
                   <input
                     type="text"
@@ -508,7 +510,7 @@ export default function Quiz() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                    Класс *
+                    {t('quiz.class')} *
                   </label>
                   <input
                     type="text"
@@ -534,7 +536,7 @@ export default function Quiz() {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                  Школа *
+                  {t('quiz.school')} *
                 </label>
                 <input
                   type="text"
@@ -571,7 +573,7 @@ export default function Quiz() {
                     onChange={(e) => setIsTeacher(e.target.checked)}
                     style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                   />
-                  Я учитель
+                  {t('quiz.iAmTeacher')}
                 </label>
               </div>
 
@@ -584,10 +586,7 @@ export default function Quiz() {
                 border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)'
               }}>
                 <p style={{ color: isLightTheme ? '#666' : '#888', margin: 0, fontSize: '0.8rem', lineHeight: 1.5 }}>
-                  <span style={{ color: '#4a90e2', fontWeight: 500 }}>Анонимность:</span> Тестирование проводится анонимно.
-                  Вы можете указать любое имя — эти данные нужны только для удобства вашего преподавателя.
-                  Результаты будут использованы в статистике научного проекта.
-                  После завершения исследования все данные будут удалены и никогда не будут переданы третьим лицам.
+                  <span style={{ color: '#4a90e2', fontWeight: 500 }}>{t('quiz.anonymityLabel')}</span> {t('quiz.anonymity')}
                 </p>
               </div>
 
@@ -608,7 +607,7 @@ export default function Quiz() {
                   boxShadow: '0 0 15px rgba(252, 98, 85, 0.3)'
                 }}
               >
-                Начать тест
+                {t('quiz.startTest')}
               </button>
 
               {/* Кнопка анкетирования для учителей */}
@@ -631,7 +630,7 @@ export default function Quiz() {
                     fontFamily: "'CCUltimatum', Arial, sans-serif"
                   }}
                 >
-                  Пройти анкетирование
+                  {t('quiz.takeSurvey')}
                 </button>
               )}
             </form>
@@ -657,10 +656,10 @@ export default function Quiz() {
             <div style={{ marginBottom: '1.5rem', flex: '0 0 auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ color: isLightTheme ? '#666' : '#888', fontSize: '0.9rem' }}>
-                  Вопрос {currentQuestion + 1} из {shuffledQuestions.length}
+                  {t('quiz.question')} {currentQuestion + 1} {t('quiz.of')} {shuffledQuestions.length}
                 </span>
                 <span style={{ color: isLightTheme ? '#666' : '#888', fontSize: '0.9rem' }}>
-                  {Object.keys(answers).length} отвечено
+                  {Object.keys(answers).length} {t('quiz.answered')}
                 </span>
               </div>
               <div style={{
@@ -750,7 +749,7 @@ export default function Quiz() {
                   flex: isMobile ? '1 1 auto' : '0 0 auto'
                 }}
               >
-                Назад
+                {t('common.back')}
               </button>
 
               {currentQuestion < shuffledQuestions.length - 1 ? (
@@ -769,7 +768,7 @@ export default function Quiz() {
                     flex: isMobile ? '1 1 auto' : '0 0 auto'
                   }}
                 >
-                  Далее
+                  {t('common.next')}
                 </button>
               ) : (
                 <button
@@ -789,14 +788,14 @@ export default function Quiz() {
                     flex: isMobile ? '1 1 auto' : '0 0 auto'
                   }}
                 >
-                  {isSubmitting ? 'Сохранение...' : (isMobile ? 'Завершить' : 'Завершить тест')}
+                  {isSubmitting ? '...' : (isMobile ? t('common.finish') : t('quiz.finishTest'))}
                 </button>
               )}
             </div>
 
             {Object.keys(answers).length < shuffledQuestions.length && currentQuestion === shuffledQuestions.length - 1 && (
               <p style={{ color: '#FC6255', fontSize: '0.9rem', marginTop: '1rem', textAlign: 'center' }}>
-                Пожалуйста, ответьте на все вопросы перед завершением
+                {t('quiz.answerAll')}
               </p>
             )}
           </motion.div>
@@ -842,7 +841,7 @@ export default function Quiz() {
               marginBottom: '0.5rem',
               fontFamily: "'CCUltimatum', Arial, sans-serif"
             }}>
-              Итоговый тест завершён!
+              {t('quiz.testComplete')}
             </h2>
 
             <p style={{ color: isLightTheme ? '#666' : '#888', marginBottom: '1.5rem' }}>
@@ -857,8 +856,8 @@ export default function Quiz() {
               border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <div style={{ marginBottom: '1rem' }}>
-                <span style={{ color: isLightTheme ? '#666' : '#888' }}>Правильных ответов: </span>
-                <span style={{ fontWeight: 'bold', color: isLightTheme ? '#1a1a1a' : '#ffffff' }}>{score} из {shuffledQuestions.length}</span>
+                <span style={{ color: isLightTheme ? '#666' : '#888' }}>{t('quiz.correctAnswers')}: </span>
+                <span style={{ fontWeight: 'bold', color: isLightTheme ? '#1a1a1a' : '#ffffff' }}>{score} {t('quiz.of')} {shuffledQuestions.length}</span>
               </div>
               <div style={{
                 fontSize: '1.5rem',
@@ -866,7 +865,7 @@ export default function Quiz() {
                 fontFamily: "'CCUltimatum', Arial, sans-serif",
                 color: percentage >= 75 ? '#27ae60' : percentage >= 50 ? '#f39c12' : '#FC6255'
               }}>
-                Оценка: {grade}
+                {t('quiz.grade')}: {grade}
               </div>
             </div>
 
@@ -892,7 +891,7 @@ export default function Quiz() {
                     fontFamily: "'CCUltimatum', Arial, sans-serif"
                   }}
                 >
-                  Пройти анкету для учителей
+                  {t('quiz.teacherSurvey')}
                 </button>
               ) : (
                 <>
@@ -918,7 +917,7 @@ export default function Quiz() {
                       fontFamily: "'CCUltimatum', Arial, sans-serif"
                     }}
                   >
-                    Пройти заново
+                    {t('quiz.retake')}
                   </button>
                   <Link
                     to="/nuclear/rutherford"
@@ -934,7 +933,7 @@ export default function Quiz() {
                       fontFamily: "'CCUltimatum', Arial, sans-serif"
                     }}
                   >
-                    К материалам
+                    {t('quiz.toMaterials')}
                   </Link>
                 </>
               )}
@@ -955,7 +954,7 @@ export default function Quiz() {
             }}
           >
             <p style={{ color: isLightTheme ? '#666' : '#888', marginBottom: '1.5rem', textAlign: 'center' }}>
-              Пожалуйста, ответьте на вопросы об анимациях. Ваше мнение очень важно для нас!
+              {t('survey.intro')}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -1081,7 +1080,7 @@ export default function Quiz() {
                   fontFamily: "'CCUltimatum', Arial, sans-serif"
                 }}
               >
-                Пропустить
+                {t('common.skip')}
               </button>
               <button
                 onClick={handleSubmitSurvey}
@@ -1098,7 +1097,7 @@ export default function Quiz() {
                   fontFamily: "'CCUltimatum', Arial, sans-serif"
                 }}
               >
-                {isSubmitting ? 'Отправка...' : (isMobile ? 'Отправить' : 'Отправить анкету')}
+                {isSubmitting ? '...' : (isMobile ? t('common.submit') : t('survey.submitSurvey'))}
               </button>
             </div>
           </motion.div>
@@ -1139,11 +1138,11 @@ export default function Quiz() {
               marginBottom: '1rem',
               fontFamily: "'CCUltimatum', Arial, sans-serif"
             }}>
-              Спасибо за участие!
+              {t('survey.thanks')}
             </h2>
 
             <p style={{ color: isLightTheme ? '#666' : '#888', marginBottom: '1.5rem' }}>
-              Ваши ответы помогут нам улучшить качество образовательных материалов.
+              {t('survey.thanksMessage')}
             </p>
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -1161,7 +1160,7 @@ export default function Quiz() {
                   fontFamily: "'CCUltimatum', Arial, sans-serif"
                 }}
               >
-                К материалам
+                {t('quiz.toMaterials')}
               </Link>
             </div>
           </motion.div>
@@ -1178,7 +1177,7 @@ export default function Quiz() {
                 fontSize: '0.95rem'
               }}
             >
-              Вернуться к последнему видео
+              {t('pageTemplate.backToLastVideo')}
             </Link>
           </div>
         )}

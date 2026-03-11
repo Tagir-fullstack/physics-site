@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { SITE_VERSION } from '../config/version';
+import { useAccessibility } from '../context/AccessibilityContext';
 import '../styles/page-layout.css';
 
 interface ChangelogEntry {
@@ -9,6 +11,20 @@ interface ChangelogEntry {
 }
 
 const changelog: ChangelogEntry[] = [
+  {
+    date: '09.03.2026',
+    version: 'v1.4.0',
+    changes: [
+      'Глоссарий терминов — 55+ физических терминов с определениями по категориям',
+      'Таблица периодов полураспада — 30+ изотопов с типом распада, продуктами и описанием',
+      'Биографии учёных — 20+ выдающихся физиков с достижениями, Нобелевскими премиями и цитатами',
+      'Калькулятор радиоактивного распада — расчёт N = N₀ · 2^(-t/T½) с выбором изотопа из базы',
+      'Горячая клавиша Alt+L для переключения светлой темы',
+      'Сортировка по алфавиту (А→Я, Я→А) в таблице изотопов',
+      'Добавлены изотопы: Кислород-14, Висмут-210',
+      'Добавлен учёный: Джон Дальтон',
+    ],
+  },
   {
     date: '01.03.2026',
     version: 'v1.3.1',
@@ -179,6 +195,10 @@ const changelog: ChangelogEntry[] = [
 ];
 
 export default function Changelog() {
+  const { t } = useTranslation();
+  const { lightTheme, enabled: a11yEnabled } = useAccessibility();
+  const isLightTheme = a11yEnabled && lightTheme;
+
   return (
     <motion.main
       className="page-content"
@@ -197,12 +217,12 @@ export default function Changelog() {
         <h1
           style={{
             fontSize: '2.5rem',
-            color: '#fff',
+            color: isLightTheme ? '#1a1a1a' : '#fff',
             marginBottom: '0.5rem',
             textAlign: 'center',
           }}
         >
-          История изменений
+          {t('changelog.title')}
         </h1>
         <p
           style={{
@@ -213,15 +233,15 @@ export default function Changelog() {
             fontWeight: 500,
           }}
         >
-          Текущая версия: {SITE_VERSION}
+          {t('changelog.currentVersion')}: {SITE_VERSION}
         </p>
 
         <div
           style={{
-            backgroundColor: '#111',
+            backgroundColor: isLightTheme ? '#f5f5f5' : '#111',
             padding: '2.5rem',
             borderRadius: '15px',
-            border: '1px solid #222',
+            border: isLightTheme ? '1px solid #ddd' : '1px solid #222',
             lineHeight: '1.8',
           }}
         >
@@ -233,7 +253,7 @@ export default function Changelog() {
                 paddingBottom: index < changelog.length - 1 ? '2rem' : 0,
                 borderBottom:
                   index < changelog.length - 1
-                    ? '1px solid #333'
+                    ? `1px solid ${isLightTheme ? '#ddd' : '#333'}`
                     : 'none',
               }}
             >
@@ -241,7 +261,7 @@ export default function Changelog() {
                 style={{
                   fontSize: '1.3rem',
                   marginBottom: '0.75rem',
-                  color: '#fff',
+                  color: isLightTheme ? '#1a1a1a' : '#fff',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -256,7 +276,7 @@ export default function Changelog() {
               </h2>
               <ul
                 style={{
-                  color: '#ccc',
+                  color: isLightTheme ? '#555' : '#ccc',
                   paddingLeft: '1.5rem',
                   margin: 0,
                 }}

@@ -1,10 +1,13 @@
+import { useTranslation } from 'react-i18next';
 import PageTemplate from '../../components/PageTemplate';
 
 export default function Alpha() {
+  const { t } = useTranslation();
+
   return (
     <PageTemplate
-      title="Альфа-распад"
-      section="Физика Атомного ядра"
+      title={t('topics.alpha.title')}
+      section={t('pageTemplate.section')}
       videoSrc="/videos/nuclear/3_AlphaDecay_1.mp4"
       description={
         <>
@@ -65,8 +68,8 @@ export default function Alpha() {
           <p>Понимание физики альфа-распада стало фундаментом для развития квантовой механики туннелирования (теория Гамова 1928 г.) и открыло путь к современной ядерной физике и технологиям.</p>
         </>
       }
-      prevLink={{ path: '/nuclear/rutherford', title: 'Опыт Резерфорда' }}
-      nextLink={{ path: '/nuclear/beta', title: 'Бета-распад' }}
+      prevLink={{ path: '/nuclear/rutherford', title: t('topics.rutherford.title') }}
+      nextLink={{ path: '/nuclear/beta', title: t('topics.beta.title') }}
       animationStatus="green"
     />
   );

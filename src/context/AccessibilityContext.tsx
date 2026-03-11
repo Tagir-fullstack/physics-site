@@ -69,6 +69,22 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     applyClasses(state);
   }, [state]);
 
+  // Горячая клавиша Alt+L для переключения светлой темы
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        setState((s) => ({
+          ...s,
+          enabled: true,
+          lightTheme: !s.lightTheme
+        }));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const ctx: AccessibilityContextType = {
     ...state,
     setEnabled: (v) => setState((s) => ({ ...s, enabled: v })),

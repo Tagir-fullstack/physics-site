@@ -1,10 +1,13 @@
+import { useTranslation } from 'react-i18next';
 import PageTemplate from '../../components/PageTemplate';
 
 export default function Beta() {
+  const { t } = useTranslation();
+
   return (
     <PageTemplate
-      title="Бета-распад"
-      section="Физика Атомного ядра"
+      title={t('topics.beta.title')}
+      section={t('pageTemplate.section')}
       videoSrc="/videos/nuclear/4_RadioactiveDecaysBeta.mp4"
       description={
         <>
@@ -114,8 +117,8 @@ export default function Beta() {
           <p>Бета-распад играет важную роль в ядерной физике, астрофизике (нуклеосинтез в звёздах), медицине (радиотерапия, диагностика) и датировании археологических находок (радиоуглеродный анализ).</p>
         </>
       }
-      prevLink={{ path: '/nuclear/alpha', title: 'Альфа-распад' }}
-      nextLink={{ path: '/nuclear/gamma', title: 'Гамма-излучение' }}
+      prevLink={{ path: '/nuclear/alpha', title: t('topics.alpha.title') }}
+      nextLink={{ path: '/nuclear/gamma', title: t('topics.gamma.title') }}
       animationStatus="green"
     />
   );

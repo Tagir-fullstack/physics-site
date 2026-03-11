@@ -1,14 +1,17 @@
+import { useTranslation } from 'react-i18next';
 import PageTemplate from '../../components/PageTemplate';
 
 export default function Chain() {
+  const { t } = useTranslation();
+
   return (
     <PageTemplate
-      title="Цепная реакция"
-      section="Физика Атомного ядра"
+      title={t('topics.chain.title')}
+      section={t('pageTemplate.section')}
       videoSrc="/videos/nuclear/9_chain.mp4"
-      description="Анимация демонстрирует цепную ядерную реакцию — самоподдерживающийся процесс деления ядер, при котором нейтроны, образующиеся при делении одного ядра, вызывают деление других ядер. Показаны условия для управляемой (в реакторе) и неуправляемой (взрывной) цепной реакции. Критическая масса — минимальная масса делящегося вещества, при которой реакция становится самоподдерживающейся."
-      prevLink={{ path: '/nuclear/decay', title: 'Деление ядра' }}
-      nextLink={{ path: '/nuclear/quiz', title: 'Пройти тест' }}
+      description={t('topics.chain.description')}
+      prevLink={{ path: '/nuclear/decay', title: t('topics.decay.title') }}
+      nextLink={{ path: '/nuclear/quiz', title: t('quiz.startTest') }}
       animationStatus="red"
     />
   );

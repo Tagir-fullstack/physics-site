@@ -1,10 +1,13 @@
+import { useTranslation } from 'react-i18next';
 import PageTemplate from '../../components/PageTemplate';
 
 export default function Gamma() {
+  const { t } = useTranslation();
+
   return (
     <PageTemplate
-      title="Гамма-излучение"
-      section="Физика Атомного ядра"
+      title={t('topics.gamma.title')}
+      section={t('pageTemplate.section')}
       videoSrc="/videos/nuclear/5_GammaRadiation.mp4"
       description={
         <>
@@ -164,8 +167,8 @@ export default function Gamma() {
           <p>Гамма-излучение играет ключевую роль в ядерной физике (изучение структуры ядра), астрофизике (гамма-телескопы для наблюдения космических процессов), медицине (онкология, диагностика), промышленности (дефектоскопия, стерилизация) и радиационной безопасности.</p>
         </>
       }
-      prevLink={{ path: '/nuclear/beta', title: 'Бета-распад' }}
-      nextLink={{ path: '/nuclear/halflife', title: 'Период полураспада' }}
+      prevLink={{ path: '/nuclear/beta', title: t('topics.beta.title') }}
+      nextLink={{ path: '/nuclear/halflife', title: t('topics.halflife.title') }}
       animationStatus="green"
     />
   );

@@ -1,7 +1,13 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useAccessibility } from '../context/AccessibilityContext';
 import '../styles/page-layout.css';
 
 export default function Terms() {
+  const { t } = useTranslation();
+  const { lightTheme, enabled: a11yEnabled } = useAccessibility();
+  const isLightTheme = a11yEnabled && lightTheme;
+
   return (
     <motion.main
       className="page-content"
@@ -22,124 +28,116 @@ export default function Terms() {
       }}>
         <h1 style={{
           fontSize: '2.5rem',
-          color: '#fff',
+          color: isLightTheme ? '#1a1a1a' : '#fff',
           marginBottom: '2rem',
           textAlign: 'center'
         }}>
-          Условия использования
+          {t('terms.title')}
         </h1>
 
         <div style={{
-          backgroundColor: '#111',
+          backgroundColor: isLightTheme ? '#f5f5f5' : '#111',
           padding: '2.5rem',
           borderRadius: '15px',
-          border: '1px solid #222',
+          border: isLightTheme ? '1px solid #ddd' : '1px solid #222',
           lineHeight: '1.8'
         }}>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              1. Авторские права
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              1. {t('terms.copyright')}
             </h2>
-            <p style={{ color: '#ccc', marginBottom: '1rem' }}>
-              Все материалы, размещенные на образовательной платформе <strong>Physez</strong> (рус. «Физ изи»)
-              (включая, но не ограничиваясь: тексты, изображения, видео, анимации, программный код),
-              являются объектами авторского права и принадлежат <strong>Аймурза Тагиру</strong>.
+            <p style={{ color: isLightTheme ? '#555' : '#ccc', marginBottom: '1rem' }}>
+              {t('terms.copyrightText1')} <strong>Physez</strong> {t('terms.copyrightText2')} <strong>Аймурза Тагиру</strong>.
             </p>
-            <p style={{ color: '#ccc' }}>
-              © {new Date().getFullYear()} Physez. Все права защищены.
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              © {new Date().getFullYear()} Physez. {t('terms.allRightsReserved')}
             </p>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              2. Запрет коммерческого использования
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              2. {t('terms.commercialProhibition')}
             </h2>
-            <p style={{ color: '#ccc', marginBottom: '1rem' }}>
-              Материалы данного сайта предназначены <strong>исключительно для образовательных
-              и некоммерческих целей</strong>. Запрещается:
+            <p style={{ color: isLightTheme ? '#555' : '#ccc', marginBottom: '1rem' }}>
+              {t('terms.commercialProhibitionText')}
             </p>
-            <ul style={{ color: '#ccc', paddingLeft: '2rem', marginBottom: '1rem' }}>
-              <li>Использование материалов в коммерческих целях</li>
-              <li>Продажа или перепродажа контента</li>
-              <li>Использование материалов для получения прямой или косвенной финансовой выгоды</li>
-              <li>Включение материалов в платные образовательные программы без письменного разрешения автора</li>
+            <ul style={{ color: isLightTheme ? '#555' : '#ccc', paddingLeft: '2rem', marginBottom: '1rem' }}>
+              <li>{t('terms.commercialItem1')}</li>
+              <li>{t('terms.commercialItem2')}</li>
+              <li>{t('terms.commercialItem3')}</li>
+              <li>{t('terms.commercialItem4')}</li>
             </ul>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              3. Разрешенное использование
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              3. {t('terms.allowedUse')}
             </h2>
-            <p style={{ color: '#ccc', marginBottom: '1rem' }}>
-              Разрешается использование материалов в следующих случаях:
+            <p style={{ color: isLightTheme ? '#555' : '#ccc', marginBottom: '1rem' }}>
+              {t('terms.allowedUseText')}
             </p>
-            <ul style={{ color: '#ccc', paddingLeft: '2rem' }}>
-              <li>Для личного образования и самообучения</li>
-              <li>Для использования в некоммерческих образовательных учреждениях при условии указания источника</li>
-              <li>Для цитирования в научных работах и публикациях с обязательной ссылкой на источник</li>
-              <li>Для использования в диссертационных исследованиях с указанием авторства</li>
+            <ul style={{ color: isLightTheme ? '#555' : '#ccc', paddingLeft: '2rem' }}>
+              <li>{t('terms.allowedItem1')}</li>
+              <li>{t('terms.allowedItem2')}</li>
+              <li>{t('terms.allowedItem3')}</li>
+              <li>{t('terms.allowedItem4')}</li>
             </ul>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              4. Запрет на распространение и модификацию
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              4. {t('terms.distributionProhibition')}
             </h2>
-            <p style={{ color: '#ccc' }}>
-              Запрещается без письменного разрешения правообладателя:
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              {t('terms.distributionProhibitionText')}
             </p>
-            <ul style={{ color: '#ccc', paddingLeft: '2rem' }}>
-              <li>Копирование и распространение материалов на других ресурсах</li>
-              <li>Модификация, изменение или создание производных работ</li>
-              <li>Удаление или изменение информации об авторских правах</li>
-              <li>Размещение материалов на других веб-сайтах или платформах</li>
+            <ul style={{ color: isLightTheme ? '#555' : '#ccc', paddingLeft: '2rem' }}>
+              <li>{t('terms.distributionItem1')}</li>
+              <li>{t('terms.distributionItem2')}</li>
+              <li>{t('terms.distributionItem3')}</li>
+              <li>{t('terms.distributionItem4')}</li>
             </ul>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              5. Ссылки и цитирование
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              5. {t('terms.citation')}
             </h2>
-            <p style={{ color: '#ccc' }}>
-              При цитировании материалов обязательно указание:
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              {t('terms.citationText')}
             </p>
-            <ul style={{ color: '#ccc', paddingLeft: '2rem' }}>
-              <li>Автора: Аймурза Тагир</li>
-              <li>Названия ресурса: Physez</li>
-              <li>Прямой ссылки на источник</li>
+            <ul style={{ color: isLightTheme ? '#555' : '#ccc', paddingLeft: '2rem' }}>
+              <li>{t('terms.citationItem1')}</li>
+              <li>{t('terms.citationItem2')}</li>
+              <li>{t('terms.citationItem3')}</li>
             </ul>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              6. Академическая честность
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              6. {t('terms.academicHonesty')}
             </h2>
-            <p style={{ color: '#ccc' }}>
-              Данный сайт создан в рамках диссертационного исследования. Все материалы
-              являются результатом научной работы автора. Плагиат и незаконное использование
-              материалов преследуется в соответствии с законодательством об авторских правах.
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              {t('terms.academicHonestyText')}
             </p>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              7. Ответственность
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              7. {t('terms.liability')}
             </h2>
-            <p style={{ color: '#ccc' }}>
-              Материалы предоставляются "как есть". Автор не несет ответственности за
-              возможные ошибки или неточности в содержании. Использование материалов
-              осуществляется на собственный риск пользователя.
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              {t('terms.liabilityText')}
             </p>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              8. Получение разрешения
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              8. {t('terms.permission')}
             </h2>
-            <p style={{ color: '#ccc' }}>
-              Для получения разрешения на коммерческое использование или иное использование
-              материалов, не предусмотренное данными условиями, обращайтесь по адресу:
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              {t('terms.permissionText')}
             </p>
             <p style={{ color: '#FC6255', fontWeight: 'bold', marginTop: '0.5rem' }}>
               tgr.aimurza@gmail.com
@@ -147,24 +145,23 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#fff' }}>
-              9. Изменения условий
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: isLightTheme ? '#1a1a1a' : '#fff' }}>
+              9. {t('terms.changes')}
             </h2>
-            <p style={{ color: '#ccc' }}>
-              Автор оставляет за собой право изменять данные условия использования в любое время.
-              Продолжение использования сайта после внесения изменений означает принятие новых условий.
+            <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
+              {t('terms.changesText')}
             </p>
           </section>
 
           <div style={{
             marginTop: '3rem',
             padding: '1.5rem',
-            backgroundColor: '#1a1a1a',
+            backgroundColor: isLightTheme ? '#eee' : '#1a1a1a',
             borderRadius: '10px',
             borderLeft: '4px solid #FC6255'
           }}>
-            <p style={{ color: '#ccc', margin: 0, fontWeight: '500' }}>
-              Дата последнего обновления: {new Date().toLocaleDateString('ru-RU')}
+            <p style={{ color: isLightTheme ? '#555' : '#ccc', margin: 0, fontWeight: '500' }}>
+              {t('terms.lastUpdated')}: {new Date().toLocaleDateString('ru-RU')}
             </p>
           </div>
         </div>

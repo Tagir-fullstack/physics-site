@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
@@ -11,8 +12,49 @@ import '../styles/accessibility.css';
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isA11yOpen, setIsA11yOpen] = useState(false);
+  const menuTimeoutRef = useRef<number | null>(null);
+
+  const openMenu = () => {
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+      menuTimeoutRef.current = null;
+    }
+    setIsMenuOpen(true);
+  };
+
+  const closeMenuWithDelay = () => {
+    menuTimeoutRef.current = window.setTimeout(() => {
+      setIsMenuOpen(false);
+    }, 200);
+  };
+
+  const a11yTimeoutRef = useRef<number | null>(null);
+
+  const openA11y = () => {
+    if (a11yTimeoutRef.current) {
+      clearTimeout(a11yTimeoutRef.current);
+      a11yTimeoutRef.current = null;
+    }
+    if (!enabled) setEnabled(true);
+    setIsMenuOpen(false);
+    setIsA11yOpen(true);
+  };
+
+  const closeA11yWithDelay = () => {
+    a11yTimeoutRef.current = window.setTimeout(() => {
+      setIsA11yOpen(false);
+    }, 200);
+  };
+
+  const keepA11yOpen = () => {
+    if (a11yTimeoutRef.current) {
+      clearTimeout(a11yTimeoutRef.current);
+      a11yTimeoutRef.current = null;
+    }
+  };
   const { enabled, setEnabled } = useAccessibility();
   const { isQuizActive } = useQuizMode();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
 
@@ -58,9 +100,10 @@ export default function Header() {
             <span className="logo-ez">ez</span>
           </Link>
 
-          <div className="nav-right">
+          <div className="nav-right" onMouseLeave={closeMenuWithDelay}>
             <div
               className={`nav-menu ${isMenuOpen && !isQuizActive ? 'open' : ''}`}
+              onMouseEnter={openMenu}
               onClick={(e) => {
                 // Закрыть меню при клике на фон (не на элементы меню)
                 if (e.target === e.currentTarget) {
@@ -88,7 +131,7 @@ export default function Header() {
                 className="nav-quiz-btn"
                 onClick={() => handleLinkClick(hasCompletedPreQuiz() ? '/nuclear/quiz' : '/nuclear/rutherford')}
               >
-                {hasCompletedPreQuiz() ? 'Итоговый тест' : 'Входной срез'}
+                {hasCompletedPreQuiz() ? t('header.finalTest') : t('header.preTest')}
               </button>
             </div>
 
@@ -99,6 +142,8 @@ export default function Header() {
                 setIsMenuOpen(false); // Закрыть бургер-меню
                 setIsA11yOpen(!isA11yOpen);
               }}
+              onMouseEnter={openA11y}
+              onMouseLeave={closeA11yWithDelay}
               aria-label="Режим доступности"
               title="Доступность"
             >
@@ -117,6 +162,12 @@ export default function Header() {
                   setIsMenuOpen(!isMenuOpen);
                 }
               }}
+              onMouseEnter={() => {
+                if (!isQuizActive) {
+                  setIsA11yOpen(false);
+                  openMenu();
+                }
+              }}
               aria-label="Меню"
               style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
             >
@@ -127,7 +178,12 @@ export default function Header() {
           </div>
         </nav>
       </header>
-      <AccessibilityPanel isOpen={isA11yOpen} onClose={() => setIsA11yOpen(false)} />
+      <AccessibilityPanel
+        isOpen={isA11yOpen}
+        onClose={() => setIsA11yOpen(false)}
+        onMouseEnter={keepA11yOpen}
+        onMouseLeave={closeA11yWithDelay}
+      />
     </>
   );
 }

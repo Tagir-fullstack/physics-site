@@ -1,0 +1,287 @@
+{
+  "common": {
+    "startLearning": "Start Learning",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish",
+    "submit": "Submit",
+    "skip": "Skip",
+    "reset": "Reset All",
+    "close": "Close",
+    "watch": "Watch"
+  },
+  "header": {
+    "menu": "Menu",
+    "accessibility": "Accessibility",
+    "finalTest": "Final Test",
+    "preTest": "Pre-Test"
+  },
+  "home": {
+    "free": "Free",
+    "animations": "ANIMATIONS",
+    "subtitle": "on Nuclear Physics",
+    "subatomicTitle": "Subatomic",
+    "subatomicHighlight": "Particles",
+    "topicsTitle": "Course",
+    "topicsHighlight": "Topics",
+    "aboutTitle": "About the",
+    "aboutHighlight": "Platform",
+    "aboutText1": "Physez is an educational platform for studying complex sections of physics. Our goal is to make physics understandable and accessible through quality visualizations.",
+    "aboutText2": "All video animations are created in Python using the Manim library and are completely free for students and teachers.",
+    "tagFree": "Free",
+    "tagManim": "Manim Animations",
+    "tagStudents": "For Students",
+    "tagEducation": "Education"
+  },
+  "particles": {
+    "proton": {
+      "name": "Proton",
+      "desc": "A positively charged particle in the nucleus. The number of protons determines the atomic number of an element.",
+      "discovery": "Ernest Rutherford, 1919 — experiments on splitting nitrogen nuclei with alpha particles."
+    },
+    "neutron": {
+      "name": "Neutron",
+      "desc": "A neutral particle in the nucleus. Neutrons add mass to the atom and affect nuclear stability.",
+      "discovery": "James Chadwick, 1932 — bombardment of beryllium with alpha particles, detection of uncharged radiation."
+    },
+    "electron": {
+      "name": "Electron",
+      "desc": "A negatively charged particle moving around the nucleus. Electrons determine chemical properties.",
+      "discovery": "Joseph Thomson, 1897 — experiments with cathode rays, deflection in electric and magnetic fields."
+    },
+    "charge": "Charge",
+    "mass": "Mass"
+  },
+  "accessibility": {
+    "title": "Accessibility",
+    "fontSize": "Font Size",
+    "lightTheme": "Light Theme",
+    "highContrast": "High Contrast",
+    "speechRate": "Speech Rate",
+    "slow": "Slow",
+    "fast": "Fast",
+    "language": "Language",
+    "resetAll": "Reset All"
+  },
+  "quiz": {
+    "title": "Final Test on",
+    "titleHighlight": "Nuclear Physics",
+    "enterData": "Enter your details",
+    "yourCode": "Your code (from pre-test)",
+    "codeHint": "Leave empty if you haven't taken the pre-test",
+    "name": "Name",
+    "class": "Class",
+    "school": "School",
+    "iAmTeacher": "I am a teacher",
+    "startTest": "Start Test",
+    "takeSurvey": "Take Survey",
+    "question": "Question",
+    "of": "of",
+    "answered": "answered",
+    "finishTest": "Finish Test",
+    "testComplete": "Test Complete!",
+    "correctAnswers": "Correct answers",
+    "grade": "Grade",
+    "retake": "Retake",
+    "toMaterials": "To Materials",
+    "teacherSurvey": "Take Teacher Survey",
+    "answerAll": "Please answer all questions before finishing",
+    "anonymity": "Testing is anonymous. You can enter any name — this data is only needed for your teacher's convenience. Results will be used in research project statistics. After the study is complete, all data will be deleted and never shared with third parties.",
+    "anonymityLabel": "Anonymity:"
+  },
+  "survey": {
+    "title": "Survey for",
+    "titleHighlight": "Teachers",
+    "intro": "Please answer questions about the animations. Your opinion is very important to us!",
+    "submitSurvey": "Submit Survey",
+    "thanks": "Thank you for participating!",
+    "thanksMessage": "Your answers will help us improve the quality of educational materials.",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "preQuiz": {
+    "title": "Pre-Test on",
+    "titleHighlight": "Nuclear Physics",
+    "description": "This test will help assess your knowledge before studying the material.",
+    "skipTest": "Skip Test"
+  },
+  "topics": {
+    "rutherford": {
+      "title": "Rutherford Experiment",
+      "description": "In 1911, Ernest Rutherford conducted his famous alpha particle scattering experiment on gold foil. The results showed that an atom has a tiny massive nucleus, disproving Thomson's 'plum pudding' model. This experiment laid the foundation for nuclear physics and the planetary model of the atom."
+    },
+    "alpha": {
+      "title": "Alpha Decay",
+      "description": "Alpha decay is a process in which a nucleus emits an alpha particle (helium-4 nucleus). The phenomenon was discovered by Becquerel in 1896 and explained by Gamow in 1928 through quantum tunneling. Alpha particles have high ionizing ability but low penetrating power."
+    },
+    "beta": {
+      "title": "Beta Decay",
+      "description": "In beta decay, a neutron in the nucleus transforms into a proton, emitting an electron and an antineutrino (or vice versa in β⁺ decay). Pauli predicted the neutrino in 1930 to explain the continuous energy spectrum. Fermi developed the theory of beta decay in 1934, linking it to weak interaction."
+    },
+    "gamma": {
+      "title": "Gamma Radiation",
+      "description": "Gamma radiation is high-energy electromagnetic radiation emitted by a nucleus when transitioning from an excited state to the ground state. It was discovered by Paul Villard in 1900. Gamma rays have the highest penetrating power among all types of radioactive radiation and are used in medicine and industry."
+    },
+    "halflife": {
+      "title": "Half-Life",
+      "description": "Half-life is the time it takes for half of the radioactive atoms in a sample to decay. It is a fundamental characteristic of each radioactive isotope, independent of external conditions. The law of radioactive decay, discovered by Rutherford and Soddy, describes the exponential decrease in the number of undecayed nuclei."
+    },
+    "interactions": {
+      "title": "Nuclear Interactions",
+      "description": "Nuclear (strong) interactions hold nucleons together inside the nucleus, overcoming the electrostatic repulsion of protons. Yukawa predicted the existence of mesons as carriers of nuclear forces in 1935. The strong interaction is the most powerful of the four fundamental forces but only acts at distances of about 10⁻¹⁵ m."
+    },
+    "droplet": {
+      "title": "Liquid Drop Model",
+      "description": "The liquid drop model, proposed by Gamow and developed by Bohr and Wheeler in the 1930s, describes the atomic nucleus by analogy with a drop of charged liquid. It successfully explains the binding energy of nucleons and underlies the Weizsäcker formula. This model became key to understanding the mechanism of heavy nucleus fission."
+    },
+    "decay": {
+      "title": "Nuclear Fission",
+      "description": "The fission of a heavy nucleus into two fragments was discovered by Hahn and Strassmann in 1938 and explained by Meitner and Frisch. The fission of uranium-235 releases enormous energy — about 200 MeV per fission event. This discovery led to the creation of nuclear reactors and changed the course of world history."
+    },
+    "chain": {
+      "title": "Chain Reaction",
+      "description": "A nuclear chain reaction occurs when neutrons from one fission event cause the fission of other nuclei. Fermi achieved the first controlled chain reaction on December 2, 1942, in Chicago. Controlling chain reactions is the basis of all nuclear reactors and the key to peaceful use of atomic energy."
+    }
+  },
+  "footer": {
+    "about": "Educational platform for studying nuclear physics",
+    "contacts": "Contacts",
+    "organization": "Organization",
+    "team": "Team",
+    "author": "Project Author",
+    "copyright": "All rights reserved.",
+    "terms": "Terms of Use"
+  },
+  "pageTemplate": {
+    "periodicTable": "Periodic Table",
+    "constants": "Constants",
+    "nextLesson": "Next",
+    "previousLesson": "Back",
+    "status": "Status",
+    "section": "Nuclear Physics",
+    "description": "Description",
+    "howToUse": "How to use the video",
+    "howToUseStep1": "First, read the video description above",
+    "howToUseStep2": "Play the video and pause at key moments",
+    "howToUseStep3": "Describe the process in the video for student interaction",
+    "feedbackNote": "Report any inaccuracies or suggestions via email:",
+    "passPreTest": "Take Pre-Test",
+    "videoNotSupported": "Your browser does not support video",
+    "statusApproved": "Approved",
+    "statusApprovedTooltip": "Approved animation version",
+    "statusMinorIssues": "Minor issues",
+    "statusMinorTooltip": "Currently correct animation with minor visual inaccuracies",
+    "statusIncorrect": "Incorrect",
+    "statusIncorrectTooltip": "Animation will be revised, there are inaccuracies in the process nature",
+    "noticeError": "Notice an error? Email us at",
+    "physicsConstants": "Physical constants of atomic and nuclear physics",
+    "fundamentalConstants": "Fundamental Constants",
+    "particleMasses": "Particle Masses",
+    "atomicConstants": "Atomic Constants",
+    "nuclearConstants": "Nuclear Constants",
+    "radiationCharacteristics": "Radiation Characteristics",
+    "energyUnits": "Energy Units",
+    "quantity": "Quantity",
+    "symbol": "Symbol",
+    "value": "Value",
+    "particle": "Particle",
+    "massKg": "Mass (kg)",
+    "massAmu": "Mass (amu)",
+    "energyMeV": "Energy (MeV)",
+    "type": "Type",
+    "composition": "Composition",
+    "charge": "Charge",
+    "rangeInAir": "Range in air",
+    "shielding": "Shielding",
+    "backToLastVideo": "Return to the last video"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "currentVersion": "Current version"
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "copyright": "Copyright",
+    "copyrightText1": "All materials published on the educational platform",
+    "copyrightText2": "(including but not limited to: texts, images, videos, animations, software code) are copyright protected and belong to",
+    "allRightsReserved": "All rights reserved.",
+    "commercialProhibition": "Commercial Use Prohibition",
+    "commercialProhibitionText": "Materials on this website are intended exclusively for educational and non-commercial purposes. Prohibited:",
+    "commercialItem1": "Use of materials for commercial purposes",
+    "commercialItem2": "Selling or reselling content",
+    "commercialItem3": "Use of materials for direct or indirect financial gain",
+    "commercialItem4": "Including materials in paid educational programs without written permission",
+    "allowedUse": "Permitted Use",
+    "allowedUseText": "Use of materials is permitted in the following cases:",
+    "allowedItem1": "For personal education and self-study",
+    "allowedItem2": "For use in non-commercial educational institutions with source attribution",
+    "allowedItem3": "For citation in scientific papers and publications with mandatory reference",
+    "allowedItem4": "For use in scientific research with authorship attribution",
+    "distributionProhibition": "Distribution and Modification Prohibition",
+    "distributionProhibitionText": "Prohibited without written permission:",
+    "distributionItem1": "Copying and distributing materials on other resources",
+    "distributionItem2": "Modification, alteration, or creation of derivative works",
+    "distributionItem3": "Removal or alteration of copyright information",
+    "distributionItem4": "Posting materials on other websites or platforms",
+    "citation": "References and Citation",
+    "citationText": "When citing materials, the following must be indicated:",
+    "citationItem1": "Author: Tagir Aimurza",
+    "citationItem2": "Resource name: Physez",
+    "citationItem3": "Direct link to the source",
+    "academicHonesty": "Academic Integrity",
+    "academicHonestyText": "All materials on this website are the result of the author's scientific and creative work. Plagiarism and illegal use of materials is prosecuted in accordance with copyright law.",
+    "liability": "Liability",
+    "liabilityText": "Materials are provided \"as is\". The author is not responsible for possible errors or inaccuracies in the content. Use of materials is at the user's own risk.",
+    "permission": "Obtaining Permission",
+    "permissionText": "To obtain permission for commercial use or other use of materials not covered by these terms, please contact:",
+    "changes": "Changes to Terms",
+    "changesText": "The author reserves the right to change these terms of use at any time. Continued use of the site after changes implies acceptance of the new terms.",
+    "lastUpdated": "Last updated"
+  },
+  "atomModels": {
+    "dalton": {
+      "name": "Dalton Model",
+      "nickname": "\"Billiard Ball\"",
+      "author": "John Dalton",
+      "status": "Not accurate"
+    },
+    "thomson": {
+      "name": "Thomson Model",
+      "nickname": "\"Plum Pudding\"",
+      "author": "Joseph Thomson",
+      "status": "Not accurate"
+    },
+    "rutherford": {
+      "name": "Rutherford Model",
+      "nickname": "\"Planetary Model\"",
+      "author": "Ernest Rutherford",
+      "status": "Not accurate"
+    },
+    "bohr": {
+      "name": "Bohr Model",
+      "nickname": "\"Quantum Orbits\"",
+      "author": "Niels Bohr",
+      "status": "Partially correct — works for hydrogen"
+    },
+    "sommerfeld": {
+      "name": "Bohr-Sommerfeld Model",
+      "nickname": "\"Elliptical Orbits\"",
+      "author": "Arnold Sommerfeld",
+      "status": "Partially correct — refinement of Bohr"
+    },
+    "debroglie": {
+      "name": "De Broglie Model",
+      "nickname": "\"Wave Orbits\"",
+      "author": "Louis de Broglie",
+      "status": "Partially correct — wave nature of electron"
+    },
+    "quantum": {
+      "name": "Quantum Mechanical Model",
+      "nickname": "\"Electron Cloud\"",
+      "author": "Erwin Schrödinger",
+      "status": "Current model"
+    },
+    "atom": "Atom",
+    "year": ""
+  }
+}

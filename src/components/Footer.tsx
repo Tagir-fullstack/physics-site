@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SITE_VERSION } from '../config/version';
 import '../styles/footer.css';
 
 export default function Footer() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -42,7 +44,7 @@ export default function Footer() {
               lineHeight: '1.6',
               color: '#cccccc'
             }}>
-              Образовательная платформа для изучения раздела физики атомного ядра
+              {t('footer.about')}
             </p>
           </div>
 
@@ -53,7 +55,7 @@ export default function Footer() {
               marginBottom: '1rem',
               color: '#fff'
             }}>
-              Контакты
+              {t('footer.contacts')}
             </h3>
             <div style={{
               fontSize: '0.9rem',
@@ -61,25 +63,25 @@ export default function Footer() {
               color: '#cccccc'
             }}>
               <p>Email: tgr.aimurza@gmail.com</p>
-              <p>Организация: Farabi University КазНУ</p>
+              <p>{t('footer.organization')}: Farabi University КазНУ</p>
             </div>
           </div>
 
-          {/* Диссертация */}
+          {/* Научный руководитель */}
           <div>
             <h3 style={{
               fontSize: '1.2rem',
               marginBottom: '1rem',
               color: '#fff'
             }}>
-              Диссертационное исследование
+              {t('footer.supervisorTitle')}
             </h3>
             <p style={{
               fontSize: '0.9rem',
               lineHeight: '1.6',
               color: '#bbb'
             }}>
-              Научный руководитель:<br />Амренова Асем Уахитовна
+              Амренова Асем Уахитовна
             </p>
           </div>
         </div>
@@ -100,7 +102,7 @@ export default function Footer() {
             flexWrap: 'wrap',
             gap: '0.5rem'
           }}>
-            <span>© {currentYear} Physez | Aimurza Tagir. Все права защищены.</span>
+            <span>© {currentYear} Physez | Aimurza Tagir. {t('footer.copyright')}</span>
             <span style={{ color: '#666' }}>|</span>
             <a href="/terms" style={{
               color: '#FC6255',
@@ -111,7 +113,7 @@ export default function Footer() {
             onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#FC6255'}
             onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
             >
-              Условия использования
+              {t('footer.terms')}
             </a>
             <Link to="/changelog" style={{
               color: '#888',

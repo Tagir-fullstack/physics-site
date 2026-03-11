@@ -1,10 +1,13 @@
+import { useTranslation } from 'react-i18next';
 import PageTemplate from '../../components/PageTemplate';
 
 export default function Rutherford() {
+  const { t } = useTranslation();
+
   return (
     <PageTemplate
-      title="Опыт Резерфорда"
-      section="Физика Атомного ядра"
+      title={t('topics.rutherford.title')}
+      section={t('pageTemplate.section')}
       videoSrc="/videos/nuclear/1_RutherfordExperiment.mp4"
       description={
         <>
@@ -55,7 +58,7 @@ export default function Rutherford() {
           </ul>
         </>
       }
-      nextLink={{ path: '/nuclear/alpha', title: 'Альфа-распад' }}
+      nextLink={{ path: '/nuclear/alpha', title: t('topics.alpha.title') }}
       animationStatus="green"
     />
   );

@@ -1,83 +1,23 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import '../styles/atom-models.css';
 
 interface AtomModel {
   id: string;
-  name: string;
-  nickname: string;
   year: number;
-  author: string;
   status: 'outdated' | 'partial' | 'current';
-  statusText: string;
   duration?: number;
 }
 
 const models: AtomModel[] = [
-  {
-    id: 'dalton',
-    name: 'Модель Дальтона',
-    nickname: '«Бильярдный шар»',
-    year: 1803,
-    author: 'Джон Дальтон',
-    status: 'outdated',
-    statusText: 'Не является верной'
-  },
-  {
-    id: 'thomson',
-    name: 'Модель Томсона',
-    nickname: '«Пудинг с изюмом»',
-    year: 1904,
-    author: 'Джозеф Томсон',
-    status: 'outdated',
-    statusText: 'Не является верной'
-  },
-  {
-    id: 'rutherford',
-    name: 'Модель Резерфорда',
-    nickname: '«Планетарная модель»',
-    year: 1911,
-    author: 'Эрнест Резерфорд',
-    status: 'outdated',
-    statusText: 'Не является верной'
-  },
-  {
-    id: 'bohr',
-    name: 'Модель Бора',
-    nickname: '«Квантовые орбиты»',
-    year: 1913,
-    author: 'Нильс Бор',
-    status: 'partial',
-    statusText: 'Почти верная — работает для водорода',
-    duration: 10000
-  },
-  {
-    id: 'sommerfeld',
-    name: 'Модель Бора-Зоммерфельда',
-    nickname: '«Эллиптические орбиты»',
-    year: 1916,
-    author: 'Арнольд Зоммерфельд',
-    status: 'partial',
-    statusText: 'Почти верная — уточнение модели Бора'
-  },
-  {
-    id: 'debroglie',
-    name: 'Модель де Бройля',
-    nickname: '«Волновые орбиты»',
-    year: 1924,
-    author: 'Луи де Бройль',
-    status: 'partial',
-    statusText: 'Почти верная — волновая природа электрона'
-  },
-  {
-    id: 'quantum',
-    name: 'Квантово-механическая модель',
-    nickname: '«Электронное облако»',
-    year: 1926,
-    author: 'Эрвин Шрёдингер',
-    status: 'current',
-    statusText: 'Современная модель'
-  }
+  { id: 'dalton', year: 1803, status: 'outdated' },
+  { id: 'thomson', year: 1904, status: 'outdated' },
+  { id: 'rutherford', year: 1911, status: 'outdated' },
+  { id: 'bohr', year: 1913, status: 'partial', duration: 10000 },
+  { id: 'sommerfeld', year: 1916, status: 'partial' },
+  { id: 'debroglie', year: 1924, status: 'partial' },
+  { id: 'quantum', year: 1926, status: 'current' }
 ];
 
 // Quantum model: random dots around nucleus
@@ -610,6 +550,7 @@ const modelComponents: Record<string, () => ReturnType<typeof DaltonModel>> = {
 const DEFAULT_INTERVAL = 6000;
 
 export default function RandomAtomModel() {
+  const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const isTouchRef = useRef(false);
@@ -679,9 +620,9 @@ export default function RandomAtomModel() {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="atom-model-name">{model.name}</div>
-          <div className="atom-model-nickname">{model.nickname}</div>
-          <div className="atom-model-year">{model.author}, {model.year} г.</div>
+          <div className="atom-model-name">{t(`atomModels.${model.id}.name`)}</div>
+          <div className="atom-model-nickname">{t(`atomModels.${model.id}.nickname`)}</div>
+          <div className="atom-model-year">{t(`atomModels.${model.id}.author`)}, {model.year} {t('atomModels.year')}</div>
           <span className={`atom-model-status ${model.status}`}>
             <span
               key={model.id}
@@ -692,7 +633,7 @@ export default function RandomAtomModel() {
                 background: statusColor,
               }}
             />
-            <span className="atom-model-status-text">{model.statusText}</span>
+            <span className="atom-model-status-text">{t(`atomModels.${model.id}.status`)}</span>
           </span>
         </motion.div>
       </AnimatePresence>

@@ -1,14 +1,17 @@
+import { useTranslation } from 'react-i18next';
 import PageTemplate from '../../components/PageTemplate';
 
 export default function Decay() {
+  const { t } = useTranslation();
+
   return (
     <PageTemplate
-      title="Деление ядра"
-      section="Физика Атомного ядра"
+      title={t('topics.decay.title')}
+      section={t('pageTemplate.section')}
       videoSrc="/videos/nuclear/8_decay.mp4"
-      description="Анимация показывает процесс деления тяжёлого ядра (урана-235) под действием нейтрона. Ядро захватывает нейтрон, переходит в возбуждённое состояние и делится на два осколка средней массы (барий и криптон) с выделением 2-3 нейтронов и огромной энергии. Этот процесс лежит в основе работы ядерных реакторов и атомного оружия."
-      prevLink={{ path: '/nuclear/droplet', title: 'Капельная модель ядра' }}
-      nextLink={{ path: '/nuclear/chain', title: 'Цепная реакция' }}
+      description={t('topics.decay.description')}
+      prevLink={{ path: '/nuclear/droplet', title: t('topics.droplet.title') }}
+      nextLink={{ path: '/nuclear/chain', title: t('topics.chain.title') }}
       animationStatus="yellow"
     />
   );

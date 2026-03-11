@@ -1,37 +1,41 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SpeakButton from './SpeakButton';
 import PreQuiz from './PreQuiz';
 import { hasCompletedPreQuiz, setPreQuizCompleted } from '../lib/supabase';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { glossaryTerms, glossaryCategories, type GlossaryTerm } from '../data/glossary';
+import { isotopes, isotopeCategories, type Isotope } from '../data/halfLifeTable';
+import { scientists, scientistCategories, type Scientist } from '../data/scientists';
 import '../styles/page-layout.css';
 
 type AnimationStatus = 'red' | 'yellow' | 'green';
 
-const statusConfig = {
+const getStatusConfig = (t: (key: string) => string) => ({
   red: {
     color: '#ff4444',
     bgColor: 'rgba(255, 68, 68, 0.15)',
     borderColor: 'rgba(255, 68, 68, 0.4)',
-    label: 'Не является верной',
-    tooltip: 'Анимация будет переделана, есть неточности в природе процесса'
+    label: t('pageTemplate.statusIncorrect'),
+    tooltip: t('pageTemplate.statusIncorrectTooltip')
   },
   yellow: {
     color: '#ffbb33',
     bgColor: 'rgba(255, 187, 51, 0.15)',
     borderColor: 'rgba(255, 187, 51, 0.4)',
-    label: 'Мелкие неточности',
-    tooltip: 'На данный момент является корректной анимацией с мелкими неточностями в анимации'
+    label: t('pageTemplate.statusMinorIssues'),
+    tooltip: t('pageTemplate.statusMinorTooltip')
   },
   green: {
     color: '#00C851',
     bgColor: 'rgba(0, 200, 81, 0.15)',
     borderColor: 'rgba(0, 200, 81, 0.4)',
-    label: 'Утверждена',
-    tooltip: 'Утверждённый вариант анимации'
+    label: t('pageTemplate.statusApproved'),
+    tooltip: t('pageTemplate.statusApprovedTooltip')
   }
-};
+});
 
 interface PageTemplateProps {
   title: string;
@@ -44,16 +48,37 @@ interface PageTemplateProps {
 }
 
 export default function PageTemplate({ title, section, videoSrc, description, prevLink, nextLink, animationStatus }: PageTemplateProps) {
+  const { t } = useTranslation();
   const descriptionRef = useRef<HTMLDivElement>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPeriodicTable, setShowPeriodicTable] = useState(false);
   const [showConstants, setShowConstants] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
+  const [glossarySearch, setGlossarySearch] = useState('');
+  const [glossaryCategory, setGlossaryCategory] = useState('all');
+  const [showHalfLife, setShowHalfLife] = useState(false);
+  const [halfLifeSearch, setHalfLifeSearch] = useState('');
+  const [halfLifeCategory, setHalfLifeCategory] = useState('all');
+  const [halfLifeSort, setHalfLifeSort] = useState<'halfLife' | 'halfLifeDesc' | 'atomicNumber' | 'nameAsc' | 'nameDesc'>('atomicNumber');
+  const [showDecayModeTooltip, setShowDecayModeTooltip] = useState(false);
+  const [showDecayProductsTooltip, setShowDecayProductsTooltip] = useState(false);
+  const [showScientists, setShowScientists] = useState(false);
+  const [scientistsSearch, setScientistsSearch] = useState('');
+  const [scientistsCategory, setScientistsCategory] = useState('all');
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [calcN0, setCalcN0] = useState('100');
+  const [calcHalfLife, setCalcHalfLife] = useState('');
+  const [calcTime, setCalcTime] = useState('');
+  const [calcTimeUnit, setCalcTimeUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'years'>('years');
+  const [calcHalfLifeUnit, setCalcHalfLifeUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'years'>('years');
+  const [selectedIsotope, setSelectedIsotope] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
   const [showPreQuiz, setShowPreQuiz] = useState(false);
   const [showPreQuizWithCode, setShowPreQuizWithCode] = useState(false); // Для повторного прохождения
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const isLightTheme = a11yEnabled && lightTheme;
+  const statusConfig = getStatusConfig(t);
 
   // Проверяем, нужно ли показать входной тест
   useEffect(() => {
@@ -220,7 +245,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                     borderTop: '1px solid rgba(255,255,255,0.1)',
                     paddingTop: '8px'
                   }}>
-                    Заметили ошибку? Напишите на{' '}
+                    {t('pageTemplate.noticeError')}{' '}
                     <a href="mailto:tgr.aimurza@gmail.com" style={{ color: '#FC6255' }}>
                       tgr.aimurza@gmail.com
                     </a>
@@ -255,7 +280,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 }}
               >
                 <source src={videoSrc} type="video/mp4" />
-                Ваш браузер не поддерживает видео
+                {t('pageTemplate.videoNotSupported')}
               </video>
             )}
           </div>
@@ -297,10 +322,10 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
                 e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
               }}
-              title="Таблица Менделеева"
+              title={t('pageTemplate.periodicTable')}
             >
               <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>⊞</span>
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>Таблица Менделеева</span>
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.periodicTable')}</span>
             </button>
             <button
               onClick={() => setShowConstants(true)}
@@ -330,10 +355,136 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
                 e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
               }}
-              title="Константы"
+              title={t('pageTemplate.constants')}
             >
               <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>≡</span>
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>Константы</span>
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.constants')}</span>
+            </button>
+            <button
+              onClick={() => setShowGlossary(true)}
+              style={{
+                flex: isVerySmallScreen ? 'none' : '1 1 0',
+                width: isVerySmallScreen ? '100%' : 'auto',
+                minHeight: '44px',
+                padding: '10px 12px',
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+              }}
+              title={t('pageTemplate.glossary')}
+            >
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.glossary')}</span>
+            </button>
+            <button
+              onClick={() => setShowHalfLife(true)}
+              style={{
+                flex: isVerySmallScreen ? 'none' : '1 1 0',
+                width: isVerySmallScreen ? '100%' : 'auto',
+                minHeight: '44px',
+                padding: '10px 12px',
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+              }}
+              title={t('pageTemplate.halfLifeTable')}
+            >
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.halfLifeTable')}</span>
+            </button>
+            <button
+              onClick={() => setShowScientists(true)}
+              style={{
+                flex: isVerySmallScreen ? 'none' : '1 1 0',
+                width: isVerySmallScreen ? '100%' : 'auto',
+                minHeight: '44px',
+                padding: '10px 12px',
+                background: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                borderRadius: '10px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+              }}
+              title={t('pageTemplate.scientists')}
+            >
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.scientists')}</span>
+            </button>
+            <button
+              onClick={() => setShowCalculator(true)}
+              style={{
+                flex: isVerySmallScreen ? 'none' : '1 1 0',
+                width: isVerySmallScreen ? '100%' : 'auto',
+                minHeight: '44px',
+                padding: '10px 12px',
+                background: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                borderRadius: '10px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+              }}
+              title={t('pageTemplate.calculator')}
+            >
+              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.calculator')}</span>
             </button>
           </div>
         </div>
@@ -359,7 +510,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
           >
             <img
               src="/images/periodic-table.png"
-              alt="Таблица Менделеева"
+              alt={t('pageTemplate.periodicTable')}
               style={{
                 maxWidth: '95vw',
                 maxHeight: '95vh',
@@ -434,7 +585,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                   lineHeight: 1.3,
                   flex: 1
                 }}>
-                  Физические константы атомной и ядерной физики
+                  {t('pageTemplate.physicsConstants')}
                 </h2>
                 <button
                   onClick={() => setShowConstants(false)}
@@ -455,7 +606,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
 
               {/* Fundamental Constants */}
               <h3 style={{ color: isLightTheme ? '#1976d2' : '#42a5f5', marginBottom: '15px', fontSize: '1.2rem' }}>
-                Фундаментальные константы
+                {t('pageTemplate.fundamentalConstants')}
               </h3>
               <div style={{ overflowX: 'auto', marginBottom: '25px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '500px' : 'auto' }}>
@@ -523,7 +674,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
 
               {/* Particle Masses */}
               <h3 style={{ color: isLightTheme ? '#1976d2' : '#42a5f5', marginBottom: '15px', fontSize: '1.2rem' }}>
-                Массы частиц
+                {t('pageTemplate.particleMasses')}
               </h3>
               <div style={{ overflowX: 'auto', marginBottom: '25px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '600px' : 'auto' }}>
@@ -578,7 +729,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
 
               {/* Atomic Constants */}
               <h3 style={{ color: isLightTheme ? '#1976d2' : '#42a5f5', marginBottom: '15px', fontSize: '1.2rem' }}>
-                Атомные константы
+                {t('pageTemplate.atomicConstants')}
               </h3>
               <div style={{ overflowX: 'auto', marginBottom: '25px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '500px' : 'auto' }}>
@@ -631,7 +782,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
 
               {/* Nuclear Constants */}
               <h3 style={{ color: isLightTheme ? '#1976d2' : '#42a5f5', marginBottom: '15px', fontSize: '1.2rem' }}>
-                Ядерные константы
+                {t('pageTemplate.nuclearConstants')}
               </h3>
               <div style={{ overflowX: 'auto', marginBottom: '25px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '500px' : 'auto' }}>
@@ -672,7 +823,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
 
               {/* Radiation */}
               <h3 style={{ color: isLightTheme ? '#1976d2' : '#42a5f5', marginBottom: '15px', fontSize: '1.2rem' }}>
-                Характеристики излучения
+                {t('pageTemplate.radiationCharacteristics')}
               </h3>
               <div style={{ overflowX: 'auto', marginBottom: '25px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '600px' : 'auto' }}>
@@ -727,7 +878,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
 
               {/* Energy Conversions */}
               <h3 style={{ color: isLightTheme ? '#1976d2' : '#42a5f5', marginBottom: '15px', fontSize: '1.2rem' }}>
-                Единицы энергии
+                {t('pageTemplate.energyUnits')}
               </h3>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '400px' : 'auto' }}>
@@ -755,6 +906,1152 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
           </div>
         )}
 
+        {/* Glossary Modal */}
+        {showGlossary && (
+          <div
+            className="glossary-modal-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: isLightTheme ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.95)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              padding: isMobile ? '10px' : '20px',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.target === e.currentTarget && setShowGlossary(false)}
+          >
+            <div
+              className="glossary-modal-content"
+              style={{
+                backgroundColor: isLightTheme ? '#ffffff' : '#1a1a1a',
+                borderRadius: '15px',
+                padding: isMobile ? '20px 15px' : '30px',
+                maxWidth: '800px',
+                width: '100%',
+                margin: isMobile ? '20px 0' : '40px 0',
+                border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: isLightTheme ? '0 4px 20px rgba(0,0,0,0.15)' : 'none',
+                maxHeight: '85vh',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '20px',
+                gap: '15px'
+              }}>
+                <h2 style={{
+                  color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                  margin: 0,
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  fontSize: isMobile ? '1.3rem' : '1.8rem',
+                  lineHeight: 1.3,
+                  flex: 1
+                }}>
+                  {t('pageTemplate.glossaryTitle')}
+                </h2>
+                <button
+                  onClick={() => setShowGlossary(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: isLightTheme ? '#333' : 'white',
+                    fontSize: '1.8rem',
+                    padding: '5px',
+                    lineHeight: 1,
+                    flexShrink: 0
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Search and Filter */}
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '20px',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
+                <input
+                  type="text"
+                  placeholder={t('pageTemplate.glossarySearch')}
+                  value={glossarySearch}
+                  onChange={(e) => setGlossarySearch(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                    backgroundColor: isLightTheme ? '#f5f5f5' : 'rgba(255,255,255,0.05)',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+                <select
+                  value={glossaryCategory}
+                  onChange={(e) => setGlossaryCategory(e.target.value)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                    backgroundColor: isLightTheme ? '#f5f5f5' : 'rgba(255,255,255,0.05)',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    minWidth: isMobile ? '100%' : '200px'
+                  }}
+                >
+                  <option value="all">{t('pageTemplate.glossaryCategories.all')}</option>
+                  <option value="nuclear">{t('pageTemplate.glossaryCategories.nuclear')}</option>
+                  <option value="quantum">{t('pageTemplate.glossaryCategories.quantum')}</option>
+                  <option value="general">{t('pageTemplate.glossaryCategories.general')}</option>
+                  <option value="electromagnetism">{t('pageTemplate.glossaryCategories.electromagnetism')}</option>
+                  <option value="optics">{t('pageTemplate.glossaryCategories.optics')}</option>
+                </select>
+              </div>
+
+              {/* Terms List */}
+              <div style={{
+                overflowY: 'auto',
+                flex: 1
+              }}>
+                {(() => {
+                  const filteredTerms = glossaryTerms.filter((term: GlossaryTerm) => {
+                    const matchesCategory = glossaryCategory === 'all' || term.category === glossaryCategory;
+                    const matchesSearch = glossarySearch === '' ||
+                      term.term.toLowerCase().includes(glossarySearch.toLowerCase()) ||
+                      term.definition.toLowerCase().includes(glossarySearch.toLowerCase());
+                    return matchesCategory && matchesSearch;
+                  });
+
+                  if (filteredTerms.length === 0) {
+                    return (
+                      <p style={{
+                        color: isLightTheme ? '#666' : '#888',
+                        textAlign: 'center',
+                        padding: '40px 20px'
+                      }}>
+                        {t('pageTemplate.glossaryEmpty')}
+                      </p>
+                    );
+                  }
+
+                  return filteredTerms.map((term: GlossaryTerm) => (
+                    <div
+                      key={term.id}
+                      style={{
+                        padding: '16px',
+                        marginBottom: '12px',
+                        backgroundColor: isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)',
+                        borderRadius: '10px',
+                        border: isLightTheme ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '8px'
+                      }}>
+                        <h4 style={{
+                          margin: 0,
+                          color: isLightTheme ? '#1976d2' : '#42a5f5',
+                          fontSize: '1.1rem',
+                          fontWeight: 600
+                        }}>
+                          {term.term}
+                        </h4>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: isLightTheme ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)',
+                          color: isLightTheme ? '#666' : '#888'
+                        }}>
+                          {glossaryCategories[term.category as keyof typeof glossaryCategories]}
+                        </span>
+                      </div>
+                      <p style={{
+                        margin: 0,
+                        color: isLightTheme ? '#333' : '#ccc',
+                        fontSize: '0.95rem',
+                        lineHeight: 1.6
+                      }}>
+                        {term.definition}
+                      </p>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Half-Life Table Modal */}
+        {showHalfLife && (
+          <div
+            className="halflife-modal-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: isLightTheme ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.95)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              padding: isMobile ? '10px' : '20px',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.target === e.currentTarget && setShowHalfLife(false)}
+          >
+            <div
+              className="halflife-modal-content"
+              style={{
+                backgroundColor: isLightTheme ? '#ffffff' : '#1a1a1a',
+                borderRadius: '15px',
+                padding: isMobile ? '20px 15px' : '30px',
+                maxWidth: '1000px',
+                width: '100%',
+                margin: isMobile ? '20px 0' : '40px 0',
+                border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: isLightTheme ? '0 4px 20px rgba(0,0,0,0.15)' : 'none',
+                maxHeight: '85vh',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '20px',
+                gap: '15px'
+              }}>
+                <h2 style={{
+                  color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                  margin: 0,
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  fontSize: isMobile ? '1.3rem' : '1.8rem',
+                  lineHeight: 1.3,
+                  flex: 1
+                }}>
+                  {t('pageTemplate.halfLifeTitle')}
+                </h2>
+                <button
+                  onClick={() => setShowHalfLife(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: isLightTheme ? '#333' : 'white',
+                    fontSize: '1.8rem',
+                    padding: '5px',
+                    lineHeight: 1,
+                    flexShrink: 0
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Search, Filter and Sort */}
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '20px',
+                flexDirection: isMobile ? 'column' : 'row',
+                flexWrap: 'wrap'
+              }}>
+                <input
+                  type="text"
+                  placeholder={t('pageTemplate.halfLifeSearch')}
+                  value={halfLifeSearch}
+                  onChange={(e) => setHalfLifeSearch(e.target.value)}
+                  style={{
+                    flex: isMobile ? 'none' : 1,
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                    backgroundColor: isLightTheme ? '#f5f5f5' : 'rgba(255,255,255,0.05)',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+                <select
+                  value={halfLifeCategory}
+                  onChange={(e) => setHalfLifeCategory(e.target.value)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                    backgroundColor: isLightTheme ? '#f5f5f5' : 'rgba(255,255,255,0.05)',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="all">{t('pageTemplate.halfLifeCategories.all')}</option>
+                  <option value="natural">{t('pageTemplate.halfLifeCategories.natural')}</option>
+                  <option value="medical">{t('pageTemplate.halfLifeCategories.medical')}</option>
+                  <option value="industrial">{t('pageTemplate.halfLifeCategories.industrial')}</option>
+                  <option value="weapons">{t('pageTemplate.halfLifeCategories.weapons')}</option>
+                  <option value="research">{t('pageTemplate.halfLifeCategories.research')}</option>
+                </select>
+                <select
+                  value={halfLifeSort}
+                  onChange={(e) => setHalfLifeSort(e.target.value as 'halfLife' | 'halfLifeDesc' | 'atomicNumber')}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                    backgroundColor: isLightTheme ? '#f5f5f5' : 'rgba(255,255,255,0.05)',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="atomicNumber">{t('pageTemplate.halfLifeSortZ')}</option>
+                  <option value="halfLife">T½ ↑</option>
+                  <option value="halfLifeDesc">T½ ↓</option>
+                  <option value="nameAsc">{t('pageTemplate.halfLifeSortNameAsc')}</option>
+                  <option value="nameDesc">{t('pageTemplate.halfLifeSortNameDesc')}</option>
+                </select>
+              </div>
+
+              {/* Table */}
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {(() => {
+                  let filteredIsotopes = isotopes.filter((iso: Isotope) => {
+                    const matchesCategory = halfLifeCategory === 'all' || iso.category === halfLifeCategory;
+                    const matchesSearch = halfLifeSearch === '' ||
+                      iso.name.toLowerCase().includes(halfLifeSearch.toLowerCase()) ||
+                      iso.element.toLowerCase().includes(halfLifeSearch.toLowerCase());
+                    return matchesCategory && matchesSearch;
+                  });
+
+                  // Sort
+                  filteredIsotopes = [...filteredIsotopes].sort((a, b) => {
+                    if (halfLifeSort === 'atomicNumber') return a.atomicNumber - b.atomicNumber;
+                    if (halfLifeSort === 'halfLife') return a.halfLifeSeconds - b.halfLifeSeconds;
+                    if (halfLifeSort === 'halfLifeDesc') return b.halfLifeSeconds - a.halfLifeSeconds;
+                    if (halfLifeSort === 'nameAsc') return a.name.localeCompare(b.name, 'ru');
+                    if (halfLifeSort === 'nameDesc') return b.name.localeCompare(a.name, 'ru');
+                    return 0;
+                  });
+
+                  if (filteredIsotopes.length === 0) {
+                    return (
+                      <p style={{
+                        color: isLightTheme ? '#666' : '#888',
+                        textAlign: 'center',
+                        padding: '40px 20px'
+                      }}>
+                        {t('pageTemplate.halfLifeEmpty')}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: isLightTheme ? '2px solid rgba(0,0,0,0.2)' : '2px solid rgba(255,255,255,0.2)' }}>
+                            <th style={{ textAlign: 'left', padding: '12px 10px', color: isLightTheme ? '#666' : '#888', fontWeight: 600 }}>
+                              {t('pageTemplate.halfLifeColumns.isotope')}
+                            </th>
+                            <th style={{ textAlign: 'left', padding: '12px 10px', color: isLightTheme ? '#666' : '#888', fontWeight: 600 }}>
+                              {t('pageTemplate.halfLifeColumns.halfLife')}
+                            </th>
+                            <th style={{ textAlign: 'center', padding: '12px 10px', color: isLightTheme ? '#666' : '#888', fontWeight: 600, position: 'relative' }}>
+                              <span
+                                style={{ cursor: 'help', borderBottom: '1px dashed currentColor' }}
+                                onMouseEnter={() => setShowDecayModeTooltip(true)}
+                                onMouseLeave={() => setShowDecayModeTooltip(false)}
+                              >
+                                {t('pageTemplate.halfLifeColumns.decayMode')}
+                              </span>
+                              {showDecayModeTooltip && (
+                                <div className="decay-tooltip" style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  left: '50%',
+                                  transform: 'translateX(-50%)',
+                                  background: '#1a1a1a',
+                                  color: '#ffffff',
+                                  padding: '14px 18px',
+                                  borderRadius: '10px',
+                                  fontSize: '0.85rem',
+                                  lineHeight: 1.6,
+                                  width: '280px',
+                                  zIndex: 1001,
+                                  boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                                  textAlign: 'left',
+                                  fontWeight: 400,
+                                  border: '1px solid #333'
+                                }}>
+                                  <div style={{ marginBottom: '10px', fontWeight: 600, color: '#64b5f6', fontSize: '0.9rem' }}>Типы распада:</div>
+                                  <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#ff6b6b', fontWeight: 700, fontSize: '1rem', minWidth: '24px' }}>α</span><span style={{ color: '#fff' }}>— испускание ядра гелия</span></div>
+                                  <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64b5f6', fontWeight: 700, fontSize: '1rem', minWidth: '24px' }}>β⁻</span><span style={{ color: '#fff' }}>— испускание электрона</span></div>
+                                  <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64b5f6', fontWeight: 700, fontSize: '1rem', minWidth: '24px' }}>β⁺</span><span style={{ color: '#fff' }}>— испускание позитрона</span></div>
+                                  <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#ce93d8', fontWeight: 700, fontSize: '1rem', minWidth: '24px' }}>γ</span><span style={{ color: '#fff' }}>— испускание фотона</span></div>
+                                  <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#81c784', fontWeight: 700, fontSize: '1rem', minWidth: '24px' }}>EC</span><span style={{ color: '#fff' }}>— электронный захват</span></div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#ffb74d', fontWeight: 700, fontSize: '1rem', minWidth: '24px' }}>IT</span><span style={{ color: '#fff' }}>— изомерный переход</span></div>
+                                </div>
+                              )}
+                            </th>
+                            <th style={{ textAlign: 'left', padding: '12px 10px', color: isLightTheme ? '#666' : '#888', fontWeight: 600, position: 'relative' }}>
+                              <span
+                                style={{ cursor: 'help', borderBottom: '1px dashed currentColor' }}
+                                onMouseEnter={() => setShowDecayProductsTooltip(true)}
+                                onMouseLeave={() => setShowDecayProductsTooltip(false)}
+                              >
+                                {t('pageTemplate.halfLifeColumns.decayProducts')}
+                              </span>
+                              {showDecayProductsTooltip && (
+                                <div className="decay-tooltip" style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  right: 0,
+                                  background: '#1a1a1a',
+                                  color: '#ffffff',
+                                  padding: '14px 18px',
+                                  borderRadius: '10px',
+                                  fontSize: '0.85rem',
+                                  lineHeight: 1.6,
+                                  width: '260px',
+                                  zIndex: 1001,
+                                  boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                                  textAlign: 'left',
+                                  fontWeight: 400,
+                                  border: '1px solid #333'
+                                }}>
+                                  <div style={{ marginBottom: '8px', fontWeight: 600, color: '#64b5f6' }}>Продукты распада</div>
+                                  <div style={{ color: '#ddd' }}>Дочерние ядра, образующиеся в результате распада.</div>
+                                  <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px' }}>
+                                    <span style={{ color: '#aaa' }}>Формат:</span> <span style={{ color: '#64b5f6' }}>A</span>-<span style={{ color: '#81c784' }}>X</span>
+                                    <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '4px' }}>A — массовое число, X — элемент</div>
+                                  </div>
+                                </div>
+                              )}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredIsotopes.map((iso: Isotope) => (
+                            <tr
+                              key={iso.id}
+                              style={{
+                                borderBottom: isLightTheme ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)',
+                                transition: 'background-color 0.2s'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <td style={{ padding: '12px 10px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{
+                                      color: isLightTheme ? '#1976d2' : '#42a5f5',
+                                      fontWeight: 600,
+                                      fontSize: '1.2rem'
+                                    }}>
+                                      <sup style={{ fontSize: '0.7em', verticalAlign: 'super' }}>{iso.massNumber}</sup>{iso.element}
+                                    </span>
+                                    <span style={{
+                                      fontSize: '0.7rem',
+                                      padding: '2px 8px',
+                                      borderRadius: '4px',
+                                      backgroundColor: isLightTheme ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
+                                      color: isLightTheme ? '#666' : '#999'
+                                    }}>
+                                      {isotopeCategories[iso.category as keyof typeof isotopeCategories]}
+                                    </span>
+                                  </div>
+                                  <span style={{
+                                    color: isLightTheme ? '#333' : '#ccc',
+                                    fontSize: '0.9rem'
+                                  }}>
+                                    {iso.name}
+                                  </span>
+                                  {iso.description && (
+                                    <span style={{
+                                      color: isLightTheme ? '#666' : '#888',
+                                      fontSize: '0.9rem',
+                                      lineHeight: 1.5
+                                    }}>
+                                      {iso.description}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td style={{
+                                padding: '12px 10px',
+                                color: isLightTheme ? '#333' : '#fff',
+                                fontFamily: 'monospace',
+                                fontSize: '0.95rem',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {iso.halfLife}
+                              </td>
+                              <td style={{
+                                padding: '12px 10px',
+                                textAlign: 'center'
+                              }}>
+                                <span style={{
+                                  display: 'inline-block',
+                                  padding: '4px 10px',
+                                  borderRadius: '12px',
+                                  backgroundColor: iso.decayMode.includes('α')
+                                    ? 'rgba(252, 98, 85, 0.2)'
+                                    : iso.decayMode.includes('β')
+                                      ? 'rgba(66, 165, 245, 0.2)'
+                                      : iso.decayMode.includes('γ')
+                                        ? 'rgba(156, 39, 176, 0.2)'
+                                        : iso.decayMode.includes('EC')
+                                          ? 'rgba(129, 199, 132, 0.2)'
+                                          : 'rgba(255, 183, 77, 0.2)',
+                                  color: iso.decayMode.includes('α')
+                                    ? '#FC6255'
+                                    : iso.decayMode.includes('β')
+                                      ? '#42a5f5'
+                                      : iso.decayMode.includes('γ')
+                                        ? '#ba68c8'
+                                        : iso.decayMode.includes('EC')
+                                          ? '#66bb6a'
+                                          : '#ffb74d',
+                                  fontSize: '0.85rem',
+                                  fontWeight: 500
+                                }}>
+                                  {iso.decayMode}
+                                </span>
+                              </td>
+                              <td style={{
+                                padding: '12px 10px',
+                                color: isLightTheme ? '#555' : '#aaa',
+                                fontSize: '0.9rem'
+                              }}>
+                                {iso.decayProducts}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scientists Modal */}
+        {showScientists && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+            onClick={() => setShowScientists(false)}
+          >
+            <div
+              style={{
+                backgroundColor: isLightTheme ? '#fff' : '#1a1a1a',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '800px',
+                maxHeight: '85vh',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div style={{
+                padding: '20px 24px',
+                borderBottom: `1px solid ${isLightTheme ? '#eee' : '#333'}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '1.4rem',
+                  color: isLightTheme ? '#333' : '#fff'
+                }}>
+                  {t('pageTemplate.scientistsTitle')}
+                </h2>
+                <button
+                  onClick={() => setShowScientists(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.8rem',
+                    cursor: 'pointer',
+                    color: isLightTheme ? '#666' : '#888',
+                    padding: '0 8px'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Search and Filter */}
+              <div style={{
+                padding: '16px 24px',
+                borderBottom: `1px solid ${isLightTheme ? '#eee' : '#333'}`,
+                display: 'flex',
+                gap: '12px',
+                flexWrap: 'wrap'
+              }}>
+                <input
+                  type="text"
+                  placeholder={t('pageTemplate.scientistsSearch')}
+                  value={scientistsSearch}
+                  onChange={(e) => setScientistsSearch(e.target.value)}
+                  style={{
+                    flex: '1 1 200px',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                    backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '0.95rem'
+                  }}
+                />
+                <select
+                  value={scientistsCategory}
+                  onChange={(e) => setScientistsCategory(e.target.value)}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                    backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                    color: isLightTheme ? '#333' : '#fff',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="all">{t('pageTemplate.allCategories')}</option>
+                  {Object.entries(scientistCategories).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Scientists List */}
+              <div style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '16px 24px'
+              }}>
+                {(() => {
+                  const filtered = scientists.filter(s => {
+                    const matchesSearch = scientistsSearch === '' ||
+                      s.name.toLowerCase().includes(scientistsSearch.toLowerCase()) ||
+                      s.nameEn.toLowerCase().includes(scientistsSearch.toLowerCase()) ||
+                      s.achievements.some(a => a.toLowerCase().includes(scientistsSearch.toLowerCase()));
+                    const matchesCategory = scientistsCategory === 'all' || s.category === scientistsCategory;
+                    return matchesSearch && matchesCategory;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '40px',
+                        color: isLightTheme ? '#666' : '#888'
+                      }}>
+                        {t('pageTemplate.noResults')}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {filtered.map((scientist) => (
+                        <div
+                          key={scientist.id}
+                          style={{
+                            padding: '20px',
+                            backgroundColor: isLightTheme ? '#f8f8f8' : '#252525',
+                            borderRadius: '12px',
+                            border: `1px solid ${isLightTheme ? '#eee' : '#333'}`
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                            <div>
+                              <h3 style={{
+                                margin: 0,
+                                fontSize: '1.2rem',
+                                color: '#64b5f6',
+                                marginBottom: '4px'
+                              }}>
+                                {scientist.name}
+                              </h3>
+                              <div style={{
+                                fontSize: '0.85rem',
+                                color: isLightTheme ? '#666' : '#888'
+                              }}>
+                                {scientist.nameEn} • {scientist.years} • {scientist.country}
+                              </div>
+                            </div>
+                            <span style={{
+                              padding: '4px 10px',
+                              backgroundColor: isLightTheme ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)',
+                              borderRadius: '12px',
+                              fontSize: '0.8rem',
+                              color: isLightTheme ? '#555' : '#aaa'
+                            }}>
+                              {scientistCategories[scientist.category]}
+                            </span>
+                          </div>
+
+                          <ul style={{
+                            margin: '0 0 12px 0',
+                            paddingLeft: '20px',
+                            color: isLightTheme ? '#444' : '#ccc',
+                            fontSize: '0.95rem',
+                            lineHeight: 1.6
+                          }}>
+                            {scientist.achievements.map((achievement, idx) => (
+                              <li key={idx}>{achievement}</li>
+                            ))}
+                          </ul>
+
+                          {scientist.nobelPrize && (
+                            <div style={{
+                              padding: '8px 12px',
+                              backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                              borderRadius: '8px',
+                              fontSize: '0.9rem',
+                              color: '#ffd700',
+                              marginBottom: '8px'
+                            }}>
+                              🏆 {scientist.nobelPrize}
+                            </div>
+                          )}
+
+                          {scientist.famousQuote && (
+                            <div style={{
+                              padding: '12px 16px',
+                              backgroundColor: isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)',
+                              borderLeft: '3px solid #64b5f6',
+                              borderRadius: '0 8px 8px 0',
+                              fontStyle: 'italic',
+                              color: isLightTheme ? '#555' : '#aaa',
+                              fontSize: '0.9rem'
+                            }}>
+                              «{scientist.famousQuote}»
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Decay Calculator Modal */}
+        {showCalculator && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+            onClick={() => setShowCalculator(false)}
+          >
+            <div
+              style={{
+                backgroundColor: isLightTheme ? '#fff' : '#1a1a1a',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '500px',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div style={{
+                padding: '20px 24px',
+                borderBottom: `1px solid ${isLightTheme ? '#eee' : '#333'}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '1.4rem',
+                  color: isLightTheme ? '#333' : '#fff'
+                }}>
+                  {t('pageTemplate.calculatorTitle')}
+                </h2>
+                <button
+                  onClick={() => setShowCalculator(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.8rem',
+                    cursor: 'pointer',
+                    color: isLightTheme ? '#666' : '#888',
+                    padding: '0 8px'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Calculator Content */}
+              <div style={{ padding: '24px' }}>
+                {/* Isotope Selection */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    color: isLightTheme ? '#555' : '#aaa',
+                    fontSize: '0.9rem'
+                  }}>
+                    {t('pageTemplate.calcSelectIsotope')}
+                  </label>
+                  <select
+                    value={selectedIsotope}
+                    onChange={(e) => {
+                      setSelectedIsotope(e.target.value);
+                      const iso = isotopes.find(i => i.id === e.target.value);
+                      if (iso) {
+                        // Convert halfLifeSeconds to appropriate unit
+                        const seconds = iso.halfLifeSeconds;
+                        if (seconds >= 365.25 * 24 * 3600) {
+                          setCalcHalfLife(String(seconds / (365.25 * 24 * 3600)));
+                          setCalcHalfLifeUnit('years');
+                        } else if (seconds >= 24 * 3600) {
+                          setCalcHalfLife(String(seconds / (24 * 3600)));
+                          setCalcHalfLifeUnit('days');
+                        } else if (seconds >= 3600) {
+                          setCalcHalfLife(String(seconds / 3600));
+                          setCalcHalfLifeUnit('hours');
+                        } else if (seconds >= 60) {
+                          setCalcHalfLife(String(seconds / 60));
+                          setCalcHalfLifeUnit('minutes');
+                        } else {
+                          setCalcHalfLife(String(seconds));
+                          setCalcHalfLifeUnit('seconds');
+                        }
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                      backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                      color: isLightTheme ? '#333' : '#fff',
+                      fontSize: '0.95rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="">{t('pageTemplate.calcManualInput')}</option>
+                    {[...isotopes].sort((a, b) => a.name.localeCompare(b.name, 'ru')).map(iso => (
+                      <option key={iso.id} value={iso.id}>
+                        {iso.name} (T½ = {iso.halfLife})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Initial Amount */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    color: isLightTheme ? '#555' : '#aaa',
+                    fontSize: '0.9rem'
+                  }}>
+                    {t('pageTemplate.calcInitialAmount')} (N₀)
+                  </label>
+                  <input
+                    type="number"
+                    value={calcN0}
+                    onChange={(e) => setCalcN0(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                      backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                      color: isLightTheme ? '#333' : '#fff',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                {/* Half-life */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    color: isLightTheme ? '#555' : '#aaa',
+                    fontSize: '0.9rem'
+                  }}>
+                    {t('pageTemplate.calcHalfLife')} (T½)
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="number"
+                      value={calcHalfLife}
+                      onChange={(e) => {
+                        setCalcHalfLife(e.target.value);
+                        setSelectedIsotope('');
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '12px 14px',
+                        borderRadius: '8px',
+                        border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                        backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                        color: isLightTheme ? '#333' : '#fff',
+                        fontSize: '1rem'
+                      }}
+                    />
+                    <select
+                      value={calcHalfLifeUnit}
+                      onChange={(e) => setCalcHalfLifeUnit(e.target.value as typeof calcHalfLifeUnit)}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: '8px',
+                        border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                        backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                        color: isLightTheme ? '#333' : '#fff',
+                        fontSize: '0.95rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="seconds">{t('pageTemplate.calcSeconds')}</option>
+                      <option value="minutes">{t('pageTemplate.calcMinutes')}</option>
+                      <option value="hours">{t('pageTemplate.calcHours')}</option>
+                      <option value="days">{t('pageTemplate.calcDays')}</option>
+                      <option value="years">{t('pageTemplate.calcYears')}</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    color: isLightTheme ? '#555' : '#aaa',
+                    fontSize: '0.9rem'
+                  }}>
+                    {t('pageTemplate.calcTime')} (t)
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="number"
+                      value={calcTime}
+                      onChange={(e) => setCalcTime(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '12px 14px',
+                        borderRadius: '8px',
+                        border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                        backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                        color: isLightTheme ? '#333' : '#fff',
+                        fontSize: '1rem'
+                      }}
+                    />
+                    <select
+                      value={calcTimeUnit}
+                      onChange={(e) => setCalcTimeUnit(e.target.value as typeof calcTimeUnit)}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: '8px',
+                        border: `1px solid ${isLightTheme ? '#ddd' : '#444'}`,
+                        backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                        color: isLightTheme ? '#333' : '#fff',
+                        fontSize: '0.95rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="seconds">{t('pageTemplate.calcSeconds')}</option>
+                      <option value="minutes">{t('pageTemplate.calcMinutes')}</option>
+                      <option value="hours">{t('pageTemplate.calcHours')}</option>
+                      <option value="days">{t('pageTemplate.calcDays')}</option>
+                      <option value="years">{t('pageTemplate.calcYears')}</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Result */}
+                {(() => {
+                  const n0 = parseFloat(calcN0) || 0;
+                  const halfLife = parseFloat(calcHalfLife) || 0;
+                  const time = parseFloat(calcTime) || 0;
+
+                  // Convert to same units (seconds)
+                  const unitToSeconds = {
+                    seconds: 1,
+                    minutes: 60,
+                    hours: 3600,
+                    days: 86400,
+                    years: 365.25 * 86400
+                  };
+
+                  const halfLifeSeconds = halfLife * unitToSeconds[calcHalfLifeUnit];
+                  const timeSeconds = time * unitToSeconds[calcTimeUnit];
+
+                  if (n0 > 0 && halfLifeSeconds > 0 && timeSeconds >= 0) {
+                    const n = n0 * Math.pow(0.5, timeSeconds / halfLifeSeconds);
+                    const decayed = n0 - n;
+                    const percentRemaining = (n / n0) * 100;
+                    const halfLives = timeSeconds / halfLifeSeconds;
+
+                    return (
+                      <div style={{
+                        padding: '20px',
+                        backgroundColor: isLightTheme ? '#f0f7ff' : '#1e3a5f',
+                        borderRadius: '12px',
+                        border: `1px solid ${isLightTheme ? '#cce0ff' : '#2d5a8c'}`
+                      }}>
+                        <div style={{
+                          fontSize: '0.9rem',
+                          color: isLightTheme ? '#666' : '#aaa',
+                          marginBottom: '12px'
+                        }}>
+                          {t('pageTemplate.calcFormula')}:
+                          <span style={{ fontStyle: 'italic', marginLeft: '10px', display: 'inline-flex', alignItems: 'flex-start', fontSize: '1.4rem' }}>
+                            <span style={{ marginTop: '0.4em' }}>N = N<sub>0</sub> · 2</span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '0.6em', marginLeft: '2px' }}>
+                              <span style={{ marginTop: '0.3em' }}>(</span>
+                              <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.2 }}>
+                                <span>−t</span>
+                                <span style={{ borderTop: '1px solid currentColor', paddingTop: '1px' }}>T<sub style={{ fontSize: '0.75em' }}>1/2</sub></span>
+                              </span>
+                              <span style={{ marginTop: '0.3em' }}>)</span>
+                            </span>
+                          </span>
+                        </div>
+
+                        {/* Visual Progress Bar */}
+                        <div style={{
+                          height: '24px',
+                          backgroundColor: isLightTheme ? '#ddd' : '#333',
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          marginBottom: '16px'
+                        }}>
+                          <div style={{
+                            width: `${percentRemaining}%`,
+                            height: '100%',
+                            backgroundColor: percentRemaining > 50 ? '#4caf50' : percentRemaining > 25 ? '#ff9800' : '#f44336',
+                            transition: 'width 0.3s ease',
+                            borderRadius: '12px'
+                          }} />
+                        </div>
+
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: '12px'
+                        }}>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: isLightTheme ? '#666' : '#888', marginBottom: '4px' }}>
+                              {t('pageTemplate.calcRemaining')}
+                            </div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#64b5f6' }}>
+                              {n.toFixed(n < 0.01 ? 6 : 2)}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: isLightTheme ? '#666' : '#888', marginBottom: '4px' }}>
+                              {t('pageTemplate.calcDecayed')}
+                            </div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 600, color: '#ff7043' }}>
+                              {decayed.toFixed(decayed < 0.01 ? 6 : 2)}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: isLightTheme ? '#666' : '#888', marginBottom: '4px' }}>
+                              {t('pageTemplate.calcPercentRemaining')}
+                            </div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 600, color: isLightTheme ? '#333' : '#fff' }}>
+                              {percentRemaining.toFixed(2)}%
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', color: isLightTheme ? '#666' : '#888', marginBottom: '4px' }}>
+                              {t('pageTemplate.calcHalfLivesPassed')}
+                            </div>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 600, color: isLightTheme ? '#333' : '#fff' }}>
+                              {halfLives.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{
+                      padding: '20px',
+                      backgroundColor: isLightTheme ? '#f5f5f5' : '#252525',
+                      borderRadius: '12px',
+                      textAlign: 'center',
+                      color: isLightTheme ? '#666' : '#888'
+                    }}>
+                      {t('pageTemplate.calcEnterValues')}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Description */}
         {description && (
           <div style={{
@@ -772,7 +2069,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 color: '#ffffff',
                 margin: 0
               }}>
-                Описание
+                {t('pageTemplate.description')}
               </h3>
               <SpeakButton textRef={descriptionRef} />
             </div>
@@ -801,7 +2098,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
             marginBottom: '1rem',
             color: '#ffffff'
           }}>
-            Как использовать видео
+            {t('pageTemplate.howToUse')}
           </h3>
           <ol style={{
             color: '#cccccc',
@@ -810,9 +2107,9 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
             paddingLeft: '1.2rem',
             margin: 0
           }}>
-            <li>Сначала прочитайте описание видео выше</li>
-            <li>Запустите видео и останавливайте в нужных местах</li>
-            <li>Описывайте процесс на видео для интерактивности с учениками</li>
+            <li>{t('pageTemplate.howToUseStep1')}</li>
+            <li>{t('pageTemplate.howToUseStep2')}</li>
+            <li>{t('pageTemplate.howToUseStep3')}</li>
           </ol>
           <p style={{
             color: '#888',
@@ -820,7 +2117,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
             marginTop: '1rem',
             fontStyle: 'italic'
           }}>
-            Все неточности в видео или пожелания можете написать на почту: <a href="mailto:tgr.aimurza@gmail.com" style={{ color: '#FC6255' }}>tgr.aimurza@gmail.com</a>
+            {t('pageTemplate.feedbackNote')} <a href="mailto:tgr.aimurza@gmail.com" style={{ color: '#FC6255' }}>tgr.aimurza@gmail.com</a>
           </p>
         </div>
 
@@ -883,7 +2180,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3a7bc8'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4a90e2'}
               >
-                Пройти входной срез
+                {t('pageTemplate.passPreTest')}
               </button>
             )}
             {nextLink && (
