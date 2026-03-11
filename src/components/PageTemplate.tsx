@@ -8,7 +8,7 @@ import { hasCompletedPreQuiz, setPreQuizCompleted } from '../lib/supabase';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { glossaryTerms, glossaryCategories, type GlossaryTerm } from '../data/glossary';
 import { isotopes, isotopeCategories, type Isotope } from '../data/halfLifeTable';
-import { scientists, scientistCategories, type Scientist } from '../data/scientists';
+import { scientists, scientistCategories } from '../data/scientists';
 import '../styles/page-layout.css';
 
 type AnimationStatus = 'red' | 'yellow' | 'green';
