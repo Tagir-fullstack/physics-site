@@ -256,8 +256,8 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [surveyAnswers, setSurveyAnswers] = useState<Record<string, string | number | boolean>>({});
+    const [surveyAnswers, setSurveyAnswers] = useState<Record<string, string | number | boolean>>({});
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
   const shuffledQuestions = useMemo(() => shuffleQuestions(questions), []);
 
@@ -311,7 +311,7 @@ export default function Quiz() {
     }
   };
 
-  const handleFinish = async () => {
+  const handleFinish = () => {
     let correctCount = 0;
     shuffledQuestions.forEach((q, index) => {
       if (answers[index] === q.correctAnswer) {
@@ -323,27 +323,25 @@ export default function Quiz() {
     const grade = calculateGrade(percentage);
     setScore(correctCount);
 
-    setIsSubmitting(true);
-    setSubmitError('');
+    // Сразу показываем результат без ожидания сохранения
+    setStage('result');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
 
-    try {
-      await savePostQuizResult({
-        user_code: enteredUserCode || 'GUEST',
-        student_name: studentName,
-        student_class: studentClass,
-        school: school,
-        score: correctCount,
-        total_questions: shuffledQuestions.length,
-        percentage: percentage,
-        grade: grade,
-        answers: answers
-      });
-    } catch {
-      setSubmitError('Результат не сохранён в базу данных, но ваша оценка посчитана.');
-    } finally {
-      setIsSubmitting(false);
-      setStage('result');
-    }
+    // Сохраняем в фоне без блокировки UI
+    savePostQuizResult({
+      user_code: enteredUserCode || 'GUEST',
+      student_name: studentName,
+      student_class: studentClass,
+      school: school,
+      score: correctCount,
+      total_questions: shuffledQuestions.length,
+      percentage: percentage,
+      grade: grade,
+      answers: answers
+    }).catch(() => {
+      // Тихо игнорируем ошибку - результат уже показан пользователю
+      console.warn('Failed to save quiz result to database');
+    });
   };
 
   const handleGoToSurvey = () => {
@@ -382,13 +380,13 @@ export default function Quiz() {
     } finally {
       setIsSubmitting(false);
       setStage('complete');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
     }
   };
 
   const handleSkipSurvey = () => {
     setStage('complete');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
   };
 
   const percentage = Math.round((score / shuffledQuestions.length) * 100);
@@ -732,6 +730,48 @@ export default function Quiz() {
               })}
             </div>
 
+            {/* Question Navigation Circles */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '6px',
+              flexWrap: 'wrap',
+              marginBottom: '1rem'
+            }}>
+              {shuffledQuestions.map((_, index) => {
+                const isAnswered = answers[index] !== undefined;
+                const isCurrent = currentQuestion === index;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentQuestion(index)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      minWidth: '32px',
+                      minHeight: '32px',
+                      borderRadius: '50%',
+                      border: isCurrent ? '2px solid #FC6255' : isAnswered ? '2px solid #27ae60' : isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                      backgroundColor: isCurrent ? 'rgba(252, 98, 85, 0.15)' : isAnswered ? 'rgba(39, 174, 96, 0.15)' : 'transparent',
+                      color: isCurrent ? '#FC6255' : isAnswered ? '#27ae60' : isLightTheme ? '#666' : '#888',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                      padding: 0,
+                      boxSizing: 'border-box',
+                      flexShrink: 0
+                    }}
+                  >
+                    {index + 1}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Navigation */}
             <div style={{ display: 'flex', gap: isMobile ? '0.5rem' : '1rem', justifyContent: 'space-between', marginTop: 'auto', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
               <button
@@ -750,6 +790,23 @@ export default function Quiz() {
                 }}
               >
                 {t('common.back')}
+              </button>
+
+              <button
+                onClick={() => setShowFinishConfirm(true)}
+                style={{
+                  padding: isMobile ? '0.6rem 1rem' : '0.75rem 1.5rem',
+                  borderRadius: '50px',
+                  border: '1px solid #f39c12',
+                  backgroundColor: 'transparent',
+                  color: '#f39c12',
+                  cursor: 'pointer',
+                  fontSize: isMobile ? '0.85rem' : '0.95rem',
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  flex: isMobile ? '1 1 auto' : '0 0 auto'
+                }}
+              >
+                Завершить
               </button>
 
               {currentQuestion < shuffledQuestions.length - 1 ? (
@@ -797,6 +854,110 @@ export default function Quiz() {
               <p style={{ color: '#FC6255', fontSize: '0.9rem', marginTop: '1rem', textAlign: 'center' }}>
                 {t('quiz.answerAll')}
               </p>
+            )}
+
+            {/* Finish Confirmation Modal */}
+            {showFinishConfirm && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1000,
+                  padding: '1rem'
+                }}
+                onClick={() => setShowFinishConfirm(false)}
+              >
+                <div
+                  style={{
+                    backgroundColor: isLightTheme ? '#ffffff' : '#1a1a2e',
+                    borderRadius: '16px',
+                    padding: '2rem',
+                    maxWidth: '400px',
+                    width: '100%',
+                    textAlign: 'center'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(243, 156, 18, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1rem',
+                    fontSize: '1.8rem',
+                    color: '#f39c12'
+                  }}>
+                    ⚠
+                  </div>
+                  <h3 style={{
+                    color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                    marginBottom: '0.75rem',
+                    fontSize: '1.3rem',
+                    fontFamily: "'CCUltimatum', Arial, sans-serif"
+                  }}>
+                    Завершить тест?
+                  </h3>
+                  <p style={{
+                    color: isLightTheme ? '#666' : '#888',
+                    marginBottom: '1.5rem',
+                    fontSize: '0.95rem',
+                    lineHeight: 1.5
+                  }}>
+                    {Object.keys(answers).length < shuffledQuestions.length ? (
+                      <>Вы ответили на <strong style={{ color: '#f39c12' }}>{Object.keys(answers).length}</strong> из <strong>{shuffledQuestions.length}</strong> вопросов. Неотвеченные вопросы будут засчитаны как неправильные.</>
+                    ) : (
+                      <>Вы ответили на все вопросы. Вы уверены, что хотите завершить тест?</>
+                    )}
+                  </p>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => setShowFinishConfirm(false)}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '50px',
+                        border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                        backgroundColor: 'transparent',
+                        color: isLightTheme ? '#666' : '#888',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        fontFamily: "'CCUltimatum', Arial, sans-serif"
+                      }}
+                    >
+                      Отмена
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowFinishConfirm(false);
+                        handleFinish();
+                      }}
+                      disabled={isSubmitting}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '50px',
+                        border: 'none',
+                        backgroundColor: '#f39c12',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        fontFamily: "'CCUltimatum', Arial, sans-serif"
+                      }}
+                    >
+                      {isSubmitting ? '...' : 'Завершить'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </motion.div>
         )}
@@ -869,12 +1030,7 @@ export default function Quiz() {
               </div>
             </div>
 
-            {submitError && (
-              <p style={{ color: '#FC6255', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                {submitError}
-              </p>
-            )}
-
+            
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               {isTeacher ? (
                 <button

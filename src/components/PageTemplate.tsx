@@ -478,7 +478,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                   }}
                   title={t('pageTemplate.calculator')}
                 >
-                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>∑</span>
+                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0, position: 'relative', top: '-2px' }}>∑</span>
                   <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.calculator')}</span>
                 </button>
               </>
@@ -668,7 +668,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                           textAlign: 'left'
                         }}
                       >
-                        <span style={{ opacity: 0.6 }}>∑</span>
+                        <span style={{ opacity: 0.6, position: 'relative', top: '-1px' }}>∑</span>
                         {t('pageTemplate.calculator')}
                       </button>
                     </div>

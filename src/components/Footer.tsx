@@ -12,28 +12,30 @@ export default function Footer() {
       backgroundColor: '#0a0a0a',
       color: '#ffffff',
       borderTop: '1px solid #333',
-      paddingTop: '3rem',
-      paddingBottom: '2rem',
+      paddingTop: '1.5rem',
+      paddingBottom: '1rem',
       marginTop: 'auto'
     }}>
       <div className="footer-content" style={{
-        maxWidth: '1400px',
-        margin: '0 auto'
+        maxWidth: '1000px',
+        margin: '0 auto',
+        padding: '0 2rem'
       }}>
         <div className="footer-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '2rem',
-          marginBottom: '2rem'
+          gap: '1.5rem',
+          marginBottom: '1rem'
         }}>
           {/* О сайте */}
-          <div>
+          <div style={{ textAlign: 'center' }}>
             <h3 className="logo" style={{
-              fontSize: '1.2rem',
-              marginBottom: '1rem',
+              fontSize: '1.1rem',
+              marginBottom: '0.5rem',
               fontFamily: "'CCUltimatum', sans-serif",
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '0'
             }}>
               <span style={{ color: '#FC6255' }}>Phys</span>
@@ -49,10 +51,10 @@ export default function Footer() {
           </div>
 
           {/* Контакты */}
-          <div>
+          <div style={{ textAlign: 'center' }}>
             <h3 style={{
-              fontSize: '1.2rem',
-              marginBottom: '1rem',
+              fontSize: '1.1rem',
+              marginBottom: '0.5rem',
               color: '#fff'
             }}>
               {t('footer.contacts')}
@@ -63,15 +65,14 @@ export default function Footer() {
               color: '#cccccc'
             }}>
               <p>Email: tgr.aimurza@gmail.com</p>
-              <p>{t('footer.organization')}: Farabi University КазНУ</p>
             </div>
           </div>
 
           {/* Научный руководитель */}
-          <div>
+          <div style={{ textAlign: 'center' }}>
             <h3 style={{
-              fontSize: '1.2rem',
-              marginBottom: '1rem',
+              fontSize: '1.1rem',
+              marginBottom: '0.5rem',
               color: '#fff'
             }}>
               {t('footer.supervisorTitle')}
@@ -89,10 +90,10 @@ export default function Footer() {
         {/* Copyright */}
         <div style={{
           borderTop: '1px solid #333',
-          paddingTop: '1.5rem',
+          paddingTop: '1rem',
           textAlign: 'center',
           color: '#999',
-          fontSize: '0.9rem'
+          fontSize: '0.85rem'
         }}>
           <p style={{
             margin: 0,
