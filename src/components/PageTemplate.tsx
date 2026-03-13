@@ -72,6 +72,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   const [calcTimeUnit, setCalcTimeUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'years'>('years');
   const [calcHalfLifeUnit, setCalcHalfLifeUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'years'>('years');
   const [selectedIsotope, setSelectedIsotope] = useState('');
+  const [showReferencesMenu, setShowReferencesMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
   const [showPreQuiz, setShowPreQuiz] = useState(false);
@@ -80,13 +81,8 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   const isLightTheme = a11yEnabled && lightTheme;
   const statusConfig = getStatusConfig(t);
 
-  // Проверяем, нужно ли показать входной тест
-  useEffect(() => {
-    // Показываем PreQuiz только для страниц ядерной физики
-    if (section === 'Физика Атомного ядра' && !hasCompletedPreQuiz()) {
-      setShowPreQuiz(true);
-    }
-  }, [section]);
+  // Входной тест теперь не показывается автоматически
+  // Пользователь может пройти его вручную через кнопку
 
   const handlePreQuizComplete = () => {
     setPreQuizCompleted();
@@ -288,204 +284,400 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
           {/* Buttons - Below Video */}
           <div style={{
             display: 'flex',
-            flexDirection: isVerySmallScreen ? 'column' : 'row',
+            flexDirection: isMobile ? 'column' : 'row',
             alignItems: 'stretch',
             gap: '10px',
             width: '100%',
             padding: isMobile ? '0 10px' : '0'
           }}>
-            <button
-              onClick={() => setShowPeriodicTable(true)}
-              style={{
-                flex: isVerySmallScreen ? 'none' : '1 1 0',
-                width: isVerySmallScreen ? '100%' : 'auto',
-                minHeight: '44px',
-                padding: '10px 12px',
-                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title={t('pageTemplate.periodicTable')}
-            >
-              <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>⊞</span>
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.periodicTable')}</span>
-            </button>
-            <button
-              onClick={() => setShowConstants(true)}
-              style={{
-                flex: isVerySmallScreen ? 'none' : '1 1 0',
-                width: isVerySmallScreen ? '100%' : 'auto',
-                minHeight: '44px',
-                padding: '10px 12px',
-                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title={t('pageTemplate.constants')}
-            >
-              <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>≡</span>
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.constants')}</span>
-            </button>
-            <button
-              onClick={() => setShowGlossary(true)}
-              style={{
-                flex: isVerySmallScreen ? 'none' : '1 1 0',
-                width: isVerySmallScreen ? '100%' : 'auto',
-                minHeight: '44px',
-                padding: '10px 12px',
-                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title={t('pageTemplate.glossary')}
-            >
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.glossary')}</span>
-            </button>
-            <button
-              onClick={() => setShowHalfLife(true)}
-              style={{
-                flex: isVerySmallScreen ? 'none' : '1 1 0',
-                width: isVerySmallScreen ? '100%' : 'auto',
-                minHeight: '44px',
-                padding: '10px 12px',
-                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title={t('pageTemplate.halfLifeTable')}
-            >
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.halfLifeTable')}</span>
-            </button>
-            <button
-              onClick={() => setShowScientists(true)}
-              style={{
-                flex: isVerySmallScreen ? 'none' : '1 1 0',
-                width: isVerySmallScreen ? '100%' : 'auto',
-                minHeight: '44px',
-                padding: '10px 12px',
-                background: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '10px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title={t('pageTemplate.scientists')}
-            >
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.scientists')}</span>
-            </button>
-            <button
-              onClick={() => setShowCalculator(true)}
-              style={{
-                flex: isVerySmallScreen ? 'none' : '1 1 0',
-                width: isVerySmallScreen ? '100%' : 'auto',
-                minHeight: '44px',
-                padding: '10px 12px',
-                background: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
-                border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: '10px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-                e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
-              }}
-              title={t('pageTemplate.calculator')}
-            >
-              <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.calculator')}</span>
-            </button>
+            {/* Desktop: show all buttons */}
+            {!isMobile && (
+              <>
+                <button
+                  onClick={() => setShowPeriodicTable(true)}
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  title={t('pageTemplate.periodicTable')}
+                >
+                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>⊞</span>
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.periodicTable')}</span>
+                </button>
+                <button
+                  onClick={() => setShowConstants(true)}
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  title={t('pageTemplate.constants')}
+                >
+                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>≡</span>
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.constants')}</span>
+                </button>
+                <button
+                  onClick={() => setShowGlossary(true)}
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  title={t('pageTemplate.glossary')}
+                >
+                  <span style={{ fontSize: '0.85rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0, fontWeight: 'bold' }}>Aa</span>
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.glossary')}</span>
+                </button>
+                <button
+                  onClick={() => setShowHalfLife(true)}
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  title={t('pageTemplate.halfLifeTable')}
+                >
+                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>τ½</span>
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.halfLifeTable')}</span>
+                </button>
+                <button
+                  onClick={() => setShowScientists(true)}
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    background: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  title={t('pageTemplate.scientists')}
+                >
+                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>⚛</span>
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.scientists')}</span>
+                </button>
+                <button
+                  onClick={() => setShowCalculator(true)}
+                  style={{
+                    flex: '1 1 0',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    background: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                  title={t('pageTemplate.calculator')}
+                >
+                  <span style={{ fontSize: '1rem', opacity: 0.6, color: isLightTheme ? '#333' : 'inherit', flexShrink: 0 }}>∑</span>
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('pageTemplate.calculator')}</span>
+                </button>
+              </>
+            )}
+
+            {/* Mobile: single "Справочники" button with dropdown */}
+            {isMobile && (
+              <div style={{ position: 'relative', width: '100%' }}>
+                <button
+                  onClick={() => setShowReferencesMenu(!showReferencesMenu)}
+                  style={{
+                    width: '100%',
+                    minHeight: '44px',
+                    padding: '10px 12px',
+                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+                    e.currentTarget.style.borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+                  }}
+                >
+                  <span style={{ fontSize: '0.9rem', color: isLightTheme ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)' }}>
+                    Справочники
+                  </span>
+                  <span style={{
+                    fontSize: '0.8rem',
+                    color: isLightTheme ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)',
+                    transform: showReferencesMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s'
+                  }}>▼</span>
+                </button>
+
+                {/* Dropdown menu */}
+                {showReferencesMenu && (
+                  <>
+                    <div
+                      onClick={() => setShowReferencesMenu(false)}
+                      style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 99
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '4px',
+                        backgroundColor: isLightTheme ? '#ffffff' : '#2a2a2a',
+                        borderRadius: '8px',
+                        border: `1px solid ${isLightTheme ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.15)'}`,
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                        zIndex: 100,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <button
+                        onClick={() => { setShowPeriodicTable(true); setShowReferencesMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderBottom: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: isLightTheme ? '#333' : '#fff',
+                          fontSize: '0.9rem',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ opacity: 0.6 }}>⊞</span>
+                        {t('pageTemplate.periodicTable')}
+                      </button>
+                      <button
+                        onClick={() => { setShowConstants(true); setShowReferencesMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderBottom: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: isLightTheme ? '#333' : '#fff',
+                          fontSize: '0.9rem',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ opacity: 0.6 }}>≡</span>
+                        {t('pageTemplate.constants')}
+                      </button>
+                      <button
+                        onClick={() => { setShowGlossary(true); setShowReferencesMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderBottom: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: isLightTheme ? '#333' : '#fff',
+                          fontSize: '0.9rem',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ opacity: 0.6, fontWeight: 'bold', fontSize: '0.85rem' }}>Aa</span>
+                        {t('pageTemplate.glossary')}
+                      </button>
+                      <button
+                        onClick={() => { setShowHalfLife(true); setShowReferencesMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderBottom: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: isLightTheme ? '#333' : '#fff',
+                          fontSize: '0.9rem',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ opacity: 0.6 }}>τ½</span>
+                        {t('pageTemplate.halfLifeTable')}
+                      </button>
+                      <button
+                        onClick={() => { setShowScientists(true); setShowReferencesMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderBottom: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: isLightTheme ? '#333' : '#fff',
+                          fontSize: '0.9rem',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ opacity: 0.6 }}>⚛</span>
+                        {t('pageTemplate.scientists')}
+                      </button>
+                      <button
+                        onClick={() => { setShowCalculator(true); setShowReferencesMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          color: isLightTheme ? '#333' : '#fff',
+                          fontSize: '0.9rem',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ opacity: 0.6 }}>∑</span>
+                        {t('pageTemplate.calculator')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
