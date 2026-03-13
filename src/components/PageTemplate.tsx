@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SpeakButton from './SpeakButton';
 import PreQuiz from './PreQuiz';
-import { hasCompletedPreQuiz, setPreQuizCompleted } from '../lib/supabase';
+import { setPreQuizCompleted } from '../lib/supabase';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { glossaryTerms, glossaryCategories, type GlossaryTerm } from '../data/glossary';
 import { isotopes, isotopeCategories, type Isotope } from '../data/halfLifeTable';
@@ -74,8 +74,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   const [selectedIsotope, setSelectedIsotope] = useState('');
   const [showReferencesMenu, setShowReferencesMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isVerySmallScreen, setIsVerySmallScreen] = useState(false);
-  const [showPreQuiz, setShowPreQuiz] = useState(false);
+    const [showPreQuiz, setShowPreQuiz] = useState(false);
   const [showPreQuizWithCode, setShowPreQuizWithCode] = useState(false); // Для повторного прохождения
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const isLightTheme = a11yEnabled && lightTheme;
@@ -92,7 +91,6 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
-      setIsVerySmallScreen(window.innerWidth < 400);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
