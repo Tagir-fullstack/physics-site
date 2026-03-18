@@ -384,10 +384,6 @@ export default function Quiz() {
     }
   };
 
-  const handleSkipSurvey = () => {
-    setStage('complete');
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
-  };
 
   const percentage = Math.round((score / shuffledQuestions.length) * 100);
   const grade = calculateGrade(percentage);
@@ -483,7 +479,7 @@ export default function Quiz() {
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ flex: 2 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                    {t('quiz.name')} *
+                    {t('quiz.name')} <span style={{ color: '#FC6255' }}>*</span>
                   </label>
                   <input
                     type="text"
@@ -508,7 +504,7 @@ export default function Quiz() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                    {t('quiz.class')} *
+                    {isTeacher ? 'Стаж работы' : t('quiz.class')} <span style={{ color: '#FC6255' }}>*</span>
                   </label>
                   <input
                     type="text"
@@ -517,7 +513,7 @@ export default function Quiz() {
                     required
                     onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Пожалуйста, заполните это поле.')}
                     onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
-                    placeholder="11б"
+                    placeholder={isTeacher ? '2 года' : '11б'}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -534,7 +530,7 @@ export default function Quiz() {
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                  {t('quiz.school')} *
+                  {t('quiz.school')} <span style={{ color: '#FC6255' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -573,6 +569,15 @@ export default function Quiz() {
                   />
                   {t('quiz.iAmTeacher')}
                 </label>
+                <p style={{
+                  marginTop: '0.5rem',
+                  marginLeft: '26px',
+                  fontSize: '0.85rem',
+                  color: isLightTheme ? '#666' : '#888',
+                  margin: '0.5rem 0 0 26px'
+                }}>
+                  Вам будет предложено пройти анкетирование по оценке анимаций{isTeacher && '. Вы можете перейти к опросу сразу'}
+                </p>
               </div>
 
               {/* Дисклеймер о конфиденциальности */}
@@ -612,7 +617,12 @@ export default function Quiz() {
               {isTeacher && (
                 <button
                   type="button"
-                  onClick={() => setStage('survey')}
+                  onClick={(e) => {
+                    const form = (e.target as HTMLElement).closest('form');
+                    if (form && form.reportValidity()) {
+                      setStage('survey');
+                    }
+                  }}
                   style={{
                     width: '100%',
                     marginTop: '0.75rem',
@@ -1223,21 +1233,6 @@ export default function Quiz() {
             </div>
 
             <div style={{ display: 'flex', gap: isMobile ? '0.75rem' : '1rem', justifyContent: 'center', marginTop: '2rem', flexWrap: 'wrap' }}>
-              <button
-                onClick={handleSkipSurvey}
-                style={{
-                  padding: isMobile ? '0.6rem 1.2rem' : '0.75rem 1.5rem',
-                  borderRadius: '50px',
-                  border: isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
-                  backgroundColor: isLightTheme ? 'rgba(0,0,0,0.05)' : 'transparent',
-                  color: isLightTheme ? '#555' : '#888',
-                  cursor: 'pointer',
-                  fontSize: isMobile ? '0.9rem' : '1rem',
-                  fontFamily: "'CCUltimatum', Arial, sans-serif"
-                }}
-              >
-                {t('common.skip')}
-              </button>
               <button
                 onClick={handleSubmitSurvey}
                 disabled={!isSurveyValid || isSubmitting}

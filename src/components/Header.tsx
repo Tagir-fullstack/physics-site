@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
-import { hasCompletedPreQuiz } from '../lib/supabase';
 import AccessibilityPanel from './AccessibilityPanel';
 import '../styles/header.css';
 import '../styles/accessibility.css';
@@ -129,9 +128,9 @@ export default function Header() {
               ))}
               <button
                 className="nav-quiz-btn"
-                onClick={() => handleLinkClick(hasCompletedPreQuiz() ? '/nuclear/quiz' : '/nuclear/rutherford')}
+                onClick={() => handleLinkClick('/nuclear/quiz')}
               >
-                {hasCompletedPreQuiz() ? t('header.finalTest') : t('header.preTest')}
+                {t('header.finalTest')}
               </button>
             </div>
 
