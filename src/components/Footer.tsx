@@ -1,11 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SITE_VERSION } from '../config/version';
+import { useQuizMode } from '../context/QuizModeContext';
 import '../styles/footer.css';
 
 export default function Footer() {
   const { t } = useTranslation();
+  const { isQuizActive } = useQuizMode();
   const currentYear = new Date().getFullYear();
+
+  // Скрываем футер во время теста
+  if (isQuizActive) {
+    return null;
+  }
 
   return (
     <footer style={{
@@ -116,6 +123,18 @@ export default function Footer() {
             >
               {t('footer.terms')}
             </a>
+            <span style={{ color: '#666' }}>|</span>
+            <Link to="/privacy" style={{
+              color: '#FC6255',
+              textDecoration: 'none',
+              borderBottom: '1px solid transparent',
+              transition: 'border-color 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#FC6255'}
+            onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
+            >
+              Конфиденциальность
+            </Link>
             <Link to="/changelog" style={{
               color: '#888',
               textDecoration: 'none',

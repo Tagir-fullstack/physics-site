@@ -9,6 +9,8 @@ import {
   createUser
 } from '../lib/supabase';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { useQuizMode } from '../context/QuizModeContext';
+import { useAuth } from '../context/AuthContext';
 import '../styles/page-layout.css';
 
 interface Question {
@@ -177,6 +179,8 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
   const [enteredUserCode, setEnteredUserCode] = useState('');
 
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
+  const { setQuizActive } = useQuizMode();
+  const { profile } = useAuth();
   const isLightTheme = a11yEnabled && lightTheme;
   const [isMobile, setIsMobile] = useState(false);
 
@@ -187,6 +191,12 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Скрываем футер во время прохождения преквиза
+  useEffect(() => {
+    setQuizActive(stage === 'quiz');
+    return () => setQuizActive(false);
+  }, [stage, setQuizActive]);
 
   const shuffledQuestions = useMemo(() => shuffleQuestions(questions), []);
 
@@ -260,6 +270,7 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
     try {
       await savePreQuizResult({
         user_code: userCode,
+        profile_id: profile?.id,
         score: correctCount,
         total_questions: shuffledQuestions.length,
         percentage: percentage,

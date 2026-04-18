@@ -15,12 +15,17 @@ function ScrollToTop() {
 import Footer from './components/Footer';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import { QuizModeProvider } from './context/QuizModeContext';
+import { AuthProvider } from './context/AuthContext';
+import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import './styles/global.css';
+import './styles/auth.css';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
 const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
 const Changelog = lazy(() => import('./pages/Changelog'));
+const Account = lazy(() => import('./pages/Account'));
 
 // Nuclear Physics pages - lazy loaded
 const Rutherford = lazy(() => import('./pages/nuclear/Rutherford'));
@@ -68,6 +73,7 @@ function App() {
   }, []);
 
   return (
+    <AuthProvider>
     <AccessibilityProvider>
       <QuizModeProvider>
       {isInitialLoading && <LoadingScreen onComplete={() => setIsInitialLoading(false)} />}
@@ -85,7 +91,9 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
                   <Route path="/changelog" element={<Changelog />} />
+                  <Route path="/account" element={<Account />} />
 
                   {/* Nuclear Physics Routes */}
                   <Route path="/nuclear/rutherford" element={<Rutherford />} />
@@ -117,8 +125,10 @@ function App() {
           <Footer />
         </div>
       </Router>
+      <ProfileCompletionModal />
       </QuizModeProvider>
     </AccessibilityProvider>
+    </AuthProvider>
   );
 }
 

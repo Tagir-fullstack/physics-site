@@ -4,20 +4,45 @@ import { useTranslation } from 'react-i18next';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
+import { useAuth } from '../context/AuthContext';
 import AccessibilityPanel from './AccessibilityPanel';
+import AuthModal from './auth/AuthModal';
+import UserMenu from './auth/UserMenu';
 import '../styles/header.css';
 import '../styles/accessibility.css';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isA11yOpen, setIsA11yOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const menuTimeoutRef = useRef<number | null>(null);
+  const a11yTimeoutRef = useRef<number | null>(null);
+  const authTimeoutRef = useRef<number | null>(null);
 
+  const { enabled, setEnabled } = useAccessibility();
+  const { isQuizActive } = useQuizMode();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user, profile, isLoading } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
+
+  // Burger menu handlers
   const openMenu = () => {
     if (menuTimeoutRef.current) {
       clearTimeout(menuTimeoutRef.current);
       menuTimeoutRef.current = null;
     }
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+      authTimeoutRef.current = null;
+    }
+    if (a11yTimeoutRef.current) {
+      clearTimeout(a11yTimeoutRef.current);
+      a11yTimeoutRef.current = null;
+    }
+    setIsA11yOpen(false);
+    setIsAuthOpen(false);
     setIsMenuOpen(true);
   };
 
@@ -27,15 +52,23 @@ export default function Header() {
     }, 200);
   };
 
-  const a11yTimeoutRef = useRef<number | null>(null);
-
+  // Accessibility panel handlers
   const openA11y = () => {
     if (a11yTimeoutRef.current) {
       clearTimeout(a11yTimeoutRef.current);
       a11yTimeoutRef.current = null;
     }
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+      menuTimeoutRef.current = null;
+    }
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+      authTimeoutRef.current = null;
+    }
     if (!enabled) setEnabled(true);
     setIsMenuOpen(false);
+    setIsAuthOpen(false);
     setIsA11yOpen(true);
   };
 
@@ -51,11 +84,38 @@ export default function Header() {
       a11yTimeoutRef.current = null;
     }
   };
-  const { enabled, setEnabled } = useAccessibility();
-  const { isQuizActive } = useQuizMode();
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
+
+  // Auth menu handlers
+  const openAuth = () => {
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+      authTimeoutRef.current = null;
+    }
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+      menuTimeoutRef.current = null;
+    }
+    if (a11yTimeoutRef.current) {
+      clearTimeout(a11yTimeoutRef.current);
+      a11yTimeoutRef.current = null;
+    }
+    setIsMenuOpen(false);
+    setIsA11yOpen(false);
+    setIsAuthOpen(true);
+  };
+
+  const closeAuthWithDelay = () => {
+    authTimeoutRef.current = window.setTimeout(() => {
+      setIsAuthOpen(false);
+    }, 200);
+  };
+
+  const keepAuthOpen = () => {
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+      authTimeoutRef.current = null;
+    }
+  };
 
   const handleLinkClick = (path: string) => {
     if (isQuizActive) return; // Блокируем навигацию во время теста
@@ -74,37 +134,38 @@ export default function Header() {
       )}
 
       <header className="header" onClick={(e) => {
-        // Закрыть панели при клике на пустое место header'а
-        if (e.target === e.currentTarget) {
-          setIsMenuOpen(false);
-          setIsA11yOpen(false);
-        }
-      }}>
-        <nav className="nav-container" onClick={(e) => {
-          // Закрыть панели при клике на пустое место nav-container
           if (e.target === e.currentTarget) {
             setIsMenuOpen(false);
             setIsA11yOpen(false);
+            setIsAuthOpen(false);
           }
         }}>
-          <Link to="/" className="logo" onClick={(e) => {
-            if (isQuizActive) {
-              e.preventDefault();
-              return;
+        <nav className="nav-container" onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsMenuOpen(false);
+              setIsA11yOpen(false);
+              setIsAuthOpen(false);
             }
-            setIsMenuOpen(false);
-          }} style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
+          }}>
+          <Link to="/" className="logo"
+            onClick={(e) => {
+              if (isQuizActive) {
+                e.preventDefault();
+                return;
+              }
+              setIsMenuOpen(false);
+            }} style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
             <img src="/favicon1.png" alt="" className="logo-icon" />
             <span className="logo-phys">Phys</span>
             <span className="logo-ez">ez</span>
           </Link>
 
-          <div className="nav-right" onMouseLeave={closeMenuWithDelay}>
+          <div className="nav-right">
             <div
               className={`nav-menu ${isMenuOpen && !isQuizActive ? 'open' : ''}`}
               onMouseEnter={openMenu}
+              onMouseLeave={closeMenuWithDelay}
               onClick={(e) => {
-                // Закрыть меню при клике на фон (не на элементы меню)
                 if (e.target === e.currentTarget) {
                   setIsMenuOpen(false);
                 }
@@ -134,11 +195,13 @@ export default function Header() {
               </button>
             </div>
 
+            {/* Порядок: Доступность -> Бургер -> Аккаунт */}
             <button
               className="a11y-header-btn"
               onClick={() => {
                 if (!enabled) setEnabled(true);
-                setIsMenuOpen(false); // Закрыть бургер-меню
+                setIsMenuOpen(false);
+                setIsAuthOpen(false);
                 setIsA11yOpen(!isA11yOpen);
               }}
               onMouseEnter={openA11y}
@@ -157,16 +220,17 @@ export default function Header() {
               className={`burger ${isMenuOpen ? 'active' : ''}`}
               onClick={() => {
                 if (!isQuizActive) {
-                  setIsA11yOpen(false); // Закрыть панель доступности
+                  setIsA11yOpen(false);
+                  setIsAuthOpen(false);
                   setIsMenuOpen(!isMenuOpen);
                 }
               }}
               onMouseEnter={() => {
                 if (!isQuizActive) {
-                  setIsA11yOpen(false);
                   openMenu();
                 }
               }}
+              onMouseLeave={closeMenuWithDelay}
               aria-label="Меню"
               style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
             >
@@ -174,6 +238,32 @@ export default function Header() {
               <span></span>
               <span></span>
             </button>
+
+            {isLoading ? (
+              <div className="auth-btn-skeleton" />
+            ) : user ? (
+              <button
+                className="auth-user-btn"
+                onClick={() => setIsAuthOpen(!isAuthOpen)}
+                onMouseEnter={openAuth}
+                onMouseLeave={closeAuthWithDelay}
+              >
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="user-avatar" />
+                ) : (
+                  <div className="user-avatar-placeholder">
+                    {profile?.full_name?.[0] || user.email?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </button>
+            ) : (
+              <button
+                className="auth-login-btn"
+                onClick={() => setIsAuthModalOpen(true)}
+              >
+                Войти
+              </button>
+            )}
           </div>
         </nav>
       </header>
@@ -183,6 +273,13 @@ export default function Header() {
         onMouseEnter={keepA11yOpen}
         onMouseLeave={closeA11yWithDelay}
       />
+      <UserMenu
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onMouseEnter={keepAuthOpen}
+        onMouseLeave={closeAuthWithDelay}
+      />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );
 }

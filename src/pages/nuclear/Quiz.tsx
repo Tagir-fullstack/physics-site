@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { savePostQuizResult, saveTeacherSurvey, getUserCode } from '../../lib/supabase';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { useQuizMode } from '../../context/QuizModeContext';
+import { useAuth } from '../../context/AuthContext';
 import SpeakButton from '../../components/SpeakButton';
 import '../../styles/page-layout.css';
 
@@ -261,10 +262,12 @@ export default function Quiz() {
 
   const shuffledQuestions = useMemo(() => shuffleQuestions(questions), []);
 
-  const { lightTheme, enabled: a11yEnabled } = useAccessibility();
+  const { lightTheme, enabled: a11yEnabled, fontSize } = useAccessibility();
   const { setQuizActive } = useQuizMode();
+  const { profile } = useAuth();
   const isLightTheme = a11yEnabled && lightTheme;
   const [isMobile, setIsMobile] = useState(false);
+  const circlesContainerRef = useRef<HTMLDivElement>(null);
 
   // Определение мобильного устройства
   useEffect(() => {
@@ -274,11 +277,48 @@ export default function Quiz() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Блокируем навигацию во время прохождения теста
+  // Прокрутка к текущему вопросу на мобильных
   useEffect(() => {
-    setQuizActive(stage === 'quiz');
+    if (isMobile && circlesContainerRef.current && stage === 'quiz') {
+      const container = circlesContainerRef.current;
+      const circleSize = 28 + 6; // размер кружка + gap
+      const scrollPosition = currentQuestion * circleSize - container.clientWidth / 2 + circleSize / 2;
+      container.scrollTo({ left: Math.max(0, scrollPosition), behavior: 'smooth' });
+    }
+  }, [currentQuestion, isMobile, stage]);
+
+  // Блокируем навигацию во время прохождения теста и анкетирования
+  useEffect(() => {
+    setQuizActive(stage === 'quiz' || stage === 'survey');
     return () => setQuizActive(false);
   }, [stage, setQuizActive]);
+
+  // Блокируем свайп назад и кнопку "назад" браузера во время теста
+  useEffect(() => {
+    if (stage !== 'quiz') return;
+
+    // Добавляем запись в историю, чтобы перехватить "назад"
+    window.history.pushState({ quizActive: true }, '');
+
+    const handlePopState = () => {
+      // Пользователь нажал "назад" - возвращаем его обратно в тест
+      window.history.pushState({ quizActive: true }, '');
+    };
+
+    // Предупреждение при попытке закрыть/обновить страницу
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [stage]);
 
   // Автозаполнение кода пользователя из localStorage
   useEffect(() => {
@@ -295,6 +335,12 @@ export default function Quiz() {
     }
   };
 
+  const scrollTopIfA11y = () => {
+    if (fontSize === 'large' || fontSize === 'xlarge') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleAnswer = (answerIndex: number) => {
     setAnswers(prev => ({ ...prev, [currentQuestion]: answerIndex }));
   };
@@ -302,12 +348,14 @@ export default function Quiz() {
   const handleNext = () => {
     if (currentQuestion < shuffledQuestions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
+      scrollTopIfA11y();
     }
   };
 
   const handlePrev = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
+      scrollTopIfA11y();
     }
   };
 
@@ -330,6 +378,7 @@ export default function Quiz() {
     // Сохраняем в фоне без блокировки UI
     savePostQuizResult({
       user_code: enteredUserCode || 'GUEST',
+      profile_id: profile?.id,
       student_name: studentName,
       student_class: studentClass,
       school: school,
@@ -401,9 +450,9 @@ export default function Quiz() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
       style={{
-        marginTop: '80px',
-        minHeight: 'calc(100vh - 80px)',
-        padding: '1.5rem 1rem 2rem',
+        marginTop: isMobile ? '85px' : '80px',
+        minHeight: isMobile ? 'calc(100vh - 85px)' : 'calc(100vh - 80px)',
+        padding: isMobile ? '1rem 0.75rem 2rem' : '1.5rem 1rem 2rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -412,9 +461,9 @@ export default function Quiz() {
     >
       <div style={{ width: '100%', maxWidth: '850px' }}>
         <h1 style={{
-          fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
+          fontSize: isMobile ? 'clamp(1.4rem, 6vw, 2rem)' : 'clamp(1.5rem, 5vw, 2.2rem)',
           color: isLightTheme ? '#1a1a1a' : '#ffffff',
-          marginBottom: '1.5rem',
+          marginBottom: isMobile ? '1rem' : '1.5rem',
           fontWeight: 900,
           textAlign: 'center',
           fontFamily: "'CCUltimatum', Arial, sans-serif"
@@ -422,13 +471,14 @@ export default function Quiz() {
           {stage === 'survey' ? (
             <>{t('survey.title')} <span style={{ color: '#FC6255' }}>{t('survey.titleHighlight')}</span></>
           ) : (
-            <>{t('quiz.title')} <span style={{ color: '#FC6255' }}>{t('quiz.titleHighlight')}</span></>
+            <>{t('quiz.title')}{isMobile ? ' ' : <br />}<span style={{ color: '#FC6255' }}>{t('quiz.titleHighlight')}</span></>
           )}
         </h1>
 
         {/* Student Info Form */}
         {stage === 'info' && (
           <motion.div
+            className="quiz-form-container"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             style={{
@@ -449,10 +499,11 @@ export default function Quiz() {
             </h2>
             <form onSubmit={handleStartQuiz}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                <label htmlFor="userCode" style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
                   {t('quiz.yourCode')}
                 </label>
                 <input
+                  id="userCode"
                   type="text"
                   value={enteredUserCode}
                   onChange={(e) => setEnteredUserCode(e.target.value.toUpperCase())}
@@ -476,12 +527,13 @@ export default function Quiz() {
                 </p>
               </div>
               {/* Имя и Класс в одну строку */}
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="quiz-name-row" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ flex: 2 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                  <label htmlFor="studentName" style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
                     {t('quiz.name')} <span style={{ color: '#FC6255' }}>*</span>
                   </label>
                   <input
+                    id="studentName"
                     type="text"
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
@@ -503,10 +555,11 @@ export default function Quiz() {
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                    {isTeacher ? 'Стаж работы' : t('quiz.class')} <span style={{ color: '#FC6255' }}>*</span>
+                  <label htmlFor="studentClass" style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                    {isTeacher ? 'Стаж' : t('quiz.class')} <span style={{ color: '#FC6255' }}>*</span>
                   </label>
                   <input
+                    id="studentClass"
                     type="text"
                     value={studentClass}
                     onChange={(e) => setStudentClass(e.target.value)}
@@ -529,10 +582,11 @@ export default function Quiz() {
                 </div>
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                <label htmlFor="school" style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
                   {t('quiz.school')} <span style={{ color: '#FC6255' }}>*</span>
                 </label>
                 <input
+                  id="school"
                   type="text"
                   value={school}
                   onChange={(e) => setSchool(e.target.value)}
@@ -653,25 +707,25 @@ export default function Quiz() {
             style={{
               backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)',
               borderRadius: '16px',
-              padding: '2rem',
+              padding: isMobile ? '1rem' : '2rem',
               border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.06)',
-              height: '620px',
+              minHeight: isMobile ? 'auto' : '620px',
               display: 'flex',
               flexDirection: 'column'
             }}
           >
             {/* Progress */}
-            <div style={{ marginBottom: '1.5rem', flex: '0 0 auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: isLightTheme ? '#666' : '#888', fontSize: '0.9rem' }}>
+            <div style={{ marginBottom: isMobile ? '1rem' : '1.5rem', flex: '0 0 auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                <span style={{ color: isLightTheme ? '#666' : '#888', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
                   {t('quiz.question')} {currentQuestion + 1} {t('quiz.of')} {shuffledQuestions.length}
                 </span>
-                <span style={{ color: isLightTheme ? '#666' : '#888', fontSize: '0.9rem' }}>
+                <span style={{ color: isLightTheme ? '#666' : '#888', fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
                   {Object.keys(answers).length} {t('quiz.answered')}
                 </span>
               </div>
               <div style={{
-                height: '6px',
+                height: isMobile ? '4px' : '6px',
                 backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
                 borderRadius: '3px',
                 overflow: 'hidden'
@@ -686,9 +740,9 @@ export default function Quiz() {
             </div>
 
             {/* Question */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: isMobile ? '1rem' : '1.5rem' }}>
               <h3 style={{
-                fontSize: '1.4rem',
+                fontSize: isMobile ? '1.1rem' : '1.4rem',
                 color: isLightTheme ? '#1a1a1a' : '#ffffff',
                 lineHeight: '1.6',
                 flex: 1
@@ -699,7 +753,7 @@ export default function Quiz() {
             </div>
 
             {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', flex: '1 1 auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '0.5rem' : '0.75rem', marginBottom: isMobile ? '1rem' : '1.5rem', flex: '1 1 auto' }}>
               {shuffledQuestions[currentQuestion].options.map((option, index) => {
                 const isSelected = answers[currentQuestion] === index;
                 return (
@@ -707,12 +761,12 @@ export default function Quiz() {
                     key={index}
                     onClick={() => handleAnswer(index)}
                     style={{
-                      padding: '1rem',
+                      padding: isMobile ? '0.75rem' : '1rem',
                       borderRadius: '10px',
                       border: isSelected ? '2px solid #4a90e2' : isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
                       backgroundColor: isSelected ? 'rgba(74, 144, 226, 0.15)' : isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.03)',
                       textAlign: 'left',
-                      fontSize: '1rem',
+                      fontSize: isMobile ? '0.9rem' : '1rem',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       color: isLightTheme ? '#1a1a1a' : '#ffffff',
@@ -721,15 +775,15 @@ export default function Quiz() {
                   >
                     <span style={{
                       display: 'inline-block',
-                      width: '26px',
-                      height: '26px',
+                      width: isMobile ? '22px' : '26px',
+                      height: isMobile ? '22px' : '26px',
                       borderRadius: '50%',
                       backgroundColor: isSelected ? '#4a90e2' : isLightTheme ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)',
                       color: isSelected ? 'white' : isLightTheme ? '#666' : '#888',
                       textAlign: 'center',
-                      lineHeight: '26px',
-                      marginRight: '0.75rem',
-                      fontSize: '0.85rem',
+                      lineHeight: isMobile ? '22px' : '26px',
+                      marginRight: isMobile ? '0.5rem' : '0.75rem',
+                      fontSize: isMobile ? '0.75rem' : '0.85rem',
                       fontWeight: '600'
                     }}>
                       {String.fromCharCode(65 + index)}
@@ -741,31 +795,38 @@ export default function Quiz() {
             </div>
 
             {/* Question Navigation Circles */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '6px',
-              flexWrap: 'wrap',
-              marginBottom: '1rem'
-            }}>
+            <div
+              ref={circlesContainerRef}
+              className="quiz-navigation-circles"
+              style={{
+                display: 'flex',
+                justifyContent: isMobile ? 'flex-start' : 'center',
+                gap: '6px',
+                flexWrap: isMobile ? 'nowrap' : 'wrap',
+                marginBottom: '1rem',
+                overflowX: isMobile ? 'auto' : 'visible',
+                paddingBottom: isMobile ? '8px' : '0',
+                WebkitOverflowScrolling: 'touch'
+              }}>
               {shuffledQuestions.map((_, index) => {
                 const isAnswered = answers[index] !== undefined;
                 const isCurrent = currentQuestion === index;
+                const circleSize = isMobile ? '28px' : '32px';
                 return (
                   <button
                     key={index}
-                    onClick={() => setCurrentQuestion(index)}
+                    onClick={() => { setCurrentQuestion(index); scrollTopIfA11y(); }}
                     style={{
-                      width: '32px',
-                      height: '32px',
-                      minWidth: '32px',
-                      minHeight: '32px',
+                      width: circleSize,
+                      height: circleSize,
+                      minWidth: circleSize,
+                      minHeight: circleSize,
                       borderRadius: '50%',
                       border: isCurrent ? '2px solid #FC6255' : isAnswered ? '2px solid #27ae60' : isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
                       backgroundColor: isCurrent ? 'rgba(252, 98, 85, 0.15)' : isAnswered ? 'rgba(39, 174, 96, 0.15)' : 'transparent',
                       color: isCurrent ? '#FC6255' : isAnswered ? '#27ae60' : isLightTheme ? '#666' : '#888',
                       cursor: 'pointer',
-                      fontSize: '0.8rem',
+                      fontSize: isMobile ? '0.7rem' : '0.8rem',
                       fontWeight: '600',
                       display: 'flex',
                       alignItems: 'center',
@@ -773,7 +834,8 @@ export default function Quiz() {
                       transition: 'all 0.2s',
                       padding: 0,
                       boxSizing: 'border-box',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      outline: 'none'
                     }}
                   >
                     {index + 1}
@@ -783,7 +845,7 @@ export default function Quiz() {
             </div>
 
             {/* Navigation */}
-            <div style={{ display: 'flex', gap: isMobile ? '0.5rem' : '1rem', justifyContent: 'space-between', marginTop: 'auto', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+            <div className="quiz-nav-buttons" style={{ display: 'flex', gap: isMobile ? '0.5rem' : '1rem', justifyContent: 'space-between', marginTop: 'auto', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
               <button
                 onClick={handlePrev}
                 disabled={currentQuestion === 0}
@@ -803,6 +865,7 @@ export default function Quiz() {
               </button>
 
               <button
+                className="quiz-btn-finish"
                 onClick={() => setShowFinishConfirm(true)}
                 style={{
                   padding: isMobile ? '0.6rem 1rem' : '0.75rem 1.5rem',
@@ -821,6 +884,7 @@ export default function Quiz() {
 
               {currentQuestion < shuffledQuestions.length - 1 ? (
                 <button
+                  className="quiz-btn-next"
                   onClick={handleNext}
                   style={{
                     padding: isMobile ? '0.6rem 1rem' : '0.75rem 1.5rem',
@@ -839,6 +903,7 @@ export default function Quiz() {
                 </button>
               ) : (
                 <button
+                  className="quiz-btn-next"
                   onClick={handleFinish}
                   disabled={Object.keys(answers).length < shuffledQuestions.length || isSubmitting}
                   style={{
@@ -1115,28 +1180,32 @@ export default function Quiz() {
             style={{
               backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)',
               borderRadius: '16px',
-              padding: '2rem',
+              padding: isMobile ? '1rem' : '2rem',
               border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.1)' : '1px solid rgba(255, 255, 255, 0.06)'
             }}
           >
-            <p style={{ color: isLightTheme ? '#666' : '#888', marginBottom: '1.5rem', textAlign: 'center' }}>
+            <p style={{ color: isLightTheme ? '#555' : '#bbb', marginBottom: isMobile ? '1rem' : '1.5rem', textAlign: 'center', fontSize: isMobile ? '0.9rem' : '1rem' }}>
               {t('survey.intro')}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '1rem' : '1.5rem' }}>
               {surveyQuestions.map((sq) => (
                 <div key={sq.id} style={{
                   backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)',
                   borderRadius: '10px',
-                  padding: '1rem',
+                  padding: isMobile ? '0.75rem' : '1rem',
                   border: isLightTheme ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.05)'
                 }}>
-                  <label style={{ display: 'block', marginBottom: '0.75rem', color: isLightTheme ? '#1a1a1a' : '#ffffff', fontWeight: '500' }}>
-                    {sq.question} {sq.required && <span style={{ color: '#FC6255' }}>*</span>}
+                  <label style={{ display: 'block', marginBottom: isMobile ? '0.5rem' : '0.75rem', color: isLightTheme ? '#1a1a1a' : '#ffffff', fontWeight: '500', fontSize: isMobile ? '0.9rem' : '1rem', textAlign: 'center' }}>
+                    {sq.question.includes('(необязательно)') ? (
+                      <>{sq.question.replace('(необязательно)', '')}<span style={{ color: isLightTheme ? '#999' : '#666', fontWeight: '400' }}>(необязательно)</span></>
+                    ) : (
+                      <>{sq.question}{sq.required && <span style={{ color: '#FC6255' }}>&nbsp;*</span>}</>
+                    )}
                   </label>
 
                   {sq.type === 'rating' && (
-                    <div style={{ display: 'flex', gap: isMobile ? '0.4rem' : '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: isMobile ? '0.4rem' : '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                       {(sq.id === 'q14' ? [1,2,3,4,5,6,7,8,9,10] : [1,2,3,4,5]).map(num => (
                         <button
                           key={num}
@@ -1166,7 +1235,7 @@ export default function Quiz() {
                   )}
 
                   {sq.type === 'boolean' && (
-                    <div style={{ display: 'flex', gap: isMobile ? '0.75rem' : '1rem' }}>
+                    <div style={{ display: 'flex', gap: isMobile ? '0.75rem' : '1rem', justifyContent: 'center' }}>
                       {['Да', 'Нет'].map(opt => (
                         <button
                           key={opt}
@@ -1188,7 +1257,7 @@ export default function Quiz() {
                   )}
 
                   {sq.type === 'select' && sq.options && (
-                    <div style={{ display: 'flex', gap: isMobile ? '0.4rem' : '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: isMobile ? '0.4rem' : '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                       {sq.options.map(opt => (
                         <button
                           key={opt}
@@ -1196,9 +1265,9 @@ export default function Quiz() {
                           style={{
                             padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
                             borderRadius: '20px',
-                            border: surveyAnswers[sq.id] === opt ? '2px solid #4a90e2' : isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.2)',
+                            border: surveyAnswers[sq.id] === opt ? '2px solid #4a90e2' : isLightTheme ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.3)',
                             backgroundColor: surveyAnswers[sq.id] === opt ? 'rgba(74, 144, 226, 0.2)' : 'transparent',
-                            color: surveyAnswers[sq.id] === opt ? '#4a90e2' : isLightTheme ? '#555' : '#888',
+                            color: surveyAnswers[sq.id] === opt ? '#4a90e2' : isLightTheme ? '#555' : '#ccc',
                             cursor: 'pointer',
                             fontSize: isMobile ? '0.8rem' : '0.9rem'
                           }}
@@ -1223,7 +1292,8 @@ export default function Quiz() {
                         backgroundColor: isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)',
                         color: isLightTheme ? '#1a1a1a' : '#ffffff',
                         fontSize: '1rem',
-                        resize: 'vertical',
+                        fontFamily: 'inherit',
+                        resize: 'none',
                         boxSizing: 'border-box'
                       }}
                     />

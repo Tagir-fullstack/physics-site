@@ -10,7 +10,7 @@
 .a11y-panel {
   position: fixed;
   top: 85px;
-  right: calc(50% - 600px + 70px + 70px);
+  right: calc(50% - 600px + 70px + 25px);
   width: 420px;
   max-width: 95vw;
   background: #1a1a1a;
@@ -305,9 +305,108 @@ html.a11y-font-xlarge {
   overflow-x: hidden !important;
 }
 
-/* Compact header at xlarge font */
+/* Header ignores font size scaling - use px instead of rem */
+html.a11y-font-large .header,
 html.a11y-font-xlarge .header {
-  padding: 0.3rem 1.5rem !important;
+  padding: 10px 32px !important;
+}
+
+html.a11y-font-large .header .logo,
+html.a11y-font-xlarge .header .logo {
+  font-size: 32px !important;
+  gap: 8px !important;
+}
+
+html.a11y-font-large .header .logo-phys,
+html.a11y-font-xlarge .header .logo-phys {
+  margin-right: -8px !important;
+}
+
+html.a11y-font-large .header .logo-icon,
+html.a11y-font-xlarge .header .logo-icon {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+html.a11y-font-large .header .nav-right,
+html.a11y-font-xlarge .header .nav-right {
+  gap: 12px !important;
+}
+
+html.a11y-font-large .header .auth-login-btn,
+html.a11y-font-xlarge .header .auth-login-btn {
+  font-size: 14px !important;
+  padding: 8px 16px !important;
+}
+
+html.a11y-font-large .header .a11y-header-btn,
+html.a11y-font-xlarge .header .a11y-header-btn {
+  padding: 6px !important;
+}
+
+html.a11y-font-large .header .a11y-icon,
+html.a11y-font-xlarge .header .a11y-icon {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+html.a11y-font-large .header .burger,
+html.a11y-font-xlarge .header .burger {
+  gap: 5px !important;
+  padding: 5px !important;
+}
+
+html.a11y-font-large .header .burger span,
+html.a11y-font-xlarge .header .burger span {
+  width: 25px !important;
+  height: 3px !important;
+}
+
+/* Mobile header with font scaling */
+@media (max-width: 600px) {
+  html.a11y-font-large .header,
+  html.a11y-font-xlarge .header {
+    padding: 12px 16px !important;
+  }
+
+  html.a11y-font-large .header .logo,
+  html.a11y-font-xlarge .header .logo {
+    font-size: 32px !important;
+  }
+
+  html.a11y-font-large .header .logo-icon,
+  html.a11y-font-xlarge .header .logo-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  html.a11y-font-large .header,
+  html.a11y-font-xlarge .header {
+    padding: 8px 12px !important;
+  }
+
+  html.a11y-font-large .header .logo,
+  html.a11y-font-xlarge .header .logo {
+    font-size: 26px !important;
+  }
+
+  html.a11y-font-large .header .logo-icon,
+  html.a11y-font-xlarge .header .logo-icon {
+    display: none !important;
+  }
+
+  html.a11y-font-large .header .nav-right,
+  html.a11y-font-xlarge .header .nav-right {
+    gap: 6px !important;
+  }
+
+  html.a11y-font-large .header .auth-login-btn,
+  html.a11y-font-xlarge .header .auth-login-btn {
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+  }
 }
 
 /* ===== Light Theme ===== */
@@ -621,6 +720,36 @@ html.a11y-font-xlarge .header {
 }
 .a11y-light-theme .a11y-overlay {
   background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Accessibility panel - compact on font scaling */
+html.a11y-font-large .a11y-panel__content,
+html.a11y-font-xlarge .a11y-panel__content {
+  padding: 0.75rem 1rem !important;
+  gap: 0.75rem !important;
+}
+
+html.a11y-font-large .a11y-panel__header,
+html.a11y-font-xlarge .a11y-panel__header {
+  padding: 0.5rem 1rem !important;
+}
+
+html.a11y-font-large .a11y-font-btn,
+html.a11y-font-xlarge .a11y-font-btn {
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 0.5rem !important;
+}
+
+html.a11y-font-large .a11y-font-buttons,
+html.a11y-font-xlarge .a11y-font-buttons {
+  gap: 0.4rem !important;
+}
+
+html.a11y-font-large .a11y-reset-btn,
+html.a11y-font-xlarge .a11y-reset-btn {
+  margin-top: 0.5rem !important;
+  padding: 0.5rem !important;
 }
 
 /* --- Atom models --- */

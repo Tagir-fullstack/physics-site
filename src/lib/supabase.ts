@@ -29,6 +29,7 @@ export interface PreQuizResult {
   id?: number;
   user_id?: string;
   user_code: string;
+  profile_id?: string;  // ID авторизованного пользователя
   score: number;
   total_questions: number;
   percentage: number;
@@ -40,6 +41,7 @@ export interface PostQuizResult {
   id?: number;
   user_id?: string;
   user_code: string;
+  profile_id?: string;  // ID авторизованного пользователя
   student_name: string;
   student_class: string;
   school: string;
@@ -303,4 +305,202 @@ export async function getUserResults(userCode: string): Promise<{
     preQuiz: preQuizResult.data || null,
     postQuiz: postQuizResult.data || null
   };
+}
+
+// ==========================================
+// Функции для авторизованных пользователей
+// ==========================================
+
+export interface QuizHistoryItem {
+  id: string;
+  quiz_type: 'pre_quiz' | 'post_quiz' | 'topic_quiz';
+  topic_path?: string;
+  topic_name?: string;
+  score: number;
+  total_questions: number;
+  percentage: number;
+  grade?: string;
+  created_at: string;
+}
+
+// Маппинг путей тем к названиям
+const TOPIC_NAMES: Record<string, string> = {
+  '/nuclear/rutherford': 'Опыт Резерфорда',
+  '/nuclear/droplet': 'Капельная модель',
+  '/nuclear/alpha': 'Альфа-распад',
+  '/nuclear/beta': 'Бета-распад',
+  '/nuclear/gamma': 'Гамма-излучение',
+  '/nuclear/halflife': 'Период полураспада',
+  '/nuclear/interactions': 'Ядерные взаимодействия',
+  '/nuclear/decay': 'Деление ядра',
+  '/nuclear/chain': 'Цепная реакция',
+};
+
+// Получение истории тестов по profile_id
+export async function getQuizHistory(profileId: string): Promise<QuizHistoryItem[]> {
+  if (!supabase) {
+    return [];
+  }
+
+  // Получаем результаты из всех таблиц
+  const [preQuizResults, postQuizResults, topicQuizResults] = await Promise.all([
+    supabase
+      .from('pre_quiz_results')
+      .select('id, score, total_questions, percentage, created_at')
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('post_quiz_results')
+      .select('id, score, total_questions, percentage, grade, created_at')
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('topic_quiz_results')
+      .select('id, topic_path, score, total_questions, created_at')
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false })
+  ]);
+
+  const history: QuizHistoryItem[] = [];
+
+  // Добавляем pre_quiz результаты
+  if (preQuizResults.data) {
+    preQuizResults.data.forEach(item => {
+      history.push({
+        id: item.id,
+        quiz_type: 'pre_quiz',
+        score: item.score,
+        total_questions: item.total_questions,
+        percentage: item.percentage,
+        created_at: item.created_at
+      });
+    });
+  }
+
+  // Добавляем post_quiz результаты
+  if (postQuizResults.data) {
+    postQuizResults.data.forEach(item => {
+      history.push({
+        id: item.id,
+        quiz_type: 'post_quiz',
+        score: item.score,
+        total_questions: item.total_questions,
+        percentage: item.percentage,
+        grade: item.grade,
+        created_at: item.created_at
+      });
+    });
+  }
+
+  // Добавляем topic_quiz результаты
+  if (topicQuizResults.data) {
+    topicQuizResults.data.forEach(item => {
+      const percentage = Math.round((item.score / item.total_questions) * 100);
+      history.push({
+        id: item.id,
+        quiz_type: 'topic_quiz',
+        topic_path: item.topic_path,
+        topic_name: TOPIC_NAMES[item.topic_path] || item.topic_path,
+        score: item.score,
+        total_questions: item.total_questions,
+        percentage: percentage,
+        created_at: item.created_at
+      });
+    });
+  }
+
+  // Сортируем по дате (новые первые)
+  history.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  return history;
+}
+
+// Получение текущего profile_id
+export function getCurrentProfileId(): string | null {
+  // Это будет использоваться в компонентах через AuthContext
+  return null;
+}
+
+// ==========================================
+// Функции для коротких тестов по темам
+// ==========================================
+
+export interface TopicQuizResult {
+  id?: string;
+  profile_id: string;
+  topic_path: string;
+  score: number;
+  total_questions: number;
+  answers: Record<number, number>;
+  created_at?: string;
+}
+
+// Сохранение результата теста по теме
+export async function saveTopicQuizResult(
+  result: Omit<TopicQuizResult, 'id' | 'created_at'>
+): Promise<TopicQuizResult | null> {
+  if (!supabase) {
+    console.warn('Supabase not configured. Topic quiz result not saved.');
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('topic_quiz_results')
+    .insert([result])
+    .select();
+
+  if (error) {
+    console.error('Error saving topic quiz result:', error);
+    throw error;
+  }
+
+  return data?.[0] || null;
+}
+
+// Получение результатов тестов по темам для пользователя
+export async function getTopicQuizResults(profileId: string): Promise<TopicQuizResult[]> {
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('topic_quiz_results')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching topic quiz results:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+// Получение лучшего результата по теме
+export async function getBestTopicQuizResult(
+  profileId: string,
+  topicPath: string
+): Promise<TopicQuizResult | null> {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('topic_quiz_results')
+    .select('*')
+    .eq('profile_id', profileId)
+    .eq('topic_path', topicPath)
+    .order('score', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    if (error.code !== 'PGRST116') {
+      console.error('Error fetching best topic quiz result:', error);
+    }
+    return null;
+  }
+
+  return data;
 }

@@ -1,10 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SpeakButton from './SpeakButton';
 import PreQuiz from './PreQuiz';
+import TopicQuiz from './TopicQuiz';
 import { setPreQuizCompleted } from '../lib/supabase';
+import { getTopicQuiz } from '../data/topicQuizzes';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { glossaryTerms, glossaryCategories, type GlossaryTerm } from '../data/glossary';
 import { isotopes, isotopeCategories, type Isotope } from '../data/halfLifeTable';
@@ -76,9 +78,14 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
   const [isMobile, setIsMobile] = useState(false);
     const [showPreQuiz, setShowPreQuiz] = useState(false);
   const [showPreQuizWithCode, setShowPreQuizWithCode] = useState(false); // Для повторного прохождения
+  const [showTopicQuiz, setShowTopicQuiz] = useState(false);
+  const location = useLocation();
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const isLightTheme = a11yEnabled && lightTheme;
   const statusConfig = getStatusConfig(t);
+
+  // Проверяем есть ли тест для текущей темы
+  const hasTopicQuiz = getTopicQuiz(location.pathname) !== null;
 
   // Входной тест теперь не показывается автоматически
   // Пользователь может пройти его вручную через кнопку
@@ -111,6 +118,13 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
           onClose={() => setShowPreQuizWithCode(false)}
         />
       )}
+
+      {/* Короткий тест по теме */}
+      <TopicQuiz
+        topicPath={location.pathname}
+        isOpen={showTopicQuiz}
+        onClose={() => setShowTopicQuiz(false)}
+      />
 
       <motion.main
         className="page-content"
@@ -2371,6 +2385,32 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4a90e2'}
               >
                 {t('pageTemplate.passPreTest')}
+              </button>
+            )}
+            {/* Кнопка короткого теста по теме */}
+            {hasTopicQuiz && (
+              <button
+                onClick={() => setShowTopicQuiz(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#27ae60',
+                  color: 'white',
+                  padding: '0.875rem 1.5rem',
+                  borderRadius: '50px',
+                  border: 'none',
+                  fontSize: '1.3rem',
+                  fontWeight: '700',
+                  fontFamily: "'CCUltimatum', Arial, sans-serif",
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#219a52'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#27ae60'}
+              >
+                Проверить знания
               </button>
             )}
             {nextLink && (

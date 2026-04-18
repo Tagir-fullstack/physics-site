@@ -65,7 +65,11 @@
   cursor: pointer;
   padding: 5px;
   z-index: 1002;
-  outline: none;
+  outline: none !important;
+}
+
+.burger:focus {
+  outline: none !important;
 }
 
 .burger span {
@@ -96,6 +100,7 @@
   position: relative;
   z-index: 1200;
 }
+
 
 .nav-menu {
   position: fixed;
@@ -299,5 +304,38 @@
   .dropdown-item:active {
     border-left: none;
     background-color: rgba(252, 98, 85, 0.15);
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .header .logo-icon {
+    display: none;
+  }
+
+  .header .logo {
+    font-size: 26px !important;
+    gap: 0 !important;
+  }
+
+  .header .logo-phys {
+    margin-right: 0 !important;
+  }
+
+  .nav-right {
+    gap: 0.4rem;
+  }
+
+  .a11y-header-btn {
+    padding: 4px;
+  }
+
+  .auth-login-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
   }
 }

@@ -61,7 +61,79 @@
     text-align: center;
     justify-content: center;
   }
+
+  .page-content {
+    margin-top: 70px !important;
+    padding-top: 1rem !important;
+  }
 }
+
+/* A++ on narrow screens - stack form fields vertically */
+@media (max-width: 450px) {
+  html.a11y-font-xlarge .quiz-name-row {
+    flex-direction: column !important;
+  }
+
+  html.a11y-font-xlarge .quiz-name-row > div {
+    flex: 1 1 100% !important;
+  }
+}
+
+/* A+ on very narrow screens */
+@media (max-width: 380px) {
+  html.a11y-font-large .quiz-name-row {
+    flex-direction: column !important;
+  }
+
+  html.a11y-font-large .quiz-name-row > div {
+    flex: 1 1 100% !important;
+  }
+}
+
+/* Reduce padding in quiz form with A+ and A++ */
+html.a11y-font-large .quiz-form-container,
+html.a11y-font-xlarge .quiz-form-container {
+  padding: 1rem !important;
+}
+
+/* Quiz navigation buttons - reorder on A++ */
+html.a11y-font-xlarge .quiz-nav-buttons .quiz-btn-finish {
+  order: 3 !important;
+}
+
+html.a11y-font-xlarge .quiz-nav-buttons .quiz-btn-next {
+  order: 2 !important;
+}
+
+html.a11y-font-large .quiz-form-container input,
+html.a11y-font-large .quiz-form-container select,
+html.a11y-font-xlarge .quiz-form-container input,
+html.a11y-font-xlarge .quiz-form-container select {
+  padding: 0.5rem !important;
+}
+
+html.a11y-font-large .quiz-form-container label,
+html.a11y-font-xlarge .quiz-form-container label {
+  margin-bottom: 0.3rem !important;
+}
+
+/* Force consistent h1 layout on mid-size screens */
+@media (max-width: 950px) and (min-width: 600px) {
+  .page-content h1 {
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Allow title to wrap on very narrow screens */
+@media (max-width: 400px) {
+  .page-content h1 span {
+    white-space: normal !important;
+    display: inline !important;
+  }
+}
+
 
 /* Placeholder styles */
 input::placeholder {
@@ -78,4 +150,23 @@ input::placeholder {
 
 textarea::placeholder {
   color: rgba(150, 150, 150, 0.6) !important;
+}
+
+/* Quiz navigation circles scrollbar */
+.quiz-navigation-circles {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 150, 150, 0.5) transparent;
+}
+
+.quiz-navigation-circles::-webkit-scrollbar {
+  height: 4px;
+}
+
+.quiz-navigation-circles::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.quiz-navigation-circles::-webkit-scrollbar-thumb {
+  background-color: rgba(150, 150, 150, 0.5);
+  border-radius: 2px;
 }
