@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { getTopicQuiz, type TopicQuestion } from '../data/topicQuizzes';
+import { getTopicQuiz } from '../data/topicQuizzes';
 import { saveTopicQuizResult } from '../lib/supabase';
 import '../styles/topic-quiz.css';
 
@@ -77,7 +77,6 @@ export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps
       }
     });
 
-    const percentage = Math.round((correctCount / shuffledQuestions.length) * 100);
     setScore(correctCount);
     setStage('result');
 
