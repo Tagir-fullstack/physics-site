@@ -254,7 +254,12 @@ export default function Home() {
                 <SwiperSlide key={topic.path}>
                   <div className="topic-slide-card">
                     <div className="topic-slide-image">
-                      <img src={topic.image} alt={t(`topics.${topicKey}.title`)} />
+                      <img
+                        src={topic.image}
+                        alt={t(`topics.${topicKey}.title`)}
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                     <div className="topic-slide-info">
                       <div className="topic-slide-number">

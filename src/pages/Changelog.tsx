@@ -12,6 +12,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    date: '17.05.2026',
+    version: 'v2.1.1',
+    changes: [
+      'Ускорена загрузка страниц: видео грузят только метаданные (preload="metadata") до клика play',
+      'Превью тем на главной странице теперь подгружаются лениво — не нагружают первый экран',
+    ],
+  },
+  {
     date: '16.05.2026',
     version: 'v2.1.0',
     changes: [

@@ -280,6 +280,7 @@ export default function PageTemplate({ title, section, videoSrc, description, pr
             {videoSrc && (
               <video
                 controls
+                preload="metadata"
                 style={{
                   width: '100%',
                   height: '100%',
