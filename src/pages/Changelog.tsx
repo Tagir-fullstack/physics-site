@@ -12,6 +12,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    date: '11.06.2026',
+    version: 'v2.1.2-1',
+    changes: [
+      'Добавлена презентация магистерской диссертации (/thesis) с навигацией по слайдам, прогрессом и поддержкой пульта',
+      'На странице защиты лого отображается как Physez.com',
+    ],
+  },
+  {
     date: '19.05.2026',
     version: 'v2.1.2',
     changes: [

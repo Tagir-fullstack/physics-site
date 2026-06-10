@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
@@ -26,6 +26,8 @@ export default function Header() {
   const { user, profile, isLoading } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
+  const location = useLocation();
+  if (location.pathname === '/thesis') return null;
 
   // Burger menu handlers
   const openMenu = () => {

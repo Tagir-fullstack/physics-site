@@ -676,6 +676,9 @@ html.a11y-font-xlarge .header .burger span {
 .a11y-light-theme footer a {
   color: #FC6255 !important;
 }
+.a11y-light-theme footer a.footer-thesis-link {
+  color: #2563c2 !important;
+}
 
 /* --- Panel in light theme --- */
 .a11y-light-theme .a11y-panel {
