@@ -66,7 +66,7 @@ const Slide1 = () => (
       </div>
       <div className="title-meta-block">
         <div className="label">Научный руководитель</div>
-        <div className="name">Амренова А. У.</div>
+        <div className="name">Амренова Асем Уахитовна</div>
         <div className="desc">к.ф.-м.н., ассистент-профессор</div>
       </div>
     </motion.div>
