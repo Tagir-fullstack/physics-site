@@ -88,23 +88,10 @@ export default function Footer() {
             <p style={{
               fontSize: '0.9rem',
               lineHeight: '1.6',
-              color: '#bbb',
-              marginBottom: '0.4rem'
+              color: '#bbb'
             }}>
               Амренова Асем Уахитовна
             </p>
-            <Link to="/thesis" className="footer-thesis-link" style={{
-              fontSize: '0.85rem',
-              color: '#4a90e2',
-              textDecoration: 'none',
-              borderBottom: '1px solid transparent',
-              transition: 'border-color 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#4a90e2'}
-            onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
-            >
-              Презентация
-            </Link>
           </div>
         </div>
 

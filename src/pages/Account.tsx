@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { getQuizHistory, type QuizHistoryItem, supabase } from '../lib/supabase';
@@ -463,6 +463,25 @@ export default function Account() {
     >
       <div className="account-container">
         <h1 className="account-title">Личный кабинет</h1>
+
+        {profile?.role === 'teacher' && (
+          <Link
+            to="/teacher"
+            style={{
+              display: 'inline-block',
+              marginBottom: '1rem',
+              padding: '0.6rem 1.2rem',
+              backgroundColor: '#4a90e2',
+              color: '#fff',
+              borderRadius: 50,
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem'
+            }}
+          >
+            Кабинет учителя →
+          </Link>
+        )}
 
         {message && (
           <div className={`account-message ${message.type}`}>

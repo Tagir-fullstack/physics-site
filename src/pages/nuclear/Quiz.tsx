@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { savePostQuizResult, saveTeacherSurvey, getUserCode } from '../../lib/supabase';
+import { savePostQuizResult, saveTeacherSurvey, getUserCode, findClassByCode } from '../../lib/supabase';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { useQuizMode } from '../../context/QuizModeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -252,6 +252,9 @@ export default function Quiz() {
   const [studentClass, setStudentClass] = useState('');
   const [school, setSchool] = useState('');
   const [enteredUserCode, setEnteredUserCode] = useState('');
+  const [classCode, setClassCode] = useState('');
+  const [classId, setClassId] = useState<string | null>(null);
+  const [classError, setClassError] = useState<string | null>(null);
   const [isTeacher, setIsTeacher] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -328,11 +331,30 @@ export default function Quiz() {
     }
   }, []);
 
-  const handleStartQuiz = (e: React.FormEvent) => {
+  // Автозаполнение кода класса из ?class=XXXX
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cls = params.get('class');
+    if (cls) setClassCode(cls.toUpperCase());
+  }, []);
+
+  const handleStartQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (studentName.trim() && studentClass.trim() && school.trim()) {
-      setStage('quiz');
+    if (!(studentName.trim() && studentClass.trim() && school.trim())) return;
+
+    let resolvedClassId: string | null = classId;
+    const trimmedClass = classCode.trim().toUpperCase();
+    if (trimmedClass && !resolvedClassId) {
+      const cls = await findClassByCode(trimmedClass);
+      if (!cls) {
+        setClassError('Код класса не найден');
+        return;
+      }
+      resolvedClassId = cls.id;
+      setClassId(cls.id);
+      setClassError(null);
     }
+    setStage('quiz');
   };
 
   const scrollTopIfA11y = () => {
@@ -379,6 +401,7 @@ export default function Quiz() {
     savePostQuizResult({
       user_code: enteredUserCode || 'GUEST',
       profile_id: profile?.id,
+      class_id: classId,
       student_name: studentName,
       student_class: studentClass,
       school: school,
@@ -606,6 +629,41 @@ export default function Quiz() {
                     outline: 'none'
                   }}
                 />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label htmlFor="classCode" style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
+                  Код класса <span style={{ opacity: 0.6, fontWeight: 400 }}>(если выдал учитель)</span>
+                </label>
+                <input
+                  id="classCode"
+                  type="text"
+                  value={classCode}
+                  onChange={(e) => {
+                    setClassCode(e.target.value.toUpperCase());
+                    setClassError(null);
+                    setClassId(null);
+                  }}
+                  maxLength={12}
+                  placeholder="Например: KX42PQ"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: classError
+                      ? '1px solid #FC6255'
+                      : isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
+                    fontSize: '1rem',
+                    boxSizing: 'border-box',
+                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
+                    color: isLightTheme ? '#1a1a1a' : '#ffffff',
+                    outline: 'none',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase'
+                  }}
+                />
+                {classError && (
+                  <div style={{ color: '#FC6255', fontSize: '0.85rem', marginTop: '0.35rem' }}>{classError}</div>
+                )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{

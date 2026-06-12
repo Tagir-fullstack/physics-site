@@ -69,17 +69,28 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     applyClasses(state);
   }, [state]);
 
-  // Горячая клавиша Alt+L для переключения светлой темы
+  // Горячие клавиши: Alt+L и просто T / Е — переключение светлой темы
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key.toLowerCase() === 'l') {
-        e.preventDefault();
-        setState((s) => ({
-          ...s,
-          enabled: true,
-          lightTheme: !s.lightTheme
-        }));
+      const isAltL = e.altKey && e.key.toLowerCase() === 'l';
+      const isPlainT =
+        !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey &&
+        (e.code === 'KeyT' || e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'е');
+
+      if (!isAltL && !isPlainT) return;
+
+      if (isPlainT) {
+        const target = e.target as HTMLElement | null;
+        if (target) {
+          const tag = target.tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
+        }
+        // На /thesis тема уже переключается собственным обработчиком слайдов
+        if (window.location.pathname === '/thesis') return;
       }
+
+      e.preventDefault();
+      setState((s) => ({ ...s, enabled: true, lightTheme: !s.lightTheme }));
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

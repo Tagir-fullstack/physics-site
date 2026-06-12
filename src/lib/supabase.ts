@@ -30,6 +30,7 @@ export interface PreQuizResult {
   user_id?: string;
   user_code: string;
   profile_id?: string;  // ID авторизованного пользователя
+  class_id?: string | null;
   score: number;
   total_questions: number;
   percentage: number;
@@ -42,6 +43,7 @@ export interface PostQuizResult {
   user_id?: string;
   user_code: string;
   profile_id?: string;  // ID авторизованного пользователя
+  class_id?: string | null;
   student_name: string;
   student_class: string;
   school: string;
@@ -475,6 +477,186 @@ export async function getTopicQuizResults(profileId: string): Promise<TopicQuizR
   }
 
   return data || [];
+}
+
+// ==========================================
+// Классы (кабинет учителя)
+// ==========================================
+
+export interface ClassRow {
+  id: string;
+  teacher_id: string;
+  name: string;
+  school: string | null;
+  grade: string | null;
+  join_code: string;
+  created_at: string;
+}
+
+export interface ClassLookup {
+  id: string;
+  name: string;
+  school: string | null;
+  grade: string | null;
+}
+
+export interface ClassStudentRow {
+  user_code: string;
+  student_name: string;
+  pre_score: number | null;
+  pre_total: number | null;
+  pre_percentage: number | null;
+  pre_created_at: string | null;
+  pre_answers: Record<number, number> | null;
+  post_score: number | null;
+  post_total: number | null;
+  post_percentage: number | null;
+  post_grade: string | null;
+  post_created_at: string | null;
+  post_answers: Record<number, number> | null;
+}
+
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+export function generateJoinCode(): string {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += CODE_ALPHABET.charAt(Math.floor(Math.random() * CODE_ALPHABET.length));
+  }
+  return code;
+}
+
+export async function createClass(input: {
+  teacher_id: string;
+  name: string;
+  school?: string;
+  grade?: string;
+}): Promise<ClassRow | null> {
+  if (!supabase) return null;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const join_code = generateJoinCode();
+    const { data, error } = await supabase
+      .from('classes')
+      .insert([{
+        teacher_id: input.teacher_id,
+        name: input.name,
+        school: input.school || null,
+        grade: input.grade || null,
+        join_code,
+      }])
+      .select()
+      .single();
+
+    if (!error) return data;
+    if (error.code !== '23505') {
+      console.error('Error creating class:', error);
+      throw error;
+    }
+  }
+  throw new Error('Не удалось сгенерировать уникальный код класса');
+}
+
+export async function getTeacherClasses(teacherId: string): Promise<ClassRow[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('classes')
+    .select('*')
+    .eq('teacher_id', teacherId)
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Error fetching teacher classes:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function deleteClass(classId: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('classes').delete().eq('id', classId);
+  if (error) {
+    console.error('Error deleting class:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function findClassByCode(code: string): Promise<ClassLookup | null> {
+  if (!supabase) return null;
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) return null;
+  const { data, error } = await supabase.rpc('find_class_by_code', { p_code: normalized });
+  if (error) {
+    console.error('Error looking up class code:', error);
+    return null;
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return { id: row.id, name: row.name, school: row.school, grade: row.grade };
+}
+
+export async function getClassStudents(classId: string): Promise<ClassStudentRow[]> {
+  if (!supabase) return [];
+
+  const [pre, post] = await Promise.all([
+    supabase
+      .from('pre_quiz_results')
+      .select('user_code, score, total_questions, percentage, answers, created_at')
+      .eq('class_id', classId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('post_quiz_results')
+      .select('user_code, student_name, score, total_questions, percentage, grade, answers, created_at')
+      .eq('class_id', classId)
+      .order('created_at', { ascending: false }),
+  ]);
+
+  if (pre.error) console.error('Error fetching pre results:', pre.error);
+  if (post.error) console.error('Error fetching post results:', post.error);
+
+  const byCode = new Map<string, ClassStudentRow>();
+
+  function ensure(code: string, name: string): ClassStudentRow {
+    let row = byCode.get(code);
+    if (!row) {
+      row = {
+        user_code: code,
+        student_name: name,
+        pre_score: null, pre_total: null, pre_percentage: null, pre_created_at: null, pre_answers: null,
+        post_score: null, post_total: null, post_percentage: null, post_grade: null, post_created_at: null, post_answers: null,
+      };
+      byCode.set(code, row);
+    } else if (!row.student_name && name) {
+      row.student_name = name;
+    }
+    return row;
+  }
+
+  // Берём самый свежий pre/post для каждого user_code
+  (pre.data || []).forEach((r: any) => {
+    const row = ensure(r.user_code, '');
+    if (row.pre_created_at === null) {
+      row.pre_score = r.score;
+      row.pre_total = r.total_questions;
+      row.pre_percentage = Number(r.percentage);
+      row.pre_created_at = r.created_at;
+      row.pre_answers = r.answers || null;
+    }
+  });
+  (post.data || []).forEach((r: any) => {
+    const row = ensure(r.user_code, r.student_name || '');
+    if (row.post_created_at === null) {
+      row.post_score = r.score;
+      row.post_total = r.total_questions;
+      row.post_percentage = Number(r.percentage);
+      row.post_grade = r.grade;
+      row.post_created_at = r.created_at;
+      row.post_answers = r.answers || null;
+    }
+    if (!row.student_name && r.student_name) row.student_name = r.student_name;
+  });
+
+  return Array.from(byCode.values()).sort((a, b) => a.student_name.localeCompare(b.student_name));
 }
 
 // Получение лучшего результата по теме

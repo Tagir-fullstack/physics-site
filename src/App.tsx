@@ -26,6 +26,7 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Changelog = lazy(() => import('./pages/Changelog'));
 const Account = lazy(() => import('./pages/Account'));
+const Teacher = lazy(() => import('./pages/Teacher'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 
 // Nuclear Physics pages - lazy loaded
@@ -95,6 +96,7 @@ function App() {
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/changelog" element={<Changelog />} />
                   <Route path="/account" element={<Account />} />
+                  <Route path="/teacher" element={<Teacher />} />
                   <Route path="/thesis" element={<Thesis />} />
 
                   {/* Nuclear Physics Routes */}
