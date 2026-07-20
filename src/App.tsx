@@ -12,11 +12,24 @@ function ScrollToTop() {
   return null;
 }
 
+function Canonical() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    link.href = `https://physez.com${pathname}`;
+  }, [pathname]);
+  return null;
+}
+
 import Footer from './components/Footer';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import { QuizModeProvider } from './context/QuizModeContext';
 import { AuthProvider } from './context/AuthContext';
-import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import './styles/global.css';
 import './styles/auth.css';
 
@@ -81,6 +94,7 @@ function App() {
       {isInitialLoading && <LoadingScreen onComplete={() => setIsInitialLoading(false)} />}
       <Router>
         <ScrollToTop />
+        <Canonical />
         <div style={{
           display: isInitialLoading ? 'none' : 'flex',
           flexDirection: 'column',
@@ -129,7 +143,6 @@ function App() {
           <Footer />
         </div>
       </Router>
-      <ProfileCompletionModal />
       </QuizModeProvider>
     </AccessibilityProvider>
     </AuthProvider>

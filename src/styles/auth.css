@@ -1,20 +1,20 @@
-/* Auth Button in Header */
+/* Auth link in Header (text-only, no button chrome) */
 .auth-login-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
   color: #fff;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-family: 'CCUltimatum', Arial, sans-serif;
-  transition: all 0.2s ease;
-  margin-right: 0.5rem;
+  transition: color 0.2s ease;
+  margin-right: 0.25rem;
+  letter-spacing: 0.02em;
 }
 
 .auth-login-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #FC6255;
+  background: transparent;
   color: #FC6255;
 }
 
@@ -420,7 +420,8 @@
 .user-menu {
   position: fixed;
   top: 85px;
-  right: calc(50% - 600px + 70px + 25px);
+  right: 24px;
+  left: auto;
   background: #1a1a1a;
   border-radius: 12px;
   padding: 0.5rem 0;
@@ -432,7 +433,7 @@
   visibility: hidden;
   pointer-events: none;
   transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
 }
 
 .user-menu--open {
@@ -440,12 +441,6 @@
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
-}
-
-@media (max-width: 1200px) {
-  .user-menu {
-    right: 80px;
-  }
 }
 
 .user-menu-header {
@@ -505,14 +500,13 @@
 
 /* Light theme support */
 .a11y-light-theme .auth-login-btn {
-  border-color: #000;
-  color: #000;
+  border: none;
+  color: #1a1a1a;
   background: transparent;
 }
 
 .a11y-light-theme .auth-login-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: #FC6255;
+  background: transparent;
   color: #FC6255;
 }
 

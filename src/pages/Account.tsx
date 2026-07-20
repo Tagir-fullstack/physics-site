@@ -1,10 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useUser } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
-import { getQuizHistory, type QuizHistoryItem, supabase } from '../lib/supabase';
 import type { UserRole } from '../types/auth';
 import '../styles/account.css';
+
+interface QuizHistoryItem {
+  id: string;
+  quiz_type: 'pre_quiz' | 'post_quiz' | 'topic_quiz';
+  topic_name?: string;
+  score: number;
+  total_questions: number;
+  percentage: number;
+  created_at: string;
+}
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: 'pupil', label: 'Школьник' },
@@ -15,6 +25,7 @@ const ROLES: { value: UserRole; label: string }[] = [
 
 export default function Account() {
   const { user, profile, subscription, isPremium, signOut, updateProfile } = useAuth();
+  const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -22,9 +33,9 @@ export default function Account() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Quiz history state
-  const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  // Quiz history state (пока не подключено к БД после миграции на Clerk/Neon)
+  const [quizHistory] = useState<QuizHistoryItem[]>([]);
+  const [isLoadingHistory] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -58,27 +69,6 @@ export default function Account() {
       });
     }
   }, [profile]);
-
-  // Загрузка истории тестов
-  useEffect(() => {
-    async function loadQuizHistory() {
-      if (!profile?.id) {
-        setIsLoadingHistory(false);
-        return;
-      }
-
-      try {
-        const history = await getQuizHistory(profile.id);
-        setQuizHistory(history);
-      } catch (err) {
-        console.error('Error loading quiz history:', err);
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    }
-
-    loadQuizHistory();
-  }, [profile?.id]);
 
   if (!user) {
     return null;
@@ -173,9 +163,8 @@ export default function Account() {
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user || !supabase) return;
+    if (!file || !clerkUser) return;
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
       setMessage({ type: 'error', text: 'Выберите изображение' });
       return;
@@ -190,24 +179,8 @@ export default function Account() {
     setMessage(null);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      // Update profile
-      await updateProfile({ avatar_url: publicUrl });
+      await clerkUser.setProfileImage({ file });
+      await clerkUser.reload();
       setMessage({ type: 'success', text: 'Фото обновлено' });
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {

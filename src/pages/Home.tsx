@@ -1,5 +1,5 @@
-import { useRef, useMemo } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useMemo, useRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -52,7 +52,7 @@ const particleIcons = {
       <circle cx="24" cy="24" r="6" fill="url(#electronGrad)" />
       <defs>
         <radialGradient id="electronGrad" cx="40%" cy="35%">
-          <stop offset="0%" stopColor="#6fadeb" />
+          <stop offset="0%" stopColor="#a0c4f0" />
           <stop offset="100%" stopColor="#4a90e2" />
         </radialGradient>
       </defs>
@@ -64,16 +64,9 @@ export default function Home() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const topicsRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start']
-  });
-  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 1]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1]);
-
-  const nuclearTopics = sections.find(s => s.title === "Физика Атомного ядра")?.topics ?? [];
+  const nuclearTopics = sections.find(s => s.title === 'Физика Атомного ядра')?.topics ?? [];
 
   const particles = useMemo(() => [
     {
@@ -103,132 +96,77 @@ export default function Home() {
   ], []);
 
   const scrollToTopics = () => {
-    topicsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    topicsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
     <motion.main
+      className="home-v3"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', position: 'relative' }}
     >
-      {/* ===== HERO SECTION ===== */}
-      <motion.div
-        ref={heroRef}
-        className="home-hero"
-        style={{ opacity: heroOpacity, scale: heroScale, position: 'relative' }}
-      >
-        {/* Left: Text */}
-        <div className="home-hero-text">
-          <motion.p
-            className="home-hero-free"
-            initial={{ opacity: 0, y: 20 }}
+      {/* ===== HERO: text on top, atom below — scrolls naturally ===== */}
+      <section className="hero-v3">
+        <div className="hero-v3-text">
+          <motion.div
+            className="hero-v3-eyebrow"
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            {t('home.free')}
-          </motion.p>
+            <span>Бесплатные</span>
+          </motion.div>
 
           <motion.h1
-            className="home-hero-title"
+            className="hero-v3-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0.45, duration: 0.7 }}
           >
             {t('home.animations')}
+            <span className="hero-v3-title-soft">{t('home.subtitle')}</span>
           </motion.h1>
 
-          <motion.p
-            className="home-hero-subtitle"
+          <motion.div
+            className="hero-v3-actions"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.6 }}
           >
-            {t('home.subtitle')}
-          </motion.p>
-
-          <motion.button
-            className="home-hero-cta"
-            onClick={scrollToTopics}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {t('common.startLearning')}
-          </motion.button>
+            <button className="hero-v3-cta" onClick={scrollToTopics}>
+              Начать
+            </button>
+          </motion.div>
         </div>
 
-        {/* Right: Atom */}
         <motion.div
-          className="home-hero-atom"
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="atom-stage"
+          style={prefersReducedMotion ? { opacity: 0.6 } : undefined}
+          aria-hidden={false}
         >
-          <RandomAtomModel />
+          <div className="atom-stage-inner">
+            <RandomAtomModel />
+          </div>
         </motion.div>
-      </motion.div>
 
-      {/* ===== SUBATOMIC PARTICLES ===== */}
-      <section className="home-section">
-        <motion.h2
-          className="home-section-title"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          {t('home.subatomicTitle')} <span>{t('home.subatomicHighlight')}</span>
-        </motion.h2>
-
-        <motion.div
-          className="particles-grid"
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
-          {particles.map((p) => (
-            <motion.div
-              key={p.key}
-              className={`particle-card particle-card--${p.color}`}
-              variants={fadeUp}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="particle-header">
-                <div className="particle-icon">{p.icon}</div>
-                <div>
-                  <div className="particle-name">
-                    {t(`particles.${p.key}.name`)} <span className="particle-symbol">({p.symbol})</span>
-                  </div>
-                  <div className="particle-prop">{t('particles.charge')}: <strong>{p.charge}</strong></div>
-                  <div className="particle-prop">{t('particles.mass')}: <strong>{p.mass}</strong></div>
-                </div>
-              </div>
-              <p className="particle-desc">{t(`particles.${p.key}.desc`)}</p>
-              <p className="particle-discovery">{t(`particles.${p.key}.discovery`)}</p>
-            </motion.div>
-          ))}
-        </motion.div>
       </section>
 
       {/* ===== TOPICS ===== */}
-      <section className="home-section topics-section" ref={topicsRef}>
-        <motion.h2
-          className="home-section-title"
+      <section className="section-v3 topics-v3" ref={topicsRef}>
+        <motion.div
+          className="section-v3-head"
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.5 }}
         >
-          {t('home.topicsTitle')} <span>{t('home.topicsHighlight')}</span>
-        </motion.h2>
+          <h2 className="section-v3-title">
+            {t('home.topicsTitle')} <span>{t('home.topicsHighlight')}</span>
+          </h2>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -282,28 +220,81 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ===== ABOUT ===== */}
-      <section className="about-section">
+      {/* ===== PARTICLES ===== */}
+      <section className="section-v3 particles-v3">
         <motion.div
-          className="about-content"
+          className="section-v3-head"
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="section-v3-title">
+            {t('home.subatomicTitle')} <span>{t('home.subatomicHighlight')}</span>
+          </h2>
+          <p className="section-v3-lead">
+            Три частицы, из которых построена вся материя.
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="particles-grid-v3"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          {particles.map((p) => (
+            <motion.div
+              key={p.key}
+              className={`particle-card-v3 particle-card-v3--${p.color}`}
+              variants={fadeUp}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="particle-card-v3-icon">{p.icon}</div>
+              <div className="particle-card-v3-name">
+                {t(`particles.${p.key}.name`)}{' '}
+                <span className="particle-card-v3-symbol">({p.symbol})</span>
+              </div>
+              <div className="particle-card-v3-props">
+                <div><span>{t('particles.charge')}</span><strong>{p.charge}</strong></div>
+                <div><span>{t('particles.mass')}</span><strong>{p.mass}</strong></div>
+              </div>
+              <p className="particle-card-v3-desc">{t(`particles.${p.key}.desc`)}</p>
+              <p className="particle-card-v3-discovery">{t(`particles.${p.key}.discovery`)}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ===== ABOUT + DIPLOMA ===== */}
+      <section className="section-v3 about-v3">
+        <motion.div
+          className="about-v3-grid"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="home-section-title">
-            {t('home.aboutTitle')} <span>{t('home.aboutHighlight')}</span>
-          </h2>
-          <p>{t('home.aboutText1')}</p>
-          <p>{t('home.aboutText1_2')}</p>
-          <p>{t('home.aboutText2')}</p>
+          <div className="about-v3-text">
+            <h2 className="section-v3-title">
+              {t('home.aboutTitle')} <span>{t('home.aboutHighlight')}</span>
+            </h2>
+            <p>{t('home.aboutText1')}</p>
+            <p>{t('home.aboutText1_2')}</p>
+          </div>
 
-          <div className="about-tags">
-            <span className="about-tag red">{t('home.tagFree')}</span>
-            <span className="about-tag blue">{t('home.tagAnimations')}</span>
-            <span className="about-tag">{t('home.tagTeachers')}</span>
-            <span className="about-tag">{t('home.tagStudents')}</span>
+          <div className="about-v3-award" role="figure" aria-label="Диплом III степени Министерства Просвещения РК">
+            <div className="about-v3-award-ribbon" />
+            <div className="about-v3-award-body">
+              <div className="about-v3-award-rank">III</div>
+              <div className="about-v3-award-title">Диплом степени</div>
+              <div className="about-v3-award-issuer">Министерство Просвещения<br />Республики Казахстан</div>
+              <div className="about-v3-award-divider" />
+              <div className="about-v3-award-note">За образовательный вклад в популяризацию физики</div>
+            </div>
           </div>
         </motion.div>
       </section>

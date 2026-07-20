@@ -18,8 +18,8 @@ export default function Footer() {
   return (
     <footer style={{
       backgroundColor: '#0a0a0a',
-      color: '#ffffff',
-      borderTop: '1px solid #333',
+      color: '#cccccc',
+      borderTop: '1px solid #222',
       paddingTop: '1.5rem',
       paddingBottom: '1rem',
       marginTop: 'auto'
@@ -46,13 +46,13 @@ export default function Footer() {
               justifyContent: 'center',
               gap: '0'
             }}>
-              <span style={{ color: '#FC6255' }}>Phys</span>
-              <span style={{ color: '#fff' }}>ez</span>
+              <span style={{ color: '#c05348' }}>Phys</span>
+              <span style={{ color: '#bbb' }}>ez</span>
             </h3>
             <p style={{
               fontSize: '0.9rem',
               lineHeight: '1.6',
-              color: '#cccccc'
+              color: '#888'
             }}>
               {t('footer.about')}
             </p>
@@ -63,44 +63,53 @@ export default function Footer() {
             <h3 style={{
               fontSize: '1.1rem',
               marginBottom: '0.5rem',
-              color: '#fff'
+              color: '#bbb'
             }}>
               {t('footer.contacts')}
             </h3>
             <div style={{
               fontSize: '0.9rem',
               lineHeight: '1.8',
-              color: '#cccccc'
+              color: '#888'
             }}>
               <p>Email: tgr.aimurza@gmail.com</p>
             </div>
           </div>
 
-          {/* Научный руководитель */}
+          {/* Награда */}
           <div style={{ textAlign: 'center' }}>
             <h3 style={{
               fontSize: '1.1rem',
               marginBottom: '0.5rem',
-              color: '#fff'
+              color: '#bbb'
             }}>
-              {t('footer.supervisorTitle')}
+              Награда
             </h3>
             <p style={{
               fontSize: '0.9rem',
               lineHeight: '1.6',
-              color: '#bbb'
+              color: '#c05348',
+              textShadow: '0 0 8px rgba(192, 83, 72, 0.2)'
             }}>
-              Амренова Асем Уахитовна
+              Диплом III степени
+            </p>
+            <p style={{
+              fontSize: '0.82rem',
+              lineHeight: '1.5',
+              color: '#888',
+              marginTop: '0.25rem'
+            }}>
+              Министерство Просвещения РК
             </p>
           </div>
         </div>
 
         {/* Copyright */}
         <div style={{
-          borderTop: '1px solid #333',
+          borderTop: '1px solid #222',
           paddingTop: '1rem',
           textAlign: 'center',
-          color: '#999',
+          color: '#777',
           fontSize: '0.85rem'
         }}>
           <p style={{
@@ -111,39 +120,39 @@ export default function Footer() {
             flexWrap: 'wrap',
             gap: '0.5rem'
           }}>
-            <span>© {currentYear} Physez | Aimurza Tagir. {t('footer.copyright')}</span>
-            <span style={{ color: '#666' }}>|</span>
+            <span className="footer-copyright-text">© {currentYear} Physez | Aimurza Tagir. {t('footer.copyright')}</span>
+            <span className="footer-sep" style={{ color: '#444' }}>|</span>
             <a href="/terms" style={{
-              color: '#FC6255',
+              color: '#c05348',
               textDecoration: 'none',
               borderBottom: '1px solid transparent',
               transition: 'border-color 0.3s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#FC6255'}
+            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#c05348'}
             onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
             >
               {t('footer.terms')}
             </a>
-            <span style={{ color: '#666' }}>|</span>
+            <span className="footer-sep" style={{ color: '#444' }}>|</span>
             <Link to="/privacy" style={{
-              color: '#FC6255',
+              color: '#c05348',
               textDecoration: 'none',
               borderBottom: '1px solid transparent',
               transition: 'border-color 0.3s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#FC6255'}
+            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#c05348'}
             onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
             >
               Конфиденциальность
             </Link>
             <Link to="/changelog" style={{
-              color: '#888',
+              color: '#666',
               textDecoration: 'none',
               borderBottom: '1px solid transparent',
               transition: 'border-color 0.3s ease',
               fontSize: '0.85rem'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#888'}
+            onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = '#666'}
             onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = 'transparent'}
             >
               {SITE_VERSION}

@@ -84,4 +84,13 @@
   footer > div > div:last-child a {
     font-size: 0.7rem !important;
   }
+
+  .footer-copyright-text {
+    width: 100%;
+    text-align: center;
+  }
+
+  .footer-copyright-text + .footer-sep {
+    display: none;
+  }
 }

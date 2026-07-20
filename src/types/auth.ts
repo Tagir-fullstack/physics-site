@@ -1,6 +1,11 @@
-import type { User, Session } from '@supabase/supabase-js';
-
 export type UserRole = 'pupil' | 'student' | 'teacher' | 'tutor';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+}
 
 export interface Profile {
   id: string;
@@ -8,12 +13,12 @@ export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   role: UserRole;
-  grade?: number;           // 1-11 для школьников
-  course?: number;          // 1-6 для студентов
-  institution?: string;     // школа/университет
+  grade?: number;
+  course?: number;
+  institution?: string;
   city?: string;
-  subject?: string;         // для учителей/репетиторов
-  experience?: number;      // стаж в годах
+  subject?: string;
+  experience?: number;
   profile_completed: boolean;
   created_at: string;
 }
@@ -33,41 +38,20 @@ export type PremiumFeature =
   | 'ai_generation'
   | 'early_access';
 
-export interface RegistrationData {
-  email: string;
-  password: string;
-  fullName: string;
-  role: UserRole;
-  grade?: number;
-  course?: number;
-  institution?: string;
-  city?: string;
-  subject?: string;
-  experience?: number;
-}
-
 export interface AuthState {
-  user: User | null;
-  session: Session | null;
+  user: AuthUser | null;
   profile: Profile | null;
   subscription: Subscription | null;
   isLoading: boolean;
   isPremium: boolean;
-  showProfileCompletion: boolean;
 }
 
 export interface AuthContextType extends AuthState {
-  signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (data: RegistrationData) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasFeature: (feature: PremiumFeature) => boolean;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
-  closeProfileCompletion: () => void;
 }
 
-// Типы для истории тестов
 export interface QuizHistoryItem {
   id: string;
   profile_id: string;
@@ -78,12 +62,4 @@ export interface QuizHistoryItem {
   percentage: number;
   grade?: string;
   created_at: string;
-}
-
-export interface UserProgress {
-  id: string;
-  profile_id: string;
-  topic_path: string;
-  viewed_at: string;
-  completed: boolean;
 }

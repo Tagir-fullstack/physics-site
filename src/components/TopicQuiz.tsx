@@ -1,10 +1,8 @@
 import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { getTopicQuiz } from '../data/topicQuizzes';
-import { saveTopicQuizResult } from '../lib/supabase';
 import '../styles/topic-quiz.css';
 
 interface TopicQuizProps {
@@ -23,7 +21,6 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps) {
-  const { profile } = useAuth();
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const isLightTheme = a11yEnabled && lightTheme;
 
@@ -33,7 +30,6 @@ export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Перемешиваем вопросы и варианты ответов
   const shuffledQuestions = useMemo(() => {
@@ -62,15 +58,13 @@ export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     let correctCount = 0;
-    const answersRecord: Record<number, number> = {};
 
     shuffledQuestions.forEach((q, idx) => {
       const selectedAnswer = answers[idx];
       if (selectedAnswer !== undefined) {
         const originalIndex = q.shuffledOptions[selectedAnswer].originalIndex;
-        answersRecord[q.id] = originalIndex;
         if (originalIndex === q.correctAnswer) {
           correctCount++;
         }
@@ -79,24 +73,6 @@ export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps
 
     setScore(correctCount);
     setStage('result');
-
-    // Сохраняем результат
-    if (profile?.id) {
-      setIsSubmitting(true);
-      try {
-        await saveTopicQuizResult({
-          profile_id: profile.id,
-          topic_path: topicPath,
-          score: correctCount,
-          total_questions: shuffledQuestions.length,
-          answers: answersRecord
-        });
-      } catch (err) {
-        console.error('Error saving topic quiz result:', err);
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
   };
 
   const handleClose = () => {
@@ -198,9 +174,9 @@ export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps
                   <button
                     className="topic-quiz-submit-btn"
                     onClick={handleSubmit}
-                    disabled={!allAnswered || isSubmitting}
+                    disabled={!allAnswered}
                   >
-                    {isSubmitting ? 'Сохранение...' : 'Завершить'}
+                    Завершить
                   </button>
                 ) : (
                   <button
@@ -231,12 +207,6 @@ export default function TopicQuiz({ topicPath, isOpen, onClose }: TopicQuizProps
               <div className="topic-quiz-result-percentage">
                 {percentage}%
               </div>
-
-              {!profile && (
-                <p className="topic-quiz-result-hint">
-                  Войдите в аккаунт, чтобы сохранять результаты
-                </p>
-              )}
 
               <div className="topic-quiz-result-buttons">
                 {score <= 4 && (
