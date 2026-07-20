@@ -27,8 +27,7 @@ createRoot(document.getElementById('root')!).render(
           colorInputBackground: '#1a1a1a',
           colorInputText: '#ffffff',
           colorNeutral: '#ffffff',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+          fontFamily: '"Radiant", Arial, sans-serif',
           borderRadius: '12px',
         },
         elements: {

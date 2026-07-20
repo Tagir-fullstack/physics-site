@@ -566,15 +566,15 @@
 .about-v3-award {
   position: relative;
   padding: 2.5rem 2rem;
-  background: linear-gradient(160deg, rgba(252, 98, 85, 0.10) 0%, rgba(10, 10, 10, 0.92) 60%);
-  border: 1px solid var(--v3-border);
+  background: linear-gradient(160deg, rgba(74, 144, 226, 0.10) 0%, rgba(10, 10, 10, 0.92) 60%);
+  border: 1px solid rgba(74, 144, 226, 0.22);
   border-radius: 22px;
   text-align: center;
   overflow: hidden;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.03),
     0 30px 60px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(252, 98, 85, 0.15);
+    0 0 60px rgba(74, 144, 226, 0.15);
 }
 
 .about-v3-award::before {
@@ -584,7 +584,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at center, rgba(252, 98, 85, 0.22) 0%, transparent 45%);
+  background: radial-gradient(circle at center, rgba(74, 144, 226, 0.22) 0%, transparent 45%);
   pointer-events: none;
 }
 
@@ -595,9 +595,9 @@
   transform: translateX(-50%);
   width: 60px;
   height: 14px;
-  background: var(--v3-red);
+  background: var(--v3-blue);
   border-radius: 0 0 4px 4px;
-  box-shadow: 0 4px 12px rgba(252, 98, 85, 0.5);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.5);
 }
 
 .about-v3-award-body {
@@ -641,7 +641,7 @@
 .about-v3-award-divider {
   width: 40px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--v3-red), transparent);
+  background: linear-gradient(90deg, transparent, var(--v3-blue), transparent);
   margin: 0.4rem 0;
 }
 
