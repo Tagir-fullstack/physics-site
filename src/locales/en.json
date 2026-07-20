@@ -26,12 +26,8 @@
     "topicsHighlight": "Topics",
     "aboutTitle": "About the",
     "aboutHighlight": "Platform",
-    "aboutText1": "Physez is an educational platform for studying complex sections of physics. Our goal is to make physics understandable and accessible through quality visualizations.",
-    "aboutText2": "All video animations are created in Python using the Manim library and are completely free for students and teachers.",
-    "tagFree": "Free",
-    "tagManim": "Manim Animations",
-    "tagStudents": "For Students",
-    "tagEducation": "Education"
+    "aboutText1": "Physez is an educational platform for studying complex sections of physics.",
+    "aboutText1_2": "Our goal is to make physics understandable and accessible through quality visualizations."
   },
   "particles": {
     "proton": {

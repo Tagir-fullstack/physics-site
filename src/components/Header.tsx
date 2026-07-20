@@ -1,13 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { sections } from '../data/topics';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
-import { useAuth } from '../context/AuthContext';
 import AccessibilityPanel from './AccessibilityPanel';
-import AuthModal from './auth/AuthModal';
-import UserMenu from './auth/UserMenu';
+import AuthButton from './auth/AuthButton';
 import '../styles/header.css';
 import '../styles/accessibility.css';
 
@@ -23,10 +21,17 @@ export default function Header() {
   const { isQuizActive } = useQuizMode();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, profile, isLoading } = useAuth();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
   const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (location.pathname === '/thesis') return null;
 
   // Burger menu handlers
@@ -135,7 +140,7 @@ export default function Header() {
         />
       )}
 
-      <header className="header" onClick={(e) => {
+      <header className={`header header--frameless${scrolled ? ' header--scrolled' : ''}`} onClick={(e) => {
           if (e.target === e.currentTarget) {
             setIsMenuOpen(false);
             setIsA11yOpen(false);
@@ -241,31 +246,13 @@ export default function Header() {
               <span></span>
             </button>
 
-            {isLoading ? (
-              <div className="auth-btn-skeleton" />
-            ) : user ? (
-              <button
-                className="auth-user-btn"
-                onClick={() => setIsAuthOpen(!isAuthOpen)}
-                onMouseEnter={openAuth}
-                onMouseLeave={closeAuthWithDelay}
-              >
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="user-avatar" />
-                ) : (
-                  <div className="user-avatar-placeholder">
-                    {profile?.full_name?.[0] || user.email?.[0]?.toUpperCase() || '?'}
-                  </div>
-                )}
-              </button>
-            ) : (
-              <button
-                className="auth-login-btn"
-                onClick={() => setIsAuthModalOpen(true)}
-              >
-                Войти
-              </button>
-            )}
+            <AuthButton
+              isOpen={isAuthOpen}
+              onOpen={openAuth}
+              onClose={() => setIsAuthOpen(false)}
+              onCloseWithDelay={closeAuthWithDelay}
+              onKeepOpen={keepAuthOpen}
+            />
           </div>
         </nav>
       </header>
@@ -275,13 +262,6 @@ export default function Header() {
         onMouseEnter={keepA11yOpen}
         onMouseLeave={closeA11yWithDelay}
       />
-      <UserMenu
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onMouseEnter={keepAuthOpen}
-        onMouseLeave={closeAuthWithDelay}
-      />
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );
 }

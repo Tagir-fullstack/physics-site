@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import AuthModal from './AuthModal';
+import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/clerk-react';
 import UserMenu from './UserMenu';
 
 interface AuthButtonProps {
@@ -18,51 +16,44 @@ export default function AuthButton({
   onCloseWithDelay,
   onKeepOpen,
 }: AuthButtonProps) {
-  const { user, profile, isLoading } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isLoaded, user } = useUser();
 
-  if (isLoading) {
+  if (!isLoaded) {
     return <div className="auth-btn-skeleton" />;
-  }
-
-  if (user) {
-    return (
-      <div
-        className="auth-user-wrapper"
-        onMouseLeave={onCloseWithDelay}
-      >
-        <button
-          className="auth-user-btn"
-          onClick={() => isOpen ? onClose?.() : onOpen?.()}
-          onMouseEnter={onOpen}
-        >
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="user-avatar" />
-          ) : (
-            <div className="user-avatar-placeholder">
-              {profile?.full_name?.[0] || user.email?.[0]?.toUpperCase() || '?'}
-            </div>
-          )}
-        </button>
-        <UserMenu
-          isOpen={isOpen}
-          onClose={() => onClose?.()}
-          onMouseEnter={onKeepOpen}
-          onMouseLeave={onCloseWithDelay}
-        />
-      </div>
-    );
   }
 
   return (
     <>
-      <button
-        className="auth-login-btn"
-        onClick={() => setIsModalOpen(true)}
-      >
-        Войти
-      </button>
-      <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <SignedIn>
+        <div className="auth-user-wrapper" onMouseLeave={onCloseWithDelay}>
+          <button
+            className="auth-user-btn"
+            onClick={() => (isOpen ? onClose?.() : onOpen?.())}
+            onMouseEnter={onOpen}
+          >
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="" className="user-avatar" />
+            ) : (
+              <div className="user-avatar-placeholder">
+                {user?.fullName?.[0] ||
+                  user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() ||
+                  '?'}
+              </div>
+            )}
+          </button>
+          <UserMenu
+            isOpen={isOpen}
+            onClose={() => onClose?.()}
+            onMouseEnter={onKeepOpen}
+            onMouseLeave={onCloseWithDelay}
+          />
+        </div>
+      </SignedIn>
+      <SignedOut>
+        <SignInButton mode="modal">
+          <button className="auth-login-btn">Войти</button>
+        </SignInButton>
+      </SignedOut>
     </>
   );
 }

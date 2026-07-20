@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import SpeakButton from './SpeakButton';
 import PreQuiz from './PreQuiz';
 import TopicQuiz from './TopicQuiz';
-import { setPreQuizCompleted } from '../lib/supabase';
+import { setPreQuizCompleted } from '../lib/userCode';
 import { getTopicQuiz } from '../data/topicQuizzes';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { glossaryTerms, glossaryCategories, type GlossaryTerm } from '../data/glossary';

@@ -2,10 +2,9 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { savePostQuizResult, saveTeacherSurvey, getUserCode, findClassByCode } from '../../lib/supabase';
+import { getUserCode } from '../../lib/userCode';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { useQuizMode } from '../../context/QuizModeContext';
-import { useAuth } from '../../context/AuthContext';
 import SpeakButton from '../../components/SpeakButton';
 import '../../styles/page-layout.css';
 
@@ -252,14 +251,10 @@ export default function Quiz() {
   const [studentClass, setStudentClass] = useState('');
   const [school, setSchool] = useState('');
   const [enteredUserCode, setEnteredUserCode] = useState('');
-  const [classCode, setClassCode] = useState('');
-  const [classId, setClassId] = useState<string | null>(null);
-  const [classError, setClassError] = useState<string | null>(null);
   const [isTeacher, setIsTeacher] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
     const [surveyAnswers, setSurveyAnswers] = useState<Record<string, string | number | boolean>>({});
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
@@ -267,7 +262,6 @@ export default function Quiz() {
 
   const { lightTheme, enabled: a11yEnabled, fontSize } = useAccessibility();
   const { setQuizActive } = useQuizMode();
-  const { profile } = useAuth();
   const isLightTheme = a11yEnabled && lightTheme;
   const [isMobile, setIsMobile] = useState(false);
   const circlesContainerRef = useRef<HTMLDivElement>(null);
@@ -331,29 +325,9 @@ export default function Quiz() {
     }
   }, []);
 
-  // Автозаполнение кода класса из ?class=XXXX
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const cls = params.get('class');
-    if (cls) setClassCode(cls.toUpperCase());
-  }, []);
-
-  const handleStartQuiz = async (e: React.FormEvent) => {
+  const handleStartQuiz = (e: React.FormEvent) => {
     e.preventDefault();
     if (!(studentName.trim() && studentClass.trim() && school.trim())) return;
-
-    let resolvedClassId: string | null = classId;
-    const trimmedClass = classCode.trim().toUpperCase();
-    if (trimmedClass && !resolvedClassId) {
-      const cls = await findClassByCode(trimmedClass);
-      if (!cls) {
-        setClassError('Код класса не найден');
-        return;
-      }
-      resolvedClassId = cls.id;
-      setClassId(cls.id);
-      setClassError(null);
-    }
     setStage('quiz');
   };
 
@@ -389,31 +363,9 @@ export default function Quiz() {
       }
     });
 
-    const percentage = Math.round((correctCount / shuffledQuestions.length) * 100);
-    const grade = calculateGrade(percentage);
     setScore(correctCount);
-
-    // Сразу показываем результат без ожидания сохранения
     setStage('result');
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
-
-    // Сохраняем в фоне без блокировки UI
-    savePostQuizResult({
-      user_code: enteredUserCode || 'GUEST',
-      profile_id: profile?.id,
-      class_id: classId,
-      student_name: studentName,
-      student_class: studentClass,
-      school: school,
-      score: correctCount,
-      total_questions: shuffledQuestions.length,
-      percentage: percentage,
-      grade: grade,
-      answers: answers
-    }).catch(() => {
-      // Тихо игнорируем ошибку - результат уже показан пользователю
-      console.warn('Failed to save quiz result to database');
-    });
   };
 
   const handleGoToSurvey = () => {
@@ -424,36 +376,9 @@ export default function Quiz() {
     setSurveyAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
-  const handleSubmitSurvey = async () => {
-    setIsSubmitting(true);
-    try {
-      await saveTeacherSurvey({
-        user_code: enteredUserCode || 'GUEST',
-        teacher_name: studentName,
-        school: school,
-        q1_overall_impression: surveyAnswers.q1 as number,
-        q2_visual_quality: surveyAnswers.q2 as number,
-        q3_scientific_accuracy: surveyAnswers.q3 as number,
-        q4_ease_of_understanding: surveyAnswers.q4 as number,
-        q5_would_use_in_class: surveyAnswers.q5 as boolean,
-        q6_helps_learning: surveyAnswers.q6 as number,
-        q7_student_engagement: surveyAnswers.q7 as number,
-        q8_want_other_topics: surveyAnswers.q8 as boolean,
-        q9_which_topics: surveyAnswers.q9 as string,
-        q10_animation_length: surveyAnswers.q10 === 'Слишком короткие' ? 1 : surveyAnswers.q10 === 'Оптимальная длительность' ? 2 : 3,
-        q11_comparison_to_others: surveyAnswers.q11 as number,
-        q12_improvements: surveyAnswers.q12 as string,
-        q13_would_recommend: surveyAnswers.q13 as boolean,
-        q14_recommendation_score: surveyAnswers.q14 as number,
-        q15_additional_comments: surveyAnswers.q15 as string,
-      });
-    } catch (err) {
-      console.error('Error saving survey:', err);
-    } finally {
-      setIsSubmitting(false);
-      setStage('complete');
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
-    }
+  const handleSubmitSurvey = () => {
+    setStage('complete');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50);
   };
 
 
@@ -629,41 +554,6 @@ export default function Quiz() {
                     outline: 'none'
                   }}
                 />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label htmlFor="classCode" style={{ display: 'block', marginBottom: '0.5rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500' }}>
-                  Код класса <span style={{ opacity: 0.6, fontWeight: 400 }}>(если выдал учитель)</span>
-                </label>
-                <input
-                  id="classCode"
-                  type="text"
-                  value={classCode}
-                  onChange={(e) => {
-                    setClassCode(e.target.value.toUpperCase());
-                    setClassError(null);
-                    setClassId(null);
-                  }}
-                  maxLength={12}
-                  placeholder="Например: KX42PQ"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: classError
-                      ? '1px solid #FC6255'
-                      : isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
-                    fontSize: '1rem',
-                    boxSizing: 'border-box',
-                    backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
-                    color: isLightTheme ? '#1a1a1a' : '#ffffff',
-                    outline: 'none',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase'
-                  }}
-                />
-                {classError && (
-                  <div style={{ color: '#FC6255', fontSize: '0.85rem', marginTop: '0.35rem' }}>{classError}</div>
-                )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{
@@ -963,7 +853,7 @@ export default function Quiz() {
                 <button
                   className="quiz-btn-next"
                   onClick={handleFinish}
-                  disabled={Object.keys(answers).length < shuffledQuestions.length || isSubmitting}
+                  disabled={Object.keys(answers).length < shuffledQuestions.length}
                   style={{
                     padding: isMobile ? '0.6rem 1rem' : '0.75rem 1.5rem',
                     borderRadius: '50px',
@@ -978,7 +868,7 @@ export default function Quiz() {
                     flex: isMobile ? '1 1 auto' : '0 0 auto'
                   }}
                 >
-                  {isSubmitting ? '...' : (isMobile ? t('common.finish') : t('quiz.finishTest'))}
+                  {isMobile ? t('common.finish') : t('quiz.finishTest')}
                 </button>
               )}
             </div>
@@ -1073,7 +963,6 @@ export default function Quiz() {
                         setShowFinishConfirm(false);
                         handleFinish();
                       }}
-                      disabled={isSubmitting}
                       style={{
                         padding: '0.75rem 1.5rem',
                         borderRadius: '50px',
@@ -1086,7 +975,7 @@ export default function Quiz() {
                         fontFamily: "'CCUltimatum', Arial, sans-serif"
                       }}
                     >
-                      {isSubmitting ? '...' : 'Завершить'}
+                      Завершить
                     </button>
                   </div>
                 </div>
@@ -1363,7 +1252,7 @@ export default function Quiz() {
             <div style={{ display: 'flex', gap: isMobile ? '0.75rem' : '1rem', justifyContent: 'center', marginTop: '2rem', flexWrap: 'wrap' }}>
               <button
                 onClick={handleSubmitSurvey}
-                disabled={!isSurveyValid || isSubmitting}
+                disabled={!isSurveyValid}
                 style={{
                   padding: isMobile ? '0.6rem 1.2rem' : '0.75rem 1.5rem',
                   borderRadius: '50px',
@@ -1376,7 +1265,7 @@ export default function Quiz() {
                   fontFamily: "'CCUltimatum', Arial, sans-serif"
                 }}
               >
-                {isSubmitting ? '...' : (isMobile ? t('common.submit') : t('survey.submitSurvey'))}
+                {isMobile ? t('common.submit') : t('survey.submitSurvey')}
               </button>
             </div>
           </motion.div>

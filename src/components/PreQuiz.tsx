@@ -5,13 +5,9 @@ import {
   setUserCode,
   getUserCode,
   setPreQuizCompleted,
-  savePreQuizResult,
-  createUser,
-  findClassByCode
-} from '../lib/supabase';
+} from '../lib/userCode';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
-import { useAuth } from '../context/AuthContext';
 import '../styles/page-layout.css';
 
 interface Question {
@@ -175,16 +171,11 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [score, setScore] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [userCode, setUserCodeState] = useState('');
   const [enteredUserCode, setEnteredUserCode] = useState('');
-  const [classCode, setClassCode] = useState('');
-  const [classId, setClassId] = useState<string | null>(null);
-  const [classError, setClassError] = useState<string | null>(null);
 
   const { lightTheme, enabled: a11yEnabled } = useAccessibility();
   const { setQuizActive } = useQuizMode();
-  const { profile } = useAuth();
   const isLightTheme = a11yEnabled && lightTheme;
   const [isMobile, setIsMobile] = useState(false);
 
@@ -214,54 +205,13 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
     }
   }, [showCodeField]);
 
-  // Автозаполнение кода класса из ?class=XXXX
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const cls = params.get('class');
-    if (cls) setClassCode(cls.toUpperCase());
-  }, []);
-
-  const handleStartQuiz = async (e: React.FormEvent) => {
+  const handleStartQuiz = (e: React.FormEvent) => {
     e.preventDefault();
     if (!(studentName.trim() && studentClass.trim() && school.trim())) return;
 
-    // Проверка кода класса, если введён
-    let resolvedClassId: string | null = classId;
-    const trimmedClass = classCode.trim().toUpperCase();
-    if (trimmedClass && !resolvedClassId) {
-      const cls = await findClassByCode(trimmedClass);
-      if (!cls) {
-        setClassError('Код класса не найден');
-        return;
-      }
-      resolvedClassId = cls.id;
-      setClassId(cls.id);
-      setClassError(null);
-    }
-
-    // Используем введённый код или генерируем новый
     const code = enteredUserCode.trim() || generateUserCode();
     setUserCodeState(code);
     setUserCode(code);
-
-    // Создаём пользователя в БД только если код новый
-    if (!enteredUserCode.trim()) {
-      try {
-        await createUser({
-          user_code: code,
-          student_name: studentName,
-          student_class: studentClass,
-          school: school,
-          is_teacher: isTeacher
-        });
-      } catch (err) {
-        console.error('Error creating user:', err);
-        // Продолжаем даже если не удалось сохранить в БД
-      }
-    }
-
-    // Сохраняем resolvedClassId в state для использования в handleFinish
-    setClassId(resolvedClassId);
     setStage('quiz');
   };
 
@@ -281,7 +231,7 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
     }
   };
 
-  const handleFinish = async () => {
+  const handleFinish = () => {
     let correctCount = 0;
     shuffledQuestions.forEach((q, index) => {
       if (answers[index] === q.correctAnswer) {
@@ -289,28 +239,9 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
       }
     });
 
-    const percentage = Math.round((correctCount / shuffledQuestions.length) * 100);
     setScore(correctCount);
-
-    setIsSubmitting(true);
-
-    try {
-      await savePreQuizResult({
-        user_code: userCode,
-        profile_id: profile?.id,
-        class_id: classId,
-        score: correctCount,
-        total_questions: shuffledQuestions.length,
-        percentage: percentage,
-        answers: answers
-      });
-    } catch (err) {
-      console.error('Error saving pre-quiz result:', err);
-    } finally {
-      setPreQuizCompleted();
-      setIsSubmitting(false);
-      setStage('result');
-    }
+    setPreQuizCompleted();
+    setStage('result');
   };
 
   const handleContinue = () => {
@@ -538,42 +469,6 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
                         outline: 'none'
                       }}
                     />
-                  </div>
-
-                  {/* Код класса (опционально) */}
-                  <div style={{ marginBottom: isMobile ? '0.5rem' : '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: isMobile ? '0.25rem' : '0.4rem', color: isLightTheme ? '#333' : '#cccccc', fontWeight: '500', fontSize: isMobile ? '0.85rem' : '0.95rem' }}>
-                      Код класса <span style={{ opacity: 0.6, fontWeight: 400 }}>(если выдал учитель)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={classCode}
-                      onChange={(e) => {
-                        setClassCode(e.target.value.toUpperCase());
-                        setClassError(null);
-                        setClassId(null);
-                      }}
-                      maxLength={12}
-                      placeholder="Например, KX42PQ"
-                      style={{
-                        width: '100%',
-                        padding: isMobile ? '0.5rem' : '0.7rem',
-                        borderRadius: '8px',
-                        border: classError
-                          ? '1px solid #FC6255'
-                          : isLightTheme ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
-                        fontSize: isMobile ? '0.9rem' : '1rem',
-                        boxSizing: 'border-box',
-                        backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)',
-                        color: isLightTheme ? '#1a1a1a' : '#ffffff',
-                        outline: 'none',
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase'
-                      }}
-                    />
-                    {classError && (
-                      <div style={{ color: '#FC6255', fontSize: '0.8rem', marginTop: '0.25rem' }}>{classError}</div>
-                    )}
                   </div>
 
                   {/* Чекбокс учителя - скрываем при повторном прохождении */}
@@ -806,7 +701,7 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
                   ) : (
                     <button
                       onClick={handleFinish}
-                      disabled={Object.keys(answers).length < shuffledQuestions.length || isSubmitting}
+                      disabled={Object.keys(answers).length < shuffledQuestions.length}
                       style={{
                         padding: '0.75rem 1.5rem',
                         borderRadius: '50px',
@@ -819,7 +714,7 @@ export default function PreQuiz({ onComplete, showCodeField = false, onClose }: 
                         fontFamily: "'CCUltimatum', Arial, sans-serif"
                       }}
                     >
-                      {isSubmitting ? 'Сохранение...' : 'Завершить тест'}
+                      Завершить тест
                     </button>
                   )}
                 </div>

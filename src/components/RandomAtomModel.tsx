@@ -351,14 +351,16 @@ function BohrModel() {
   );
 }
 
-// Sommerfeld elliptical orbits for n=5: same semi-major axis, b = a*(ℓ+1)/n
+// Sommerfeld elliptical orbits for n=5: same semi-major axis, b/a grows with ℓ.
+// Ratios adjusted so the focus (where the nucleus sits) stays visibly inside every ellipse —
+// pure b = a*(ℓ+1)/n makes ℓ=0 nearly degenerate (focus on the boundary).
 const sommerfeldA = 130;
 const sommerfeldOrbits = [
-  { a: sommerfeldA, b: sommerfeldA * 1 / 5, rot: 0, speed: 2.5, color: '#e74c3c' },  // 5s ℓ=0
-  { a: sommerfeldA, b: sommerfeldA * 2 / 5, rot: 0, speed: 1.8, color: '#f39c12' },  // 5p ℓ=1
-  { a: sommerfeldA, b: sommerfeldA * 3 / 5, rot: 0, speed: 1.3, color: '#27ae60' },  // 5d ℓ=2
-  { a: sommerfeldA, b: sommerfeldA * 4 / 5, rot: 0, speed: 0.9, color: '#2980b9' },  // 5f ℓ=3
-  { a: sommerfeldA, b: sommerfeldA * 5 / 5, rot: 0, speed: 0.6, color: '#9b59b6' },  // 5g ℓ=4
+  { a: sommerfeldA, b: sommerfeldA * 0.45, rot: 0, speed: 2.5, color: '#e74c3c' },  // 5s ℓ=0
+  { a: sommerfeldA, b: sommerfeldA * 0.60, rot: 0, speed: 1.8, color: '#f39c12' },  // 5p ℓ=1
+  { a: sommerfeldA, b: sommerfeldA * 0.72, rot: 0, speed: 1.3, color: '#27ae60' },  // 5d ℓ=2
+  { a: sommerfeldA, b: sommerfeldA * 0.85, rot: 0, speed: 0.9, color: '#2980b9' },  // 5f ℓ=3
+  { a: sommerfeldA, b: sommerfeldA * 1.00, rot: 0, speed: 0.6, color: '#9b59b6' },  // 5g ℓ=4
 ];
 
 function SommerfeldModel() {
@@ -553,9 +555,32 @@ export default function RandomAtomModel() {
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [fastSwitch, setFastSwitch] = useState(false);
   const isTouchRef = useRef(false);
   const elapsedRef = useRef(0);
   const lastTimeRef = useRef(performance.now());
+
+  const switchTo = (next: number | ((prev: number) => number)) => {
+    setFastSwitch(true);
+    setIndex(next);
+  };
+
+  // Arrow-key navigation while hovered
+  useEffect(() => {
+    if (!hovered) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        switchTo(prev => (prev + 1) % models.length);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        switchTo(prev => (prev - 1 + models.length) % models.length);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [hovered]);
 
   const duration = models[index].duration ?? DEFAULT_INTERVAL;
 
@@ -573,6 +598,7 @@ export default function RandomAtomModel() {
     lastTimeRef.current = performance.now();
 
     const timer = setTimeout(() => {
+      setFastSwitch(false);
       setIndex(prev => (prev + 1) % models.length);
     }, remaining);
 
@@ -595,17 +621,25 @@ export default function RandomAtomModel() {
     <div
       className="atom-model-wrapper"
       onTouchStart={() => { isTouchRef.current = true; }}
-      onMouseEnter={() => { if (!isTouchRef.current) setPaused(true); }}
-      onMouseLeave={() => { if (!isTouchRef.current) setPaused(false); }}
+      onMouseEnter={() => {
+        if (isTouchRef.current) return;
+        setPaused(true);
+        setHovered(true);
+      }}
+      onMouseLeave={() => {
+        if (isTouchRef.current) return;
+        setPaused(false);
+        setHovered(false);
+      }}
       onClick={() => { if (isTouchRef.current) setPaused(prev => !prev); }}
     >
       <AnimatePresence mode="wait">
         <motion.div
           key={model.id}
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: fastSwitch ? 0.95 : 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.5 }}
+          exit={{ opacity: 0, scale: fastSwitch ? 0.95 : 0.9 }}
+          transition={{ duration: fastSwitch ? 0.2 : 0.5 }}
         >
           <ModelComponent />
         </motion.div>
@@ -615,10 +649,10 @@ export default function RandomAtomModel() {
         <motion.div
           key={model.id + '-info'}
           className="atom-model-info"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: fastSwitch ? 6 : 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.4 }}
+          exit={{ opacity: 0, y: fastSwitch ? -6 : -10 }}
+          transition={{ duration: fastSwitch ? 0.18 : 0.4 }}
         >
           <div className="atom-model-name">{t(`atomModels.${model.id}.name`)}</div>
           <div className="atom-model-nickname">{t(`atomModels.${model.id}.nickname`)}</div>
@@ -635,6 +669,23 @@ export default function RandomAtomModel() {
             />
             <span className="atom-model-status-text">{t(`atomModels.${model.id}.status`)}</span>
           </span>
+
+          <div className="atom-model-dots" role="tablist" aria-label="Atom model">
+            {models.map((m, i) => (
+              <button
+                key={m.id}
+                type="button"
+                className={`atom-model-dot atom-model-dot--${m.status}${i === index ? ' active' : ''}`}
+                aria-label={t(`atomModels.${m.id}.name`)}
+                aria-selected={i === index}
+                role="tab"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  switchTo(i);
+                }}
+              />
+            ))}
+          </div>
         </motion.div>
       </AnimatePresence>
     </div>

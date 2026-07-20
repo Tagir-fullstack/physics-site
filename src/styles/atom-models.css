@@ -69,6 +69,52 @@
   z-index: 1;
 }
 
+.atom-model-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0.85rem;
+}
+
+.atom-model-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* Status-based tint (dim when inactive, full when active) */
+.atom-model-dot--outdated { background: rgba(252, 98, 85, 0.35); }
+.atom-model-dot--partial  { background: rgba(245, 166, 35, 0.35); }
+.atom-model-dot--current  { background: rgba(76, 217, 100, 0.35); }
+
+.atom-model-dot:hover {
+  opacity: 0.85;
+}
+
+.atom-model-dot--outdated:hover { background: rgba(252, 98, 85, 0.65); }
+.atom-model-dot--partial:hover  { background: rgba(245, 166, 35, 0.65); }
+.atom-model-dot--current:hover  { background: rgba(76, 217, 100, 0.65); }
+
+.atom-model-dot.active { transform: scale(1.35); }
+.atom-model-dot--outdated.active { background: #FC6255; }
+.atom-model-dot--partial.active  { background: #f5a623; }
+.atom-model-dot--current.active  { background: #4cd964; }
+
+.atom-model-dot:focus {
+  outline: none;
+}
+
+.atom-model-dot:focus-visible {
+  outline: 2px solid var(--electron-blue, #4a90e2);
+  outline-offset: 2px;
+}
+
 .atom-model-status.outdated {
   color: var(--proton-red);
   border: 1px solid rgba(252, 98, 85, 0.3);

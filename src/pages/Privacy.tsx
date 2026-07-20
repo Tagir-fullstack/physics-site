@@ -92,7 +92,8 @@ export default function Privacy() {
               4. Хранение данных
             </h2>
             <p style={{ color: isLightTheme ? '#555' : '#ccc', marginBottom: '1rem' }}>
-              Ваши данные надёжно хранятся на серверах <strong>Supabase</strong> с использованием современных
+              Аутентификация и профиль обрабатываются сервисом <strong>Clerk</strong>, а данные
+              пользователей — базой <strong>Neon</strong> (PostgreSQL) с использованием современных
               стандартов шифрования и безопасности.
             </p>
             <p style={{ color: isLightTheme ? '#555' : '#ccc' }}>
