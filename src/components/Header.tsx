@@ -200,6 +200,12 @@ export default function Header() {
               >
                 {t('header.finalTest')}
               </button>
+              <button
+                className="nav-quiz-btn"
+                onClick={() => handleLinkClick('/labs/atwood')}
+              >
+                Лаборатория: машина Атвуда
+              </button>
             </div>
 
             {/* Порядок: Доступность -> Бургер -> Аккаунт */}
