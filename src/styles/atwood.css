@@ -1,0 +1,154 @@
+.atwood-page { margin-top: 72px; min-height: calc(100vh - 72px); padding: .25rem 1rem 2rem; background: var(--bg-primary); color: var(--text-primary); font-family: 'Radiant', Arial, sans-serif; font-size: 1rem; line-height: 1.5; }
+.atwood-container { max-width: 1000px; margin: 0 auto; }
+.atwood-header { text-align: center; margin-bottom: 1rem; }
+.atwood-eyebrow { color: var(--electron-blue); font-size: .8rem; font-weight: 700; letter-spacing: 1px; margin-bottom: .3rem; }
+.atwood-header h1 { margin: 0 0 .75rem; font-family: 'CCUltimatum', Arial, sans-serif; font-size: clamp(1.5rem, 5vw, 2.2rem); }
+.atwood-header p { color: var(--text-secondary); font-size: 1rem; max-width: 760px; margin: 0 auto; line-height: 1.8; }
+.atwood-equation { color: #e0e0e0; border: 1px solid #383838; background: #1c1c1c; border-radius: 8px; padding: .75rem; overflow-wrap: anywhere; font-family: monospace; font-size: .8rem; display: block; }
+.atwood-grid, .atwood-results-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .75fr); gap: 1rem; margin-bottom: 1rem; }
+.atwood-card { min-width: 0; background: var(--bg-card); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: clamp(1.25rem, 2vw, 2rem); }
+.atwood-card-title { display: flex; align-items: center; gap: .6rem; color: #fff; font: 700 1.15rem 'CCUltimatum', sans-serif; margin-bottom: 1rem; }
+.atwood-card-title span { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: rgba(252,98,85,.12); color: var(--proton-red); font: 700 .85rem 'CCUltimatum', sans-serif; flex-shrink: 0; }
+.atwood-scene { display: block; width: 100%; height: auto; min-height: 300px; flex: 1; color: #d5d5d5; background: #0a0a0a; border-radius: 10px; }
+.atwood-status-row, .atwood-time-row { display: flex; justify-content: space-between; gap: 1rem; color: #aaa; font-size: .88rem; margin-top: .7rem; }
+.atwood-status-row strong, .atwood-time-row strong { color: #fff; }
+.atwood-controls label { display: grid; gap: .35rem; color: var(--text-secondary); font-size: 1rem; margin-bottom: .8rem; }
+.atwood-controls input { width: 100%; border: 1px solid #444; border-radius: 8px; padding: .7rem .75rem; background: #202020; color: #fff; font: inherit; }
+.atwood-controls input[readonly] { color: #aaa; background: #191919; cursor: default; }
+.atwood-ring-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.atwood-ring-inputs label { margin-bottom: 0; }
+.atwood-ring-control { margin-bottom: .8rem; }
+.atwood-controls .atwood-ring-control label { margin-bottom: .35rem; }
+.atwood-ring-row { display: grid; grid-template-columns: minmax(0, 65fr) minmax(0, 35fr); align-items: center; gap: .6rem; }
+.atwood-ring-row input { min-width: 0; }
+.atwood-ring-transfer { display: flex; align-items: center; gap: .5rem; margin: .75rem 0 .35rem; }
+.atwood-ring-transfer .atwood-secondary { flex: 1; padding: .45rem .5rem; font-size: .82rem; white-space: nowrap; }
+.atwood-ring-transfer span { color: #888; font-size: .72rem; text-align: center; }
+.atwood-constants { display: flex; flex-wrap: wrap; gap: .45rem .8rem; color: #888; font-size: .76rem; margin: -.15rem 0 .85rem; }
+.atwood-constants strong { color: #ddd; font-weight: 600; }
+.atwood-mass-constants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem .6rem; font-size: .84rem; }
+.atwood-mass-constants strong { font-size: 1.08em; }
+.atwood-pulley-constants { border-top: 1px solid #303030; padding-top: .7rem; margin-top: -.1rem; }
+.atwood-control-buttons { display: flex; gap: .6rem; margin-top: 1rem; }
+.atwood-primary, .atwood-secondary, .atwood-text-button { border-radius: 8px; padding: .65rem .8rem; cursor: pointer; font: inherit; }
+.atwood-primary { flex: 1; border: 1px solid #fc6255; background: #fc6255; color: #fff; }
+.atwood-primary:disabled, .atwood-secondary:disabled { opacity: .4; cursor: not-allowed; }
+.atwood-secondary { border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: var(--text-secondary); }
+.atwood-progress { height: 7px; background: #292929; border-radius: 10px; overflow: hidden; margin-top: 1.25rem; }
+.atwood-progress div { width: 100%; height: 100%; background: #fc6255; transform-origin: left center; transition: none; }
+.atwood-warning { color: #f5a623; font-size: .72rem; line-height: 1.3; overflow-wrap: anywhere; }
+.atwood-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
+.atwood-metrics div { padding: .8rem; border-radius: 10px; background: #1d1d1d; }
+.atwood-metrics small { display: block; min-height: 2.3em; color: #aaa; font-size: .9rem; }
+.atwood-metrics strong { display: block; color: #fff; margin-top: .3rem; }
+.atwood-add-trial { margin-top: 1rem; }
+.atwood-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: .8rem; }
+.atwood-table th, .atwood-table td { padding: .5rem; border-bottom: 1px solid #333; text-align: left; }
+.atwood-table th { color: #888; font-weight: 400; }
+.atwood-theory p, .atwood-derivation { color: var(--text-secondary); font-size: 1rem; line-height: 1.8; margin-bottom: 1rem; }
+.atwood-text-button { border: 0; padding-left: 0; background: transparent; color: #4a90e2; }
+.atwood-derivation { border-left: 2px solid #4a90e2; padding-left: .8rem; font-size: .9rem; }
+.atwood-questions { margin-bottom: 1rem; }
+.atwood-questions fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.atwood-questions legend { color: #ddd; margin-bottom: 1rem; font-size: 1rem; line-height: 1.6; float: left; width: 100%; }
+.atwood-questions label { display: flex; align-items: baseline; gap: .4rem; color: #bbb; margin: .4rem 0; padding: .65rem; border: 1px solid #303030; border-radius: 8px; cursor: pointer; clear: both; font-size: .95rem; }
+.atwood-questions input { margin-right: .5rem; accent-color: #fc6255; }
+.atwood-score { color: #4cd964; border-top: 1px solid #333; padding-top: 1rem; margin-top: 1rem; font-weight: 700; }
+.atwood-simulation-card { display: flex; flex-direction: column; }
+.atwood-scene-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.atwood-state { color: #aaa; font-size: .8rem; text-align: right; }
+.atwood-diagram-labels { font: 14px 'Radiant', Arial, sans-serif; }
+.atwood-scene-caption { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 2rem; margin-top: 1rem; color: #ccc; font-size: .75rem; }
+.atwood-hint { color: #999; font-size: .85rem; line-height: 1.65; margin: .75rem 0 0; }
+.atwood-simulation-card > .atwood-hint { text-align: center; }
+.atwood-pro-heading { display: flex; align-items: center; gap: .7rem; color: #aaa; font-size: .8rem; margin: 2rem 0 1rem; }
+.atwood-pro-badge { display: inline-block; background: rgba(74,144,226,.12); color: var(--electron-blue); border: 1px solid rgba(74,144,226,.3); border-radius: 6px; padding: .2rem .45rem; font: 700 .8rem 'CCUltimatum', sans-serif; letter-spacing: .08em; }
+.atwood-pro-locked { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.atwood-pro-locked h2 { font: 700 1.2rem 'CCUltimatum', sans-serif; margin: 0 0 .4rem; }
+.atwood-pro-locked p { margin: 0; color: #aaa; font-size: .8rem; }
+.atwood-pro-locked a { flex-shrink: 0; text-decoration: none; margin-left: auto; font-size: .8rem; }
+.atwood-question-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+.atwood-questions label:has(input:checked) { background: #252525; border-color: #888; color: #fff; }
+.atwood-answer-feedback { font-size: .75rem; color: #ddd; clear: both; }
+.atwood-table-scroll { overflow-x: auto; }
+.atwood-table { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.atwood-time-row, .atwood-metrics { font-variant-numeric: tabular-nums; }
+/* Controls use their own active/hover states; don't leave browser focus rings after a click. */
+.atwood-page button:focus,
+.atwood-page input:focus,
+.atwood-page a:focus { outline: none !important; box-shadow: none !important; }
+.a11y-enabled .atwood-page button:focus-visible,
+.a11y-enabled .atwood-page input:focus-visible,
+.a11y-enabled .atwood-page a:focus-visible { outline: none !important; box-shadow: none !important; }
+.atwood-secondary:hover:not(:disabled) { background: #292929; }
+.atwood-primary:hover:not(:disabled) { background: #e95348; }
+
+/* Scoped overrides also account for the global accessibility theme's !important rules. */
+.a11y-light-theme .atwood-page {
+  --bg-primary: #f5f5f5;
+  --bg-card: #fff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #444;
+  --text-muted: #666;
+  color-scheme: light;
+}
+.a11y-light-theme .atwood-page .atwood-card {
+  background: #fff !important;
+  border-color: #ddd;
+}
+.a11y-light-theme .atwood-scene {
+  background: #f7f7f7;
+  color: #262626;
+  border: 1px solid #e0e0e0;
+}
+.a11y-light-theme .atwood-page strong,
+.a11y-light-theme .atwood-questions legend {
+  color: #1a1a1a;
+}
+.a11y-light-theme .atwood-page .atwood-card-title span {
+  color: #c63d32 !important;
+}
+.a11y-light-theme .atwood-page .atwood-eyebrow { color: #174f96 !important; }
+.a11y-light-theme .atwood-controls input[readonly] {
+  background: #f4f4f4 !important;
+  color: #555 !important;
+}
+.a11y-light-theme .atwood-secondary {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #333;
+}
+.a11y-light-theme .atwood-secondary:hover:not(:disabled) { background: #eaeaea; }
+.a11y-light-theme .atwood-primary { color: #1a1a1a; }
+.a11y-light-theme .atwood-primary:disabled,
+.a11y-light-theme .atwood-secondary:disabled { opacity: .55; }
+.a11y-light-theme .atwood-progress { background: #e5e5e5; }
+.a11y-light-theme .atwood-metrics > div,
+.a11y-light-theme .atwood-equation { background: #f4f4f4; border-color: #ddd; }
+.a11y-light-theme .atwood-metrics small,
+.a11y-light-theme .atwood-table th { color: #595959; }
+.a11y-light-theme .atwood-pulley-constants,
+.a11y-light-theme .atwood-table th,
+.a11y-light-theme .atwood-table td,
+.a11y-light-theme .atwood-warning,
+.a11y-light-theme .atwood-score,
+.a11y-light-theme .atwood-questions label { border-color: #ddd; }
+.a11y-light-theme .atwood-page .atwood-warning { color: #b43c31 !important; }
+.a11y-light-theme .atwood-text-button { color: #2169b5; }
+.a11y-light-theme .atwood-page .atwood-pro-badge {
+  color: #2169b5 !important;
+  background: #edf4fc;
+  border-color: #bfd5f0;
+}
+.a11y-light-theme .atwood-questions label:has(input:checked) {
+  background: #edf4fc;
+  border-color: #4a90e2;
+}
+.a11y-light-theme .atwood-page .atwood-score { color: #2169b5 !important; }
+.a11y-light-theme .atwood-page button:focus,
+.a11y-light-theme .atwood-page a:focus,
+.a11y-light-theme .atwood-page input:focus { outline: none !important; box-shadow: none !important; }
+@media (max-width: 1050px) { .atwood-metrics { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 800px) { .atwood-grid, .atwood-results-grid, .atwood-question-grid { grid-template-columns: 1fr; } .atwood-pro-locked { flex-wrap: wrap; } .atwood-pro-locked a { margin-left: 0; } }
+@media (max-width: 700px) { .atwood-ring-inputs { grid-template-columns: 1fr; gap: .35rem; } .atwood-ring-transfer span { display: none; } }
+@media (max-width: 480px) { .atwood-card { padding: 1rem; } .atwood-scene { min-height: 220px; } .atwood-metrics { grid-template-columns: 1fr 1fr; } .atwood-status-row, .atwood-time-row { font-size: .85rem; } .atwood-scene-heading { flex-wrap: wrap; gap: 0; margin-bottom: .75rem; } }

@@ -41,6 +41,7 @@ const Changelog = lazy(() => import('./pages/Changelog'));
 const Account = lazy(() => import('./pages/Account'));
 const Teacher = lazy(() => import('./pages/Teacher'));
 const Thesis = lazy(() => import('./pages/Thesis'));
+const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
 
 // Nuclear Physics pages - lazy loaded
 const Rutherford = lazy(() => import('./pages/nuclear/Rutherford'));
@@ -112,6 +113,7 @@ function App() {
                   <Route path="/account" element={<Account />} />
                   <Route path="/teacher" element={<Teacher />} />
                   <Route path="/thesis" element={<Thesis />} />
+                  <Route path="/labs/atwood" element={<AtwoodMachine />} />
 
                   {/* Nuclear Physics Routes */}
                   <Route path="/nuclear/rutherford" element={<Rutherford />} />
