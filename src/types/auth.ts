@@ -1,4 +1,13 @@
-export type UserRole = 'pupil' | 'student' | 'teacher' | 'tutor';
+export type UserRole =
+  | 'pupil'
+  | 'student'
+  | 'teacher'
+  | 'tutor'
+  | 'lecturer'
+  | 'assistant'
+  | 'professor'
+  | 'associate_professor'
+  | 'lab_assistant';
 
 export interface AuthUser {
   id: string;

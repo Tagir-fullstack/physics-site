@@ -12,7 +12,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 function toProfile(user: ReturnType<typeof useUser>['user']): Profile | null {
   if (!user) return null;
-  const meta = (user.publicMetadata ?? {}) as Record<string, unknown>;
+  const meta = {
+    ...(user.publicMetadata ?? {}),
+    ...(user.unsafeMetadata ?? {}),
+  } as Record<string, unknown>;
   return {
     id: user.id,
     email: user.primaryEmailAddress?.emailAddress ?? null,

@@ -1,0 +1,205 @@
+.collision-page { --collision-scene-bg: #0a0a0a; --collision-scene-fg: #d5d5d5; margin-top: 72px; min-height: calc(100vh - 72px); padding: .25rem 1rem 2rem; background: var(--bg-primary); color: var(--text-primary); font-family: 'Radiant', Arial, sans-serif; font-size: 1rem; line-height: 1.5; }
+.collision-container { max-width: 1100px; margin: 0 auto; }
+.collision-header { text-align: center; margin-bottom: 1rem; }
+.collision-eyebrow { color: var(--electron-blue); font-size: .8rem; font-weight: 700; letter-spacing: 1px; margin-bottom: .3rem; }
+.collision-header h1 { margin: 0; font-family: 'CCUltimatum', Arial, sans-serif; font-size: clamp(1.4rem, 4vw, 2.1rem); }
+.collision-header p { max-width: 780px; margin: .6rem auto 0; color: var(--text-secondary); line-height: 1.7; }
+.collision-grid, .collision-results-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, .8fr); gap: 1rem; margin-bottom: 1rem; }
+.collision-grid { align-items: start; }
+.collision-card { min-width: 0; background: var(--bg-card); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: clamp(1.25rem, 2vw, 2rem); }
+.collision-card-title { display: flex; align-items: center; gap: .6rem; color: #fff; font: 700 1.15rem 'CCUltimatum', sans-serif; margin-bottom: 1rem; }
+.collision-card-title span { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: rgba(252,98,85,.12); color: var(--proton-red); font: 700 .85rem 'CCUltimatum', sans-serif; flex-shrink: 0; }
+.collision-simulation-card { display: flex; flex-direction: column; }
+.collision-scene-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.collision-state { color: #aaa; font-size: .8rem; text-align: right; }
+.collision-scene { display: block; width: 100%; min-height: 0; height: auto; aspect-ratio: 700 / 410; flex: none; color: var(--collision-scene-fg); background: var(--collision-scene-bg); border-radius: 10px; }
+.collision-scene-labels { font: 14px 'Radiant', Arial, sans-serif; }
+.collision-angle-scale { opacity: .72; stroke-width: 1; }
+.collision-angle-scale .collision-center-mark { stroke-width: 1.5; opacity: .85; }
+.collision-angle-scale text { stroke: none; font: 9px 'Radiant', Arial, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+.collision-beta-marker { fill: #4a90e2; stroke: var(--collision-scene-bg); stroke-width: 2; }
+.collision-scene-caption { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; margin-top: 1rem; color: #ccc; font-size: .75rem; }
+.collision-impact { opacity: 0; transition: opacity .15s ease; }
+.collision-impact--visible { opacity: 1; }
+.collision-controls label { display: grid; gap: .35rem; color: var(--text-secondary); font-size: 1rem; margin-bottom: .8rem; }
+.collision-controls input { width: 100%; border: 1px solid #444; border-radius: 8px; padding: .7rem .75rem; background: #202020; color: #fff; font: inherit; }
+.collision-mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: 1rem; }
+.collision-mode-switch button, .collision-angle-presets button { border: 1px solid #444; border-radius: 8px; padding: .55rem .7rem; background: #202020; color: #aaa; cursor: pointer; font: inherit; }
+.collision-mode-switch button.collision-mode-active, .collision-angle-presets button.collision-preset-active { color: #fff; background: rgba(252,98,85,.16); border-color: #fc6255; }
+.collision-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.collision-angle-presets { display: flex; align-items: center; gap: .45rem; margin: -.25rem 0 .85rem; color: #888; font-size: .78rem; }
+.collision-angle-presets button { padding: .25rem .65rem; font-size: .8rem; }
+.collision-constants { display: flex; flex-wrap: wrap; gap: .45rem .8rem; color: #888; font-size: .84rem; margin: -.1rem 0 .85rem; }
+.collision-constants strong { color: #ddd; font-weight: 600; }
+.collision-control-buttons { display: flex; gap: .6rem; margin-top: .8rem; }
+.collision-primary, .collision-secondary, .collision-text-button { border-radius: 8px; padding: .65rem .8rem; cursor: pointer; font: inherit; }
+.collision-primary { flex: 1; border: 1px solid #fc6255; background: #fc6255; color: #fff; }
+.collision-primary:disabled, .collision-secondary:disabled { opacity: .4; cursor: not-allowed; }
+.collision-secondary { border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: var(--text-secondary); }
+.collision-primary:hover:not(:disabled) { background: #e95348; }
+.collision-secondary:hover:not(:disabled) { background: #292929; }
+.collision-progress { height: 7px; background: #292929; border-radius: 10px; overflow: hidden; margin-top: 1.25rem; }
+.collision-progress div { width: 100%; height: 100%; background: #fc6255; transform-origin: left center; }
+.collision-time-row { display: flex; justify-content: space-between; gap: 1rem; color: #aaa; font-size: .84rem; margin-top: .7rem; font-variant-numeric: tabular-nums; }
+.collision-time-row strong { color: #fff; }
+.collision-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
+.collision-metrics div { min-width: 0; padding: .7rem; border-radius: 8px; background: #1d1d1d; }
+.collision-metrics small { display: block; min-height: 2.3em; color: #aaa; font-size: .78rem; line-height: 1.35; }
+.collision-metrics strong { display: block; color: #fff; margin-top: .25rem; font-size: .9rem; white-space: nowrap; }
+.collision-add-trial { margin-top: 1rem; }
+.collision-hint { color: #999; font-size: .82rem; line-height: 1.6; margin: .75rem 0 0; }
+.collision-table-scroll { overflow-x: auto; }
+.collision-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: .78rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.collision-table th, .collision-table td { padding: .45rem; border-bottom: 1px solid #333; text-align: left; }
+.collision-table th { color: #888; font-weight: 400; }
+.collision-theory p, .collision-derivation { color: var(--text-secondary); font-size: .92rem; line-height: 1.7; margin-bottom: .85rem; }
+.collision-equation { color: #e0e0e0; border: 1px solid #383838; background: #1c1c1c; border-radius: 8px; padding: .65rem; margin: .65rem 0; overflow-wrap: anywhere; font-family: monospace; font-size: .78rem; }
+.collision-text-button { border: 0; padding-left: 0; background: transparent; color: #4a90e2; }
+.collision-derivation { border-left: 2px solid #4a90e2; padding-left: .8rem; }
+.collision-conclusion { margin-bottom: 1rem; }
+.collision-conclusion p { margin: 0; color: var(--text-secondary); }
+.collision-live { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: 1rem; font-variant-numeric: tabular-nums; }
+.collision-live small { display: block; color: #999; font-size: .75rem; }
+.collision-live strong { font-size: .9rem; }
+.collision-energy-label, .collision-energy-legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .4rem; color: #aaa; font-size: .8rem; margin-top: 1rem; }
+.collision-energy-bar { display: flex; height: 8px; background: #292929; overflow: hidden; border-radius: 8px; margin-top: .4rem; }
+.collision-energy-kinetic { background: #fc6255; }
+.collision-energy-potential { background: #4a90e2; }
+.collision-energy-legend { margin-top: .4rem; font-size: .7rem; }
+.collision-energy-legend span:first-child { color: #fc6255; }
+.collision-energy-legend span:nth-child(2) { color: #6faefa; }
+.collision-controls .collision-checkbox { display: flex; align-items: center; gap: .6rem; font-size: .85rem; margin: .75rem 0; cursor: pointer; }
+.collision-checkbox input { width: 17px; height: 17px; flex-shrink: 0; accent-color: #fc6255; padding: 0; }
+.collision-settings { border-block: 1px solid #333; padding: .65rem 0; margin: .8rem 0; }
+.collision-settings summary { cursor: pointer; color: #ccc; font-size: .88rem; }
+.collision-settings label { display: grid; gap: .35rem; color: var(--text-secondary); font-size: .85rem; margin-top: .75rem; }
+.collision-settings input[type="range"] { display: block; width: 100%; padding: 0; accent-color: #fc6255; }
+.collision-settings .collision-checkbox { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
+.collision-settings .collision-checkbox input { width: 17px; height: 17px; flex: 0 0 17px; margin: 0; padding: 0; accent-color: #fc6255; }
+.collision-settings-locked { display: flex; align-items: center; gap: .65rem; padding: .7rem 0; margin: .8rem 0; border-block: 1px solid #333; }
+.collision-settings-locked > div { display: grid; min-width: 0; }
+.collision-settings-locked strong { font-size: .86rem; }
+.collision-settings-locked small { color: #999; font-size: .72rem; line-height: 1.35; }
+.collision-settings-locked a { flex-shrink: 0; margin-left: auto; padding: .35rem .55rem; text-decoration: none; font-size: .75rem; }
+.collision-pro-badge { flex-shrink: 0; color: #4a90e2; background: rgba(74,144,226,.12); border: 1px solid rgba(74,144,226,.3); border-radius: 6px; padding: .18rem .38rem; font: 700 .7rem 'CCUltimatum', sans-serif; letter-spacing: .08em; }
+.collision-pro-heading { display: flex; align-items: center; gap: .6rem; margin: .2rem 0 .8rem; color: var(--text-secondary); font-size: .86rem; }
+.collision-pro-locked { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.collision-pro-locked h2 { margin: 0 0 .35rem; font: 700 1.2rem 'CCUltimatum', sans-serif; }
+.collision-pro-locked p { margin: 0; color: #aaa; font-size: .8rem; }
+.collision-pro-locked a { flex-shrink: 0; margin-left: auto; text-decoration: none; font-size: .8rem; }
+.collision-reading { border-top: 1px solid #333; margin-top: 1.2rem; padding-top: 1rem; }
+.collision-reading h3 { margin: 0; font-size: 1rem; }
+.collision-reading .collision-hint { margin-bottom: .8rem; }
+.collision-table caption { text-align: left; color: #ccc; padding-bottom: .5rem; }
+.collision-conclusion p + p { margin-top: .6rem; }
+.collision-page button:focus,
+.collision-page button:focus-visible,
+.collision-page input:focus,
+.collision-page input:focus-visible,
+.collision-page summary:focus,
+.collision-page summary:focus-visible,
+.collision-page details:focus,
+.collision-page details:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Scoped overrides for the global accessibility light theme. */
+.a11y-light-theme .collision-page {
+  --bg-primary: #f5f5f5;
+  --bg-card: #fff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #444;
+  --text-muted: #666;
+  --collision-scene-bg: #f7f7f7;
+  --collision-scene-fg: #262626;
+  color-scheme: light;
+}
+.a11y-light-theme .collision-page .collision-card {
+  background: #fff !important;
+  border-color: #ddd;
+}
+.a11y-light-theme .collision-page .collision-card-title,
+.a11y-light-theme .collision-page .collision-card-title span,
+.a11y-light-theme .collision-page strong,
+.a11y-light-theme .collision-page .collision-reading h3 {
+  color: #1a1a1a !important;
+}
+.a11y-light-theme .collision-page .collision-card-title span {
+  color: #c63d32 !important;
+  background: #fdebea;
+}
+.a11y-light-theme .collision-page .collision-eyebrow { color: #174f96 !important; }
+.a11y-light-theme .collision-page .collision-state,
+.a11y-light-theme .collision-page .collision-hint,
+.a11y-light-theme .collision-page .collision-time-row,
+.a11y-light-theme .collision-page .collision-constants,
+.a11y-light-theme .collision-page .collision-angle-presets,
+.a11y-light-theme .collision-page .collision-live small,
+.a11y-light-theme .collision-page .collision-energy-label,
+.a11y-light-theme .collision-page .collision-energy-legend,
+.a11y-light-theme .collision-page .collision-metrics small,
+.a11y-light-theme .collision-page .collision-table th {
+  color: #595959 !important;
+}
+.a11y-light-theme .collision-page .collision-scene {
+  background: var(--collision-scene-bg) !important;
+  color: var(--collision-scene-fg) !important;
+  border: 1px solid #e0e0e0;
+}
+.a11y-light-theme .collision-page .collision-scene-caption,
+.a11y-light-theme .collision-page .collision-scene-caption span {
+  color: #555 !important;
+}
+.a11y-light-theme .collision-controls input[type="number"] {
+  background: #fff !important;
+  border-color: #ccc;
+  color: #1a1a1a !important;
+}
+.a11y-light-theme .collision-mode-switch button,
+.a11y-light-theme .collision-angle-presets button {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #555 !important;
+}
+.a11y-light-theme .collision-mode-switch button.collision-mode-active,
+.a11y-light-theme .collision-angle-presets button.collision-preset-active {
+  background: #fdebea;
+  border-color: #fc6255;
+  color: #1a1a1a !important;
+}
+.a11y-light-theme .collision-secondary {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #333 !important;
+}
+.a11y-light-theme .collision-secondary:hover:not(:disabled) { background: #eaeaea; }
+.a11y-light-theme .collision-primary { color: #1a1a1a !important; }
+.a11y-light-theme .collision-primary:disabled,
+.a11y-light-theme .collision-secondary:disabled { opacity: .55; }
+.a11y-light-theme .collision-page .collision-settings,
+.a11y-light-theme .collision-page .collision-settings-locked,
+.a11y-light-theme .collision-page .collision-reading,
+.a11y-light-theme .collision-page .collision-table th,
+.a11y-light-theme .collision-page .collision-table td {
+  border-color: #ddd;
+}
+.a11y-light-theme .collision-page .collision-settings summary { color: #333 !important; }
+.a11y-light-theme .collision-page .collision-settings-locked small { color: #595959; }
+.a11y-light-theme .collision-page .collision-pro-locked p { color: #595959; }
+.a11y-light-theme .collision-page .collision-pro-badge { color: #2169b5 !important; background: #edf4fc; border-color: #bfd5f0; }
+.a11y-light-theme .collision-page .collision-metrics > div,
+.a11y-light-theme .collision-page .collision-equation {
+  background: #f4f4f4;
+  border-color: #ddd;
+  color: #222 !important;
+}
+.a11y-light-theme .collision-page .collision-energy-bar,
+.a11y-light-theme .collision-page .collision-progress { background: #e5e5e5; }
+.a11y-light-theme .collision-page .collision-energy-legend span:first-child { color: #c84237 !important; }
+.a11y-light-theme .collision-page .collision-energy-legend span:nth-child(2) { color: #2169b5 !important; }
+.a11y-light-theme .collision-page .collision-text-button { color: #2169b5 !important; }
+.a11y-light-theme .collision-page .collision-table caption { color: #333 !important; }
+@media (max-width: 1050px) { .collision-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 800px) { .collision-grid, .collision-results-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .collision-page { padding-inline: .7rem; } .collision-card { padding: 1rem; } .collision-input-grid { grid-template-columns: 1fr; gap: 0; } .collision-metrics { grid-template-columns: 1fr 1fr; } .collision-metrics strong { font-size: .78rem; } .collision-scene-caption { gap: .35rem .8rem; } .collision-settings-locked, .collision-pro-locked { flex-wrap: wrap; } .collision-settings-locked a, .collision-pro-locked a { margin-left: 0; } }

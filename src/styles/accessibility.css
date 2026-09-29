@@ -9,7 +9,7 @@
 
 .a11y-panel {
   position: fixed;
-  top: 85px;
+  top: var(--dropdown-top, 62px);
   right: 24px;
   left: auto;
   width: 420px;
@@ -42,7 +42,7 @@
     right: 10px;
     left: 10px;
     width: auto;
-    top: 85px;
+    top: var(--dropdown-top, 62px);
   }
 }
 
@@ -97,6 +97,13 @@
 .a11y-section__label {
   color: #cccccc;
   font-size: 1rem;
+}
+
+.a11y-hint-text {
+  margin: -0.75rem 0 1rem;
+  color: #999;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 /* Font size buttons */
@@ -636,6 +643,31 @@ html.a11y-font-xlarge .header .burger span {
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 
+.a11y-light-theme .nav-section-trigger {
+  color: #333333 !important;
+}
+
+.a11y-light-theme .nav-section-trigger:hover,
+.a11y-light-theme .nav-section-trigger.active {
+  color: #111111 !important;
+  background-color: rgba(252, 98, 85, 0.1) !important;
+}
+
+.a11y-light-theme .nav-flyout {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16) !important;
+}
+
+.a11y-light-theme .nav-final-test {
+  color: #777777 !important;
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.a11y-light-theme .nav-final-test:hover {
+  color: #333333 !important;
+}
+
 .a11y-light-theme .nav-title {
   color: #FC6255 !important;
   border-bottom-color: rgba(0, 0, 0, 0.1) !important;
@@ -920,25 +952,39 @@ html.a11y-font-xlarge .a11y-reset-btn {
   background: rgba(252, 98, 85, 0.1) !important;
 }
 
+/* ===== Hero "Начать" CTA in light theme ===== */
+.a11y-light-theme .hero-v3-cta {
+  background: #FC6255 !important;
+  color: #ffffff !important;
+  border-color: #FC6255 !important;
+  box-shadow: 0 6px 18px rgba(252, 98, 85, 0.25) !important;
+}
+.a11y-light-theme .hero-v3-cta:hover {
+  background: #e5544a !important;
+  border-color: #e5544a !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(252, 98, 85, 0.35) !important;
+}
+
 /* ===== Diploma award card in light theme ===== */
 .a11y-light-theme .about-v3-award {
-  background: linear-gradient(160deg, rgba(252, 98, 85, 0.08) 0%, #ffffff 60%) !important;
-  border-color: rgba(252, 98, 85, 0.3) !important;
+  background: linear-gradient(160deg, rgba(74, 144, 226, 0.10) 0%, #ffffff 60%) !important;
+  border-color: rgba(74, 144, 226, 0.3) !important;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.04),
     0 20px 40px rgba(0, 0, 0, 0.08),
-    0 0 40px rgba(252, 98, 85, 0.1) !important;
+    0 0 40px rgba(74, 144, 226, 0.12) !important;
 }
 
 .a11y-light-theme .about-v3-award::before {
-  background: radial-gradient(circle at center, rgba(252, 98, 85, 0.12) 0%, transparent 45%) !important;
+  background: radial-gradient(circle at center, rgba(74, 144, 226, 0.14) 0%, transparent 45%) !important;
 }
 
 .a11y-light-theme .about-v3-award-rank {
-  color: #FC6255 !important;
+  color: #1a6bc4 !important;
   text-shadow:
-    0 0 20px rgba(252, 98, 85, 0.25),
-    0 0 40px rgba(252, 98, 85, 0.12) !important;
+    0 0 20px rgba(74, 144, 226, 0.28),
+    0 0 40px rgba(74, 144, 226, 0.14) !important;
 }
 
 .a11y-light-theme .about-v3-award-title {
@@ -1004,4 +1050,3 @@ html.a11y-font-xlarge .a11y-reset-btn {
   color: #555555 !important;
   border-top-color: rgba(0, 0, 0, 0.1) !important;
 }
-

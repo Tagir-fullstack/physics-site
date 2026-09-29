@@ -1,15 +1,62 @@
 /* ========== SHARED ========== */
 .atom-model-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 }
 
+.atom-hover-hint {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: max-content;
+  max-width: min(90vw, 360px);
+  padding: 0.55rem 0.7rem 0.55rem 0.85rem;
+  border: 1px solid rgba(74, 144, 226, 0.45);
+  border-radius: 10px;
+  background: rgba(12, 12, 12, 0.95);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  margin-top: -0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.atom-hover-hint button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
+  background: transparent;
+  color: var(--electron-blue, #4a90e2);
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+
 .atom-model-container {
   position: relative;
   width: 400px;
   height: 400px;
+}
+
+/* Visible interaction area for pausing the model carousel. */
+.atom-model-wrapper--hint-visible .atom-model-container::before {
+  content: '';
+  position: absolute;
+  z-index: 20;
+  inset: 10px;
+  border: 1px dashed rgba(74, 144, 226, 0.28);
+  border-radius: 24px;
+  pointer-events: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.atom-model-wrapper--hint-visible:hover .atom-model-container::before {
+  border-color: rgba(74, 144, 226, 0.75);
+  box-shadow: 0 0 18px rgba(74, 144, 226, 0.12);
 }
 
 .atom-model-info {

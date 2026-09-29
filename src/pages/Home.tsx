@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -63,7 +63,6 @@ const particleIcons = {
 export default function Home() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const topicsRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
   const nuclearTopics = sections.find(s => s.title === 'Физика Атомного ядра')?.topics ?? [];
@@ -95,10 +94,6 @@ export default function Home() {
     },
   ], []);
 
-  const scrollToTopics = () => {
-    topicsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   return (
     <motion.main
       className="home-v3"
@@ -116,7 +111,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <span>Бесплатные</span>
+            <span>{t('home.free')}</span>
           </motion.div>
 
           <motion.h1
@@ -128,17 +123,6 @@ export default function Home() {
             {t('home.animations')}
             <span className="hero-v3-title-soft">{t('home.subtitle')}</span>
           </motion.h1>
-
-          <motion.div
-            className="hero-v3-actions"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-          >
-            <button className="hero-v3-cta" onClick={scrollToTopics}>
-              Начать
-            </button>
-          </motion.div>
         </div>
 
         <motion.div
@@ -154,7 +138,7 @@ export default function Home() {
       </section>
 
       {/* ===== TOPICS ===== */}
-      <section className="section-v3 topics-v3" ref={topicsRef}>
+      <section className="section-v3 topics-v3">
         <motion.div
           className="section-v3-head"
           variants={fadeUp}

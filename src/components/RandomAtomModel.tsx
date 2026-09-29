@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAccessibility } from '../context/AccessibilityContext';
 import '../styles/atom-models.css';
 
 interface AtomModel {
@@ -553,13 +554,28 @@ const DEFAULT_INTERVAL = 6000;
 
 export default function RandomAtomModel() {
   const { t } = useTranslation();
+  const { hoverPause } = useAccessibility();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [fastSwitch, setFastSwitch] = useState(false);
+  const [showHoverHint, setShowHoverHint] = useState(false);
   const isTouchRef = useRef(false);
   const elapsedRef = useRef(0);
   const lastTimeRef = useRef(performance.now());
+
+  useEffect(() => {
+    const hintSeen = localStorage.getItem('physez-atom-hover-hint-seen');
+    if (!hintSeen) {
+      setShowHoverHint(true);
+      localStorage.setItem('physez-atom-hover-hint-seen', 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hoverPause) setPaused(false);
+    else if (hovered) setPaused(true);
+  }, [hoverPause, hovered]);
 
   const switchTo = (next: number | ((prev: number) => number)) => {
     setFastSwitch(true);
@@ -619,19 +635,27 @@ export default function RandomAtomModel() {
 
   return (
     <div
-      className="atom-model-wrapper"
+      className={`atom-model-wrapper${showHoverHint && hoverPause ? ' atom-model-wrapper--hint-visible' : ''}`}
       onTouchStart={() => { isTouchRef.current = true; }}
       onMouseEnter={() => {
         if (isTouchRef.current) return;
-        setPaused(true);
+        if (hoverPause) setPaused(true);
         setHovered(true);
+      }}
+      onMouseMove={() => {
+        // Keep the pause state synchronized even when the setting is toggled
+        // while the pointer is already over the model area.
+        if (!isTouchRef.current && hoverPause) {
+          setPaused(true);
+          setHovered(true);
+        }
       }}
       onMouseLeave={() => {
         if (isTouchRef.current) return;
-        setPaused(false);
+        if (hoverPause) setPaused(false);
         setHovered(false);
       }}
-      onClick={() => { if (isTouchRef.current) setPaused(prev => !prev); }}
+      onClick={() => { if (isTouchRef.current && hoverPause) setPaused(prev => !prev); }}
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -644,6 +668,15 @@ export default function RandomAtomModel() {
           <ModelComponent />
         </motion.div>
       </AnimatePresence>
+
+      {showHoverHint && hoverPause && (
+        <div className="atom-hover-hint" role="status">
+          <span>{t('accessibility.pauseAtomHintShort')}</span>
+          <button type="button" onClick={() => setShowHoverHint(false)} aria-label={t('common.close')}>
+            {t('common.gotIt')}
+          </button>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div

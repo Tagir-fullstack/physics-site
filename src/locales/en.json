@@ -8,6 +8,7 @@
     "skip": "Skip",
     "reset": "Reset All",
     "close": "Close",
+    "gotIt": "Got it",
     "watch": "Watch"
   },
   "header": {
@@ -17,7 +18,7 @@
     "preTest": "Pre-Test"
   },
   "home": {
-    "free": "Free",
+    "free": "Interactive",
     "animations": "ANIMATIONS",
     "subtitle": "on Nuclear Physics",
     "subatomicTitle": "Subatomic",
@@ -51,8 +52,11 @@
   "accessibility": {
     "title": "Accessibility",
     "fontSize": "Font Size",
-    "lightTheme": "Light Theme",
+    "lightTheme": "Light Theme [T]",
     "highContrast": "High Contrast",
+    "pauseAtomOnHover": "Pause model on hover",
+    "pauseAtomHint": "Hover over the atom model on the home page to pause the carousel.",
+    "pauseAtomHintShort": "Hover to pause the model",
     "speechRate": "Speech Rate",
     "slow": "Slow",
     "fast": "Fast",
