@@ -96,10 +96,6 @@ function replaceZeroOnDigit(event: KeyboardEvent<HTMLInputElement>, replace: (va
   event.preventDefault()
   replace(event.key)
 }
-function modeLabel(mode: CollisionMode) {
-  return mode === 'elastic' ? 'Упругий удар' : 'Неупругий удар'
-}
-
 export default function BallCollision() {
   const { user, isPremium, isLoading } = useAuth()
   const isPro = isPremium || isEmailAdmin(user?.email)
@@ -128,8 +124,8 @@ export default function BallCollision() {
   const config = useMemo<PhysicsConfig>(() => ({
     mass1, mass2, length, angle: Math.max(1, Math.min(30, angle || 10)),
     restitution: mode === 'inelastic' ? 0 : realistic ? restitution : 1,
-    damping: realistic ? mode === 'elastic' && !isPro ? 1.2 : damping : 0,
-  }), [mass1, mass2, length, angle, mode, realistic, restitution, damping, isPro])
+    damping: realistic ? damping : 0,
+  }), [mass1, mass2, length, angle, mode, realistic, restitution, damping])
   const [motionState, setMotionState] = useState(() => createPendulums(config))
   const simulationRef = useRef(motionState)
   const runConfigRef = useRef(config)
@@ -172,6 +168,11 @@ export default function BallCollision() {
           const measured = measure(state, runConfigRef.current, realistic && errors)!
           readingRef.current = measured
           setReading(measured)
+          // Preserve the measured first rebound, then damp later free-version
+          // oscillations more strongly so the demonstration does not run too long.
+          if (!isPro && mode === 'elastic' && runConfigRef.current.damping > 0) {
+            runConfigRef.current = { ...runConfigRef.current, damping: 1.2 }
+          }
         }
       }
       simulationRef.current = state
@@ -184,7 +185,7 @@ export default function BallCollision() {
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [running, slowMotion, realistic, errors, mode])
+  }, [running, slowMotion, realistic, errors, mode, isPro])
 
   const reset = () => {
     setRunning(false)
@@ -224,8 +225,6 @@ export default function BallCollision() {
       restitution: config.restitution, damping: config.damping, noisy: realistic && errors }])
     setSaved(true)
   }
-  const phaseLabel = !activeState.firstImpact ? 'Разгон до удара' : collision ? 'Столкновение' : 'Свободные колебания'
-  const stateLabel = activeState.settled ? 'Система остановлена' : running ? phaseLabel : simTime > 0 ? 'Пауза' : 'Готово к запуску'
   const series = trials.filter(trial => trial.mode === mode && trial.angle === angle
     && trial.mass1 === mass1 && trial.mass2 === mass2 && trial.length === length
     && trial.restitution === config.restitution && trial.damping === config.damping && trial.noisy === (realistic && errors))
@@ -242,8 +241,8 @@ export default function BallCollision() {
 
         <section className="collision-grid">
           <div className="collision-card collision-simulation-card">
-            <div className="collision-scene-heading"><div className="collision-card-title"><span>1</span> Схема установки</div><span className="collision-state" aria-live="polite">{stateLabel}</span></div>
-            <svg className="collision-scene" viewBox="0 0 700 410" role="img" aria-label="Схема установки для исследования столкновения подвешенных шаров">
+            <div className="collision-scene-heading"><div className="collision-card-title"><span>1</span> Схема установки</div></div>
+            <svg className="collision-scene" viewBox="100 0 500 410" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Схема установки для исследования столкновения подвешенных шаров">
               <g transform="translate(350 30) scale(1.18) translate(-350 -30)">
               <g fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d={`M${PIVOT_2_X} 30 V48 M${PIVOT_1_X} 30 V48 M322 16 H378 V30 H322 Z`} strokeWidth="3" />
@@ -291,7 +290,7 @@ export default function BallCollision() {
               {mode === 'elastic' && <circle cx={ball2X - 4} cy={ball2Y - 4} r="2.5" fill="#fff" opacity=".35" />}
               </g>
             </svg>
-            <div className="collision-scene-caption"><span>m₁ — металлический ударяющий шар</span><span>{mode === 'inelastic' ? 'm₂ — пластилиновый шарик, 20 г' : 'm₂ — второй металлический шар'}</span><span>{modeLabel(mode)}</span><span>Цена деления — 2°</span></div>
+            {isPro && <>
             <div className="collision-live">
               <div><small>Скорость m₁</small><strong>{formatSigned(activeState.omega1 * length)} м/с</strong></div>
               <div><small>Скорость m₂</small><strong>{formatSigned(activeState.omega2 * length)} м/с</strong></div>
@@ -303,6 +302,7 @@ export default function BallCollision() {
               <span className="collision-energy-potential" style={{ width: `${activeState.initialEnergy ? currentEnergy.potential / activeState.initialEnergy * 100 : 0}%` }} />
             </div>
             <div className="collision-energy-legend"><span>● Кинетическая</span><span>● Потенциальная</span><span>Потери: {format((1 - energyFraction) * 100, 1)}%</span></div>
+            </>}
           </div>
 
           <aside className="collision-card collision-controls">
@@ -324,6 +324,7 @@ export default function BallCollision() {
               <button className="collision-secondary" type="button" onClick={reset}>Сбросить</button>
             </div>
             <div className="collision-time-row"><span>Время: <strong>{format(simTime, 3)} с</strong></span><span>Режим: <strong>{mode === 'elastic' ? 'упругий' : 'неупругий'}</strong></span></div>
+            <div className="collision-scene-caption"><span>m₁ — металлический ударяющий шар</span><span>{mode === 'inelastic' ? 'm₂ — пластилиновый шарик, 20 г' : 'm₂ — второй металлический шар'}</span><span>Цена деления — 2°</span></div>
           </aside>
         </section>
 

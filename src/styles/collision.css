@@ -5,20 +5,30 @@
 .collision-header h1 { margin: 0; font-family: 'CCUltimatum', Arial, sans-serif; font-size: clamp(1.4rem, 4vw, 2.1rem); }
 .collision-header p { max-width: 780px; margin: .6rem auto 0; color: var(--text-secondary); line-height: 1.7; }
 .collision-grid, .collision-results-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, .8fr); gap: 1rem; margin-bottom: 1rem; }
-.collision-grid { align-items: start; }
+.collision-grid { align-items: stretch; }
 .collision-card { min-width: 0; background: var(--bg-card); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: clamp(1.25rem, 2vw, 2rem); }
 .collision-card-title { display: flex; align-items: center; gap: .6rem; color: #fff; font: 700 1.15rem 'CCUltimatum', sans-serif; margin-bottom: 1rem; }
 .collision-card-title span { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: rgba(252,98,85,.12); color: var(--proton-red); font: 700 .85rem 'CCUltimatum', sans-serif; flex-shrink: 0; }
 .collision-simulation-card { display: flex; flex-direction: column; }
 .collision-scene-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
 .collision-state { color: #aaa; font-size: .8rem; text-align: right; }
-.collision-scene { display: block; width: 100%; min-height: 0; height: auto; aspect-ratio: 700 / 410; flex: none; color: var(--collision-scene-fg); background: var(--collision-scene-bg); border-radius: 10px; }
+.collision-scene { display: block; width: 100%; min-height: 0; height: auto; aspect-ratio: 500 / 410; flex: 1 1 auto; color: var(--collision-scene-fg); background: var(--collision-scene-bg); border-radius: 10px; }
 .collision-scene-labels { font: 14px 'Radiant', Arial, sans-serif; }
 .collision-angle-scale { opacity: .72; stroke-width: 1; }
 .collision-angle-scale .collision-center-mark { stroke-width: 1.5; opacity: .85; }
 .collision-angle-scale text { stroke: none; font: 9px 'Radiant', Arial, sans-serif; text-anchor: middle; dominant-baseline: middle; }
 .collision-beta-marker { fill: #4a90e2; stroke: var(--collision-scene-bg); stroke-width: 2; }
 .collision-scene-caption { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; margin-top: 1rem; color: #ccc; font-size: .75rem; }
+.collision-controls .collision-scene-caption { padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.08); }
+.collision-controls { padding-block: 1.35rem; }
+.collision-controls .collision-card-title { margin-bottom: .75rem; }
+.collision-card.collision-controls label { gap: .25rem; margin-bottom: .6rem; font-size: .94rem; }
+.collision-card.collision-controls input[type="number"] { padding-block: .58rem; }
+.collision-controls .collision-mode-switch { margin-bottom: .75rem; }
+.collision-controls .collision-angle-presets { margin-bottom: .65rem; }
+.collision-card.collision-controls .collision-checkbox { margin-block: .55rem; }
+.collision-controls .collision-control-buttons { margin-top: .6rem; }
+.collision-controls .collision-scene-caption { gap: .3rem .9rem; margin-top: .75rem; padding-top: .65rem; font-size: .7rem; line-height: 1.35; }
 .collision-impact { opacity: 0; transition: opacity .15s ease; }
 .collision-impact--visible { opacity: 1; }
 .collision-controls label { display: grid; gap: .35rem; color: var(--text-secondary); font-size: 1rem; margin-bottom: .8rem; }
@@ -201,5 +211,16 @@
 .a11y-light-theme .collision-page .collision-text-button { color: #2169b5 !important; }
 .a11y-light-theme .collision-page .collision-table caption { color: #333 !important; }
 @media (max-width: 1050px) { .collision-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 800px) { .collision-grid, .collision-results-grid { grid-template-columns: 1fr; } }
+@media (max-width: 800px) {
+  .collision-grid, .collision-results-grid { grid-template-columns: 1fr; }
+  .collision-simulation-card .collision-scene { flex: none; aspect-ratio: 1 / 1; }
+  .collision-controls { display: flex; flex-direction: column; }
+  .collision-controls > * { order: 5; }
+  .collision-controls > .collision-card-title { order: 0; }
+  .collision-controls > .collision-control-buttons { order: 1; margin-top: 0; }
+  .collision-controls > .collision-checkbox { order: 2; }
+  .collision-controls > .collision-time-row { order: 3; margin: .15rem 0 .7rem; }
+  .collision-controls > .collision-mode-switch { order: 4; }
+  .collision-controls > .collision-scene-caption { order: 6; }
+}
 @media (max-width: 600px) { .collision-page { padding-inline: .7rem; } .collision-card { padding: 1rem; } .collision-input-grid { grid-template-columns: 1fr; gap: 0; } .collision-metrics { grid-template-columns: 1fr 1fr; } .collision-metrics strong { font-size: .78rem; } .collision-scene-caption { gap: .35rem .8rem; } .collision-settings-locked, .collision-pro-locked { flex-wrap: wrap; } .collision-settings-locked a, .collision-pro-locked a { margin-left: 0; } }
