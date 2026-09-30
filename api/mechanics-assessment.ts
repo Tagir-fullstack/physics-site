@@ -115,7 +115,7 @@ async function startAttempt(userId: string) {
   throw new Error('Could not create a unique assessment variant')
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+async function handleRequest(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store, max-age=0')
   const user = await getClerkUser(req)
   if (!user) return res.status(401).json({ error: 'Войдите в аккаунт, чтобы пройти срез.' })
@@ -167,4 +167,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   return res.status(400).json({ error: 'Unknown action' })
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    return await handleRequest(req, res)
+  } catch (error) {
+    console.error('Mechanics assessment API error:', error)
+    if (res.headersSent) return
+    return res.status(500).json({
+      error: 'Сервис контрольного среза временно недоступен. Попробуйте обновить страницу.',
+    })
+  }
 }

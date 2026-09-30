@@ -39,6 +39,25 @@ type SubmittedResponse = {
 };
 type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse;
 
+async function readAssessmentResponse(response: Response): Promise<AssessmentResponse> {
+  const text = await response.text();
+  let payload: (AssessmentResponse & { error?: string }) | null = null;
+  if (text.trim()) {
+    try {
+      payload = JSON.parse(text) as AssessmentResponse & { error?: string };
+    } catch {
+      throw new Error(`Сервер вернул некорректный ответ (HTTP ${response.status}). Обновите страницу.`);
+    }
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error || `Сервис контрольного среза временно недоступен (HTTP ${response.status}).`);
+  }
+  if (!payload) {
+    throw new Error(`Сервер не вернул данные (HTTP ${response.status}). Обновите страницу.`);
+  }
+  return payload;
+}
+
 const formatTime = (seconds: number) => {
   const safe = Math.max(0, seconds);
   const minutes = Math.floor(safe / 60);
@@ -81,8 +100,7 @@ export default function MechanicsAssessment() {
     setLoading(true);
     authFetch('/api/mechanics-assessment')
       .then(async (response) => {
-        const json = await response.json();
-        if (!response.ok) throw new Error(json.error || 'Не удалось загрузить срез.');
+        const json = await readAssessmentResponse(response);
         if (!cancelled) {
           setData(json);
           if (json.status === 'active') setViolations(json.violationsCount || 0);
@@ -117,10 +135,9 @@ export default function MechanicsAssessment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'start' }),
       });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || 'Не удалось начать срез.');
+      const json = await readAssessmentResponse(response);
       setData(json);
-      setViolations(json.violationsCount || 0);
+      setViolations('violationsCount' in json ? json.violationsCount : 0);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось начать срез.');
       if (document.fullscreenElement) void document.exitFullscreen();
@@ -158,8 +175,7 @@ export default function MechanicsAssessment() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'submit', answers: answersRef.current }),
         });
-        const json = await response.json();
-        if (!response.ok) throw new Error(json.error || 'Не удалось отправить ответы.');
+        const json = await readAssessmentResponse(response);
         setData(json);
         setConfirmSubmit(false);
         if (document.fullscreenElement) await document.exitFullscreen();
