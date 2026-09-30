@@ -7,6 +7,7 @@ interface AccessibilityState {
   fontSize: FontSize;
   highContrast: boolean;
   reducedMotion: boolean;
+  hoverPause: boolean;
   lightTheme: boolean;
   speechRate: number;
 }
@@ -16,6 +17,7 @@ interface AccessibilityContextType extends AccessibilityState {
   setFontSize: (v: FontSize) => void;
   setHighContrast: (v: boolean) => void;
   setReducedMotion: (v: boolean) => void;
+  setHoverPause: (v: boolean) => void;
   setLightTheme: (v: boolean) => void;
   setSpeechRate: (v: number) => void;
   resetAll: () => void;
@@ -26,6 +28,7 @@ const defaults: AccessibilityState = {
   fontSize: 'normal',
   highContrast: false,
   reducedMotion: false,
+  hoverPause: true,
   lightTheme: false,
   speechRate: 1.0,
 };
@@ -102,6 +105,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setFontSize: (v) => setState((s) => ({ ...s, fontSize: v })),
     setHighContrast: (v) => setState((s) => ({ ...s, highContrast: v })),
     setReducedMotion: (v) => setState((s) => ({ ...s, reducedMotion: v })),
+    setHoverPause: (v) => setState((s) => ({ ...s, hoverPause: v })),
     setLightTheme: (v) => setState((s) => ({ ...s, lightTheme: v })),
     setSpeechRate: (v) => setState((s) => ({ ...s, speechRate: v })),
     resetAll: () => setState((s) => ({ ...defaults, enabled: s.enabled })),

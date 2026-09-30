@@ -40,8 +40,13 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 const Changelog = lazy(() => import('./pages/Changelog'));
 const Account = lazy(() => import('./pages/Account'));
 const Teacher = lazy(() => import('./pages/Teacher'));
+const KtpList = lazy(() => import('./pages/teacher/KtpList'));
+const KtpNew = lazy(() => import('./pages/teacher/KtpNew'));
+const KtpView = lazy(() => import('./pages/teacher/KtpView'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
+const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
+const MechanicsAssessment = lazy(() => import('./pages/MechanicsAssessment'));
 
 // Nuclear Physics pages - lazy loaded
 const Rutherford = lazy(() => import('./pages/nuclear/Rutherford'));
@@ -112,8 +117,13 @@ function App() {
                   <Route path="/changelog" element={<Changelog />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/teacher" element={<Teacher />} />
+                  <Route path="/teacher/ktp" element={<KtpList />} />
+                  <Route path="/teacher/ktp/new" element={<KtpNew />} />
+                  <Route path="/teacher/ktp/:id" element={<KtpView />} />
                   <Route path="/thesis" element={<Thesis />} />
                   <Route path="/labs/atwood" element={<AtwoodMachine />} />
+                  <Route path="/labs/ball-collision" element={<BallCollision />} />
+                  <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />
 
                   {/* Nuclear Physics Routes */}
                   <Route path="/nuclear/rutherford" element={<Rutherford />} />

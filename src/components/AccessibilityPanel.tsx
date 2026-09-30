@@ -17,6 +17,7 @@ export default function AccessibilityPanel({ isOpen, onClose, onMouseEnter, onMo
     fontSize, setFontSize,
     highContrast, setHighContrast,
     lightTheme, setLightTheme,
+    hoverPause, setHoverPause,
     speechRate, setSpeechRate,
     resetAll,
   } = useAccessibility();
@@ -86,6 +87,23 @@ export default function AccessibilityPanel({ isOpen, onClose, onMouseEnter, onMo
               <span className="a11y-toggle__thumb" />
             </button>
           </div>
+
+          {/* Pause atom model on hover */}
+          <div className="a11y-section">
+            <span className="a11y-section__label">{t('accessibility.pauseAtomOnHover')}</span>
+            <button
+              className={`a11y-toggle ${hoverPause ? 'a11y-toggle--on' : ''}`}
+              onClick={() => setHoverPause(!hoverPause)}
+              role="switch"
+              aria-checked={hoverPause}
+              aria-label={t('accessibility.pauseAtomOnHover')}
+            >
+              <span className="a11y-toggle__thumb" />
+            </button>
+          </div>
+          <p className="a11y-hint-text">
+            {t('accessibility.pauseAtomHint')}
+          </p>
 
 
           {/* Speech Rate */}

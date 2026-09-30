@@ -419,7 +419,7 @@
 
 .user-menu {
   position: fixed;
-  top: 85px;
+  top: var(--dropdown-top, 62px);
   right: 24px;
   left: auto;
   background: #1a1a1a;

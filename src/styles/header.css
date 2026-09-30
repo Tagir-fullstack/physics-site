@@ -1,5 +1,5 @@
 :root {
-  --dropdown-top: 75px;
+  --dropdown-top: 62px;
 }
 
 .header {
@@ -197,8 +197,7 @@
   transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
   padding: 0.75rem 0;
   z-index: 1001;
-  overflow-y: auto;
-  max-height: 80vh;
+  overflow: visible;
 }
 
 .nav-menu.open {
@@ -206,6 +205,72 @@
   visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
+}
+
+.nav-section {
+  position: relative;
+  padding: 0.25rem 0.65rem;
+}
+
+.nav-section-trigger {
+  width: 100%;
+  border: 0;
+  border-radius: 9px;
+  padding: 0.8rem 0.85rem;
+  background: transparent;
+  color: #d7d7d7;
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-section-trigger:hover,
+.nav-section-trigger.active {
+  color: #ffffff;
+  background: rgba(252, 98, 85, 0.13);
+}
+
+.nav-section-trigger > span:last-child {
+  color: #FC6255;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.nav-flyout {
+  position: absolute;
+  top: -0.75rem;
+  right: calc(100% + 0.75rem);
+  width: min(340px, calc(100vw - 340px));
+  max-height: calc(100vh - var(--dropdown-top) - 24px);
+  overflow-y: auto;
+  padding: 0.75rem 0;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.48);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(8px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.nav-flyout.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.nav-flyout--labs {
+  top: 0;
+  bottom: auto;
 }
 
 .nav-item {
@@ -273,6 +338,19 @@
   border-left-color: #FC6255;
 }
 
+.nav-menu button:focus,
+.nav-menu button:focus-visible,
+.a11y-enabled .nav-menu button:focus,
+.a11y-enabled .nav-menu button:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+.nav-menu button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .nav-quiz-btn {
   display: block;
   width: calc(100% - 2.5rem);
@@ -295,6 +373,26 @@
 
 .nav-quiz-btn:focus {
   outline: none;
+}
+
+.nav-final-test {
+  display: block;
+  width: calc(100% - 2.5rem);
+  margin: 0.65rem 1.25rem 0.15rem;
+  padding: 0.75rem 0 0.2rem;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #858585;
+  font: inherit;
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-final-test:hover {
+  color: #b9b9b9;
 }
 
 /* Tablet */
@@ -357,6 +455,41 @@
     width: auto;
     min-width: auto;
     top: var(--dropdown-top);
+    max-height: calc(100vh - var(--dropdown-top) - 12px);
+    overflow-y: auto;
+  }
+
+  .nav-section {
+    padding: 0.2rem 0.55rem;
+  }
+
+  .nav-section-trigger {
+    padding: 0.9rem 1rem;
+  }
+
+  .nav-section-trigger > span:last-child {
+    transform: rotate(-90deg);
+  }
+
+  .nav-flyout,
+  .nav-flyout--labs {
+    position: static;
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .nav-flyout.open {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0.35rem 0 0.6rem;
+    margin-top: 0.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
   }
 
   .nav-title {

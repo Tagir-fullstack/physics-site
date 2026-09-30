@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
+import { isEmailAdmin } from '../lib/apiClient';
 import type { UserRole } from '../types/auth';
 import '../styles/account.css';
 
@@ -19,9 +20,37 @@ interface QuizHistoryItem {
 const ROLES: { value: UserRole; label: string }[] = [
   { value: 'pupil', label: 'Школьник' },
   { value: 'student', label: 'Студент' },
-  { value: 'teacher', label: 'Учитель' },
   { value: 'tutor', label: 'Репетитор' },
+  { value: 'teacher', label: 'Учитель' },
+  { value: 'lab_assistant', label: 'Лаборант' },
+  { value: 'assistant', label: 'Ассистент' },
+  { value: 'lecturer', label: 'Преподаватель' },
+  { value: 'associate_professor', label: 'Ассоциированный профессор' },
+  { value: 'professor', label: 'Профессор' },
 ];
+
+const UNIVERSITY_ROLES: UserRole[] = [
+  'lecturer',
+  'assistant',
+  'professor',
+  'associate_professor',
+  'lab_assistant',
+];
+
+const isUniversityRole = (role: UserRole) => UNIVERSITY_ROLES.includes(role);
+const isEducatorRole = (role: UserRole) => role === 'teacher' || isUniversityRole(role);
+
+const EXPERIENCE_OPTIONS = [
+  { value: '0', label: 'До 1 года' },
+  { value: '1', label: '1–3 года' },
+  { value: '3', label: '3–5 лет' },
+  { value: '5', label: '5–10 лет' },
+  { value: '10', label: '10–20 лет' },
+  { value: '20', label: 'Более 20 лет' },
+];
+
+const getExperienceLabel = (experience: number) =>
+  EXPERIENCE_OPTIONS.find(option => Number(option.value) === experience)?.label || `${experience} лет`;
 
 export default function Account() {
   const { user, profile, subscription, isPremium, signOut, updateProfile } = useAuth();
@@ -84,10 +113,10 @@ export default function Account() {
       role,
       grade: '',
       course: '',
-      institution: role === 'pupil' || role === 'student' || role === 'teacher' ? prev.institution : '',
-      city: role === 'teacher' || role === 'tutor' ? prev.city : '',
-      subject: role === 'teacher' || role === 'tutor' ? prev.subject : '',
-      experience: role === 'teacher' || role === 'tutor' ? prev.experience : '',
+      institution: role === 'pupil' || role === 'student' || isEducatorRole(role) ? prev.institution : '',
+      city: isEducatorRole(role) || role === 'tutor' ? prev.city : '',
+      subject: isEducatorRole(role) || role === 'tutor' ? prev.subject : '',
+      experience: isEducatorRole(role) || role === 'tutor' ? prev.experience : '',
     }));
   };
 
@@ -111,15 +140,15 @@ export default function Account() {
         if (formData.institution) updateData.institution = formData.institution;
       }
 
-      if (formData.role === 'teacher') {
-        if (formData.experience) updateData.experience = parseInt(formData.experience, 10);
+      if (isEducatorRole(formData.role)) {
+        if (formData.experience !== '') updateData.experience = parseInt(formData.experience, 10);
         if (formData.subject) updateData.subject = formData.subject;
         if (formData.institution) updateData.institution = formData.institution;
         if (formData.city) updateData.city = formData.city;
       }
 
       if (formData.role === 'tutor') {
-        if (formData.experience) updateData.experience = parseInt(formData.experience, 10);
+        if (formData.experience !== '') updateData.experience = parseInt(formData.experience, 10);
         if (formData.subject) updateData.subject = formData.subject;
         if (formData.city) updateData.city = formData.city;
       }
@@ -191,7 +220,13 @@ export default function Account() {
     }
   };
 
+  const isAdmin = isEmailAdmin(user.email);
+  const isPro = isPremium || isAdmin;
+
   const getPlanInfo = () => {
+    if (isPro) {
+      return { name: 'Pro', description: 'Полный доступ к платформе' };
+    }
     if (!subscription) {
       return { name: 'Бесплатный', description: 'Базовый доступ к анимациям' };
     }
@@ -224,14 +259,21 @@ export default function Account() {
     }
 
     if (formData.role === 'teacher') {
-      if (profile?.experience) fields.push({ label: 'Стаж', value: `${profile.experience} лет` });
+      if (profile?.experience !== undefined) fields.push({ label: 'Стаж', value: getExperienceLabel(profile.experience) });
       if (profile?.subject) fields.push({ label: 'Предмет', value: profile.subject });
       if (profile?.institution) fields.push({ label: 'Школа', value: profile.institution });
       if (profile?.city) fields.push({ label: 'Город', value: profile.city });
     }
 
+    if (isUniversityRole(formData.role)) {
+      if (profile?.experience !== undefined) fields.push({ label: 'Стаж', value: getExperienceLabel(profile.experience) });
+      if (profile?.subject) fields.push({ label: 'Предмет', value: profile.subject });
+      if (profile?.institution) fields.push({ label: 'ВУЗ', value: profile.institution });
+      if (profile?.city) fields.push({ label: 'Город', value: profile.city });
+    }
+
     if (formData.role === 'tutor') {
-      if (profile?.experience) fields.push({ label: 'Стаж', value: `${profile.experience} лет` });
+      if (profile?.experience !== undefined) fields.push({ label: 'Стаж', value: getExperienceLabel(profile.experience) });
       if (profile?.subject) fields.push({ label: 'Предмет', value: profile.subject });
       if (profile?.city) fields.push({ label: 'Город', value: profile.city });
     }
@@ -300,18 +342,25 @@ export default function Account() {
         );
 
       case 'teacher':
+      case 'lecturer':
+      case 'assistant':
+      case 'professor':
+      case 'associate_professor':
+      case 'lab_assistant':
         return (
           <>
             <div className="account-field">
               <label className="account-label">Стаж (лет)</label>
-              <input
-                type="number"
-                min="0"
-                max="50"
-                className="account-input"
+              <select
+                className="account-select"
                 value={formData.experience}
                 onChange={(e) => handleInputChange('experience', e.target.value)}
-              />
+              >
+                <option value="">Выберите</option>
+                {EXPERIENCE_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </div>
             <div className="account-field">
               <label className="account-label">Предмет</label>
@@ -323,7 +372,9 @@ export default function Account() {
               />
             </div>
             <div className="account-field">
-              <label className="account-label">Школа</label>
+              <label className="account-label">
+                {isUniversityRole(formData.role) ? 'ВУЗ' : 'Школа'}
+              </label>
               <input
                 type="text"
                 className="account-input"
@@ -348,14 +399,16 @@ export default function Account() {
           <>
             <div className="account-field">
               <label className="account-label">Стаж (лет)</label>
-              <input
-                type="number"
-                min="0"
-                max="50"
-                className="account-input"
+              <select
+                className="account-select"
                 value={formData.experience}
                 onChange={(e) => handleInputChange('experience', e.target.value)}
-              />
+              >
+                <option value="">Выберите</option>
+                {EXPERIENCE_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </div>
             <div className="account-field">
               <label className="account-label">Предмет</label>
@@ -409,15 +462,15 @@ export default function Account() {
       total += 2;
       if (profile.course) filled++;
       if (profile.institution) filled++;
-    } else if (profile?.role === 'teacher') {
+    } else if (profile?.role && isEducatorRole(profile.role)) {
       total += 4;
-      if (profile.experience) filled++;
+      if (profile.experience !== undefined) filled++;
       if (profile.subject) filled++;
       if (profile.institution) filled++;
       if (profile.city) filled++;
     } else if (profile?.role === 'tutor') {
       total += 3;
-      if (profile.experience) filled++;
+      if (profile.experience !== undefined) filled++;
       if (profile.subject) filled++;
       if (profile.city) filled++;
     }
@@ -436,25 +489,6 @@ export default function Account() {
     >
       <div className="account-container">
         <h1 className="account-title">Личный кабинет</h1>
-
-        {profile?.role === 'teacher' && (
-          <Link
-            to="/teacher"
-            style={{
-              display: 'inline-block',
-              marginBottom: '1rem',
-              padding: '0.6rem 1.2rem',
-              backgroundColor: '#4a90e2',
-              color: '#fff',
-              borderRadius: 50,
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.95rem'
-            }}
-          >
-            Кабинет учителя →
-          </Link>
-        )}
 
         {message && (
           <div className={`account-message ${message.type}`}>
@@ -610,19 +644,19 @@ export default function Account() {
             <div className="account-plan">
               <div className="account-plan-header">
                 <span className="account-plan-name">{planInfo.name}</span>
-                {isPremium && <span className="account-plan-badge">Активна</span>}
+                {isPro && <span className="account-plan-badge">Активна</span>}
               </div>
               <p className="account-plan-description">{planInfo.description}</p>
             </div>
 
-            {!isPremium && (
+            {isPro && profile?.role && isEducatorRole(profile.role) && (
               <div className="account-upgrade">
                 <p className="account-upgrade-text">
-                  Хотите получить доступ к дополнительным функциям?
+                  Ваша подписка открывает доступ к кабинету учителя.
                 </p>
-                <button className="account-btn account-btn-premium" disabled>
-                  Скоро
-                </button>
+                <Link to="/teacher" className="account-btn account-btn-teacher">
+                  Кабинет учителя →
+                </Link>
               </div>
             )}
           </section>

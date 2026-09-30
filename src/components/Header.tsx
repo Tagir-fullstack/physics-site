@@ -11,6 +11,7 @@ import '../styles/accessibility.css';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeMenuPanel, setActiveMenuPanel] = useState<'nuclear' | 'labs' | null>(null);
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const menuTimeoutRef = useRef<number | null>(null);
@@ -56,6 +57,7 @@ export default function Header() {
   const closeMenuWithDelay = () => {
     menuTimeoutRef.current = window.setTimeout(() => {
       setIsMenuOpen(false);
+      setActiveMenuPanel(null);
     }, 200);
   };
 
@@ -75,6 +77,7 @@ export default function Header() {
     }
     if (!enabled) setEnabled(true);
     setIsMenuOpen(false);
+    setActiveMenuPanel(null);
     setIsAuthOpen(false);
     setIsA11yOpen(true);
   };
@@ -107,6 +110,7 @@ export default function Header() {
       a11yTimeoutRef.current = null;
     }
     setIsMenuOpen(false);
+    setActiveMenuPanel(null);
     setIsA11yOpen(false);
     setIsAuthOpen(true);
   };
@@ -127,6 +131,7 @@ export default function Header() {
   const handleLinkClick = (path: string) => {
     if (isQuizActive) return; // Блокируем навигацию во время теста
     setIsMenuOpen(false);
+    setActiveMenuPanel(null);
     navigate(path);
   };
 
@@ -136,13 +141,17 @@ export default function Header() {
       {isMenuOpen && (
         <div
           className="menu-overlay"
-          onClick={() => setIsMenuOpen(false)}
+          onClick={() => {
+            setIsMenuOpen(false);
+            setActiveMenuPanel(null);
+          }}
         />
       )}
 
       <header className={`header header--frameless${scrolled ? ' header--scrolled' : ''}`} onClick={(e) => {
           if (e.target === e.currentTarget) {
             setIsMenuOpen(false);
+            setActiveMenuPanel(null);
             setIsA11yOpen(false);
             setIsAuthOpen(false);
           }
@@ -150,6 +159,7 @@ export default function Header() {
         <nav className="nav-container" onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsMenuOpen(false);
+              setActiveMenuPanel(null);
               setIsA11yOpen(false);
               setIsAuthOpen(false);
             }
@@ -161,6 +171,7 @@ export default function Header() {
                 return;
               }
               setIsMenuOpen(false);
+              setActiveMenuPanel(null);
             }} style={isQuizActive ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}>
             <img src="/favicon1.png" alt="" className="logo-icon" />
             <span className="logo-phys">Phys</span>
@@ -178,34 +189,60 @@ export default function Header() {
                 }
               }}
             >
-              {visibleSections.map((section) => (
-                <div key={section.title} className="nav-item">
-                  <span className="nav-title">{section.title}</span>
-                  <div className="dropdown">
-                    {section.topics.map((topic) => (
-                      <button
-                        key={topic.path}
-                        className="dropdown-item"
-                        onClick={() => handleLinkClick(topic.path)}
-                      >
-                        {topic.title}
+              <div className="nav-section">
+                <button
+                  className={`nav-section-trigger${activeMenuPanel === 'nuclear' ? ' active' : ''}`}
+                  type="button"
+                  aria-expanded={activeMenuPanel === 'nuclear'}
+                  onMouseEnter={() => setActiveMenuPanel('nuclear')}
+                  onClick={() => setActiveMenuPanel(activeMenuPanel === 'nuclear' ? null : 'nuclear')}
+                >
+                  <span>Физика атомного ядра</span><span aria-hidden="true">‹</span>
+                </button>
+                <div className={`nav-flyout${activeMenuPanel === 'nuclear' ? ' open' : ''}`}>
+                  {visibleSections.map((section) => (
+                    <div key={section.title} className="nav-item">
+                      <span className="nav-title">{section.title}</span>
+                      <div className="dropdown">
+                        {section.topics.map((topic) => (
+                          <button
+                            key={topic.path}
+                            className="dropdown-item"
+                            onClick={() => handleLinkClick(topic.path)}
+                          >
+                            {topic.title}
+                          </button>
+                        ))}
+                      </div>
+                      <button className="nav-final-test" onClick={() => handleLinkClick('/nuclear/quiz')}>
+                        {t('header.finalTest')}
                       </button>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="nav-section">
+                <button
+                  className={`nav-section-trigger${activeMenuPanel === 'labs' ? ' active' : ''}`}
+                  type="button"
+                  aria-expanded={activeMenuPanel === 'labs'}
+                  onMouseEnter={() => setActiveMenuPanel('labs')}
+                  onClick={() => setActiveMenuPanel(activeMenuPanel === 'labs' ? null : 'labs')}
+                >
+                  <span>Лаборатории</span><span aria-hidden="true">‹</span>
+                </button>
+                <div className={`nav-flyout nav-flyout--labs${activeMenuPanel === 'labs' ? ' open' : ''}`}>
+                  <div className="nav-item">
+                    <span className="nav-title">Лабораторные работы</span>
+                    <div className="dropdown">
+                      <button className="dropdown-item" onClick={() => handleLinkClick('/labs/atwood')}>Машина Атвуда</button>
+                      <button className="dropdown-item" onClick={() => handleLinkClick('/labs/ball-collision')}>Столкновение шаров</button>
+                      <button className="dropdown-item" onClick={() => handleLinkClick('/assessment/mechanics')}>Контрольный срез по механике</button>
+                    </div>
                   </div>
                 </div>
-              ))}
-              <button
-                className="nav-quiz-btn"
-                onClick={() => handleLinkClick('/nuclear/quiz')}
-              >
-                {t('header.finalTest')}
-              </button>
-              <button
-                className="nav-quiz-btn"
-                onClick={() => handleLinkClick('/labs/atwood')}
-              >
-                Лаборатория: машина Атвуда
-              </button>
+              </div>
             </div>
 
             {/* Порядок: Доступность -> Бургер -> Аккаунт */}
@@ -214,6 +251,7 @@ export default function Header() {
               onClick={() => {
                 if (!enabled) setEnabled(true);
                 setIsMenuOpen(false);
+                setActiveMenuPanel(null);
                 setIsAuthOpen(false);
                 setIsA11yOpen(!isA11yOpen);
               }}
@@ -235,6 +273,7 @@ export default function Header() {
                 if (!isQuizActive) {
                   setIsA11yOpen(false);
                   setIsAuthOpen(false);
+                  setActiveMenuPanel(null);
                   setIsMenuOpen(!isMenuOpen);
                 }
               }}

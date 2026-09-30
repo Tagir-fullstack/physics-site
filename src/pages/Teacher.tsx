@@ -3,13 +3,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { isEmailAdmin } from '../lib/apiClient';
+import CurrentWeekWidget from '../components/teacher/CurrentWeekWidget';
 import '../styles/page-layout.css';
+
+const teacherRoles = new Set([
+  'teacher',
+  'lecturer',
+  'assistant',
+  'professor',
+  'associate_professor',
+  'lab_assistant',
+]);
 
 export default function Teacher() {
   const { user, profile, isLoading } = useAuth();
   const { enabled: a11yEnabled, lightTheme } = useAccessibility();
   const isLight = a11yEnabled && lightTheme;
   const navigate = useNavigate();
+  const isAdmin = isEmailAdmin(user?.email);
 
   useEffect(() => {
     if (isLoading) return;
@@ -17,10 +29,10 @@ export default function Teacher() {
       navigate('/');
       return;
     }
-    if (profile && profile.role !== 'teacher') {
+    if (!isAdmin && profile && !teacherRoles.has(profile.role)) {
       navigate('/account');
     }
-  }, [user, profile, isLoading, navigate]);
+  }, [user, profile, isLoading, isAdmin, navigate]);
 
   if (isLoading || !user) return null;
 
@@ -47,18 +59,41 @@ export default function Teacher() {
           </Link>
         </div>
 
-        <div style={{ backgroundColor: cardBg, border: cardBorder, borderRadius: 16, padding: '2rem 1.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🛠</div>
-          <h2 style={{ color: textPrimary, marginTop: 0, marginBottom: '0.75rem', fontSize: '1.3rem' }}>
-            Классы и КТП/КСП — в разработке
-          </h2>
-          <p style={{ color: textMuted, marginTop: 0, marginBottom: '1rem', fontSize: '0.95rem', lineHeight: 1.6 }}>
-            Мы переезжаем на новую инфраструктуру. Скоро здесь появится создание классов,
-            хранилище КТП/КСП/СОР/СОЧ и авто‑генерация конспектов по расписанию.
-          </p>
-          <p style={{ color: textMuted, marginTop: 0, marginBottom: 0, fontSize: '0.85rem' }}>
-            Следите за обновлениями в <Link to="/changelog" style={{ color: '#4a90e2' }}>changelog</Link>.
-          </p>
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          {isAdmin && <CurrentWeekWidget isLight={isLight} />}
+
+          {isAdmin && (
+            <Link
+              to="/teacher/ktp"
+              style={{
+                display: 'block',
+                backgroundColor: cardBg,
+                border: cardBorder,
+                borderRadius: 16,
+                padding: '1.25rem 1.25rem',
+                textDecoration: 'none',
+                color: textPrimary,
+              }}
+            >
+              <div style={{ fontSize: '1.05rem', fontWeight: 500, marginBottom: '0.25rem' }}>Мои КТП →</div>
+              <div style={{ color: textMuted, fontSize: '0.9rem' }}>
+                Загрузка docx и просмотр календарно-тематических планов.
+              </div>
+            </Link>
+          )}
+
+          <div style={{ backgroundColor: cardBg, border: cardBorder, borderRadius: 16, padding: '2rem 1.5rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🛠</div>
+            <h2 style={{ color: textPrimary, marginTop: 0, marginBottom: '0.75rem', fontSize: '1.3rem' }}>
+              Классы, расписание, СОР/СОЧ — в разработке
+            </h2>
+            <p style={{ color: textMuted, marginTop: 0, marginBottom: '1rem', fontSize: '0.95rem', lineHeight: 1.6 }}>
+              КТП уже доступно. Скоро — классы, расписание, СОР/СОЧ и авто-генерация конспектов.
+            </p>
+            <p style={{ color: textMuted, marginTop: 0, marginBottom: 0, fontSize: '0.85rem' }}>
+              Следите за обновлениями в <Link to="/changelog" style={{ color: '#4a90e2' }}>changelog</Link>.
+            </p>
+          </div>
         </div>
       </div>
     </motion.div>

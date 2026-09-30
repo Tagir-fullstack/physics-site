@@ -8,6 +8,8 @@ import {
   boolean,
   jsonb,
   uuid,
+  integer,
+  smallint,
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
@@ -132,8 +134,85 @@ export const moderationLog = pgTable(
   })
 )
 
+export const ktpLanguageEnum = pgEnum('ktp_language', ['ru', 'kk'])
+
+export const ktp = pgTable(
+  'ktp',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    grade: smallint('grade').notNull(),
+    language: ktpLanguageEnum('language').notNull().default('ru'),
+    academicYear: varchar('academic_year', { length: 16 }),
+    title: varchar('title', { length: 255 }).notNull(),
+    hoursPerWeek: smallint('hours_per_week'),
+    totalHours: smallint('total_hours'),
+    sourceUrl: text('source_url'),
+    sourceFilename: varchar('source_filename', { length: 255 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    gradeIdx: index('ktp_grade_idx').on(t.grade),
+  })
+)
+
+export const ktpLessons = pgTable(
+  'ktp_lessons',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ktpId: uuid('ktp_id')
+      .notNull()
+      .references(() => ktp.id, { onDelete: 'cascade' }),
+    orderNo: integer('order_no').notNull(),
+    quarter: smallint('quarter'),
+    section: text('section'),
+    topic: text('topic'),
+    objectives: text('objectives'),
+    hours: smallint('hours'),
+    plannedDate: varchar('planned_date', { length: 128 }),
+    notes: text('notes'),
+  },
+  (t) => ({
+    ktpIdx: index('ktp_lessons_ktp_idx').on(t.ktpId),
+    orderIdx: uniqueIndex('ktp_lessons_ktp_order_idx').on(t.ktpId, t.orderNo),
+  })
+)
+
+export const assessmentAttempts = pgTable(
+  'assessment_attempts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    assessmentKey: varchar('assessment_key', { length: 64 }).notNull(),
+    clerkUserId: varchar('clerk_user_id', { length: 64 }).notNull(),
+    variantCode: varchar('variant_code', { length: 16 }).notNull(),
+    variantFingerprint: varchar('variant_fingerprint', { length: 255 }).notNull(),
+    variantData: jsonb('variant_data').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }),
+    answers: jsonb('answers'),
+    score: smallint('score'),
+    violations: jsonb('violations'),
+  },
+  (t) => ({
+    userAssessmentIdx: uniqueIndex('assessment_attempts_user_key_idx').on(
+      t.clerkUserId,
+      t.assessmentKey
+    ),
+    variantCodeIdx: uniqueIndex('assessment_attempts_variant_code_idx').on(t.variantCode),
+    fingerprintIdx: uniqueIndex('assessment_attempts_fingerprint_idx').on(
+      t.variantFingerprint
+    ),
+  })
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Comment = typeof comments.$inferSelect
 export type NewComment = typeof comments.$inferInsert
 export type TeacherVerification = typeof teacherVerifications.$inferSelect
+export type Ktp = typeof ktp.$inferSelect
+export type NewKtp = typeof ktp.$inferInsert
+export type KtpLesson = typeof ktpLessons.$inferSelect
+export type NewKtpLesson = typeof ktpLessons.$inferInsert
+export type AssessmentAttempt = typeof assessmentAttempts.$inferSelect

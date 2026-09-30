@@ -7,9 +7,8 @@
   flex-direction: column;
   align-items: center;
 }
-
 .account-container {
-  width: min(980px, calc(100% - 40px));
+  width: min(1200px, calc(100% - 80px));
 }
 
 .account-title {
@@ -331,6 +330,26 @@
   cursor: not-allowed;
 }
 
+.account-btn-teacher {
+  display: inline-block;
+  background: #4a90e2;
+  color: #fff;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: none;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.15s, color 0.15s;
+}
+.account-btn-teacher:hover {
+  background: #3a7fd0;
+  color: rgba(255, 255, 255, 0.82);
+}
+.a11y-light-theme .account-btn-teacher {
+  color: #ffffff !important;
+}
+
 .account-btn-danger {
   background: transparent;
   color: #888;
@@ -555,7 +574,7 @@
 
 /* Light theme */
 .a11y-light-theme .account-page {
-  background: #f5f5f5;
+  background: #f4f5f7;
 }
 
 .a11y-light-theme .account-title {
@@ -563,8 +582,35 @@
 }
 
 .a11y-light-theme .account-section {
-  background: #fff;
-  border-color: rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.a11y-light-theme .account-section-danger {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.a11y-light-theme .account-profile-name {
+  color: #1a1a1a;
+}
+.a11y-light-theme .account-profile-email {
+  color: #6b7280;
+}
+.a11y-light-theme .account-label {
+  color: #6b7280;
+}
+.a11y-light-theme .account-stat-value {
+  color: #d94438;
+}
+.a11y-light-theme .account-stat-label {
+  color: #6b7280;
+}
+.a11y-light-theme .account-stats {
+  border-top-color: rgba(15, 23, 42, 0.08);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
 }
 
 .a11y-light-theme .account-section-title {
@@ -594,11 +640,36 @@
 }
 
 .a11y-light-theme .account-plan {
-  background: rgba(0, 0, 0, 0.02);
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.08), rgba(252, 98, 85, 0.05));
+  border: 1px solid rgba(74, 144, 226, 0.18);
 }
 
 .a11y-light-theme .account-plan-name {
   color: #1a1a1a;
+}
+
+.a11y-light-theme .account-plan-description {
+  color: #4b5563;
+}
+
+.a11y-light-theme .account-plan-badge {
+  background: rgba(39, 174, 96, 0.15);
+  color: #1f8a4c;
+  border: 1px solid rgba(39, 174, 96, 0.28);
+}
+
+.a11y-light-theme .account-upgrade {
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+.a11y-light-theme .account-upgrade-text {
+  color: #4b5563;
+}
+
+.a11y-light-theme .account-history-empty,
+.a11y-light-theme .account-history-empty p,
+.a11y-light-theme .account-history-hint,
+.a11y-light-theme .account-history-loading {
+  color: #6b7280 !important;
 }
 
 .a11y-light-theme .account-history-item {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -52,6 +53,20 @@ function ringWord(count: number) {
   if (last === 1) return 'кольцо'
   if (last >= 2 && last <= 4) return 'кольца'
   return 'колец'
+}
+
+function normalizeNumberInput(value: string) {
+  return value.replace(/^0+(?=\d)/, '')
+}
+
+function selectZero(input: HTMLInputElement) {
+  if (Number(input.value) === 0) input.select()
+}
+
+function replaceZeroOnDigit(event: KeyboardEvent<HTMLInputElement>, replace: (value: string) => void) {
+  if (!/^\d$/.test(event.key) || !/^0+$/.test(event.currentTarget.value)) return
+  event.preventDefault()
+  replace(event.key)
 }
 
 function getAcceleration(deltaMass: number, totalMass: number, frictionFactor = 1) {
@@ -123,7 +138,7 @@ export default function AtwoodMachine() {
   }
 
   const updateRingCount = (side: 'm1' | 'm2', rawValue: string) => {
-    const value = Number(rawValue)
+    const value = Number(normalizeNumberInput(rawValue))
     if (!Number.isInteger(value) || value < 0 || value > MAX_RINGS) return
     if (side === 'm1') setRingCount1(value)
     else setRingCount2(value)
@@ -240,8 +255,8 @@ export default function AtwoodMachine() {
             <div className="atwood-card-title"><span>2</span> Параметры опыта</div>
             <label>Масса груза без колец, г<input type="number" value={BASE_MASS * 1000} readOnly /></label>
             <div className="atwood-ring-inputs">
-              <label htmlFor="atwood-rings-m1">Кольца на грузе m₁, шт.<input id="atwood-rings-m1" aria-describedby={acceleration <= 0 ? 'atwood-ring-warning' : undefined} type="number" min="0" max={MAX_RINGS} step="1" value={ringCount1} onChange={(e) => updateRingCount('m1', e.target.value)} /></label>
-              <label htmlFor="atwood-rings-m2">Кольца на грузе m₂, шт.<input id="atwood-rings-m2" aria-describedby={acceleration <= 0 ? 'atwood-ring-warning' : undefined} type="number" min="0" max={MAX_RINGS} step="1" value={ringCount2} onChange={(e) => updateRingCount('m2', e.target.value)} /></label>
+              <label htmlFor="atwood-rings-m1">Кольца на грузе m₁, шт.<input id="atwood-rings-m1" aria-describedby={acceleration <= 0 ? 'atwood-ring-warning' : undefined} type="number" min="0" max={MAX_RINGS} step="1" value={ringCount1} onFocus={(e) => selectZero(e.currentTarget)} onKeyDown={(e) => replaceZeroOnDigit(e, (value) => updateRingCount('m1', value))} onChange={(e) => updateRingCount('m1', e.target.value)} /></label>
+              <label htmlFor="atwood-rings-m2">Кольца на грузе m₂, шт.<input id="atwood-rings-m2" aria-describedby={acceleration <= 0 ? 'atwood-ring-warning' : undefined} type="number" min="0" max={MAX_RINGS} step="1" value={ringCount2} onFocus={(e) => selectZero(e.currentTarget)} onKeyDown={(e) => replaceZeroOnDigit(e, (value) => updateRingCount('m2', value))} onChange={(e) => updateRingCount('m2', e.target.value)} /></label>
             </div>
             <div className="atwood-ring-transfer" aria-label="Перенос колец между грузами">
               <button className="atwood-secondary" type="button" onClick={() => transferRing('m2')} disabled={ringCount2 === 0 || ringCount1 === MAX_RINGS} aria-label="Перенести одно кольцо с m₂ на m₁">← на m₁</button>
@@ -250,7 +265,7 @@ export default function AtwoodMachine() {
             </div>
             <div id="atwood-ring-warning" className="atwood-warning" style={{ visibility: acceleration <= 0 ? 'visible' : 'hidden' }} aria-hidden={acceleration > 0}>Массы равны — движения нет.</div>
             <div className="atwood-constants atwood-mass-constants"><span>m₁: <strong>{(m1 * 1000).toFixed(1)} г</strong></span><span>m₂: <strong>{(m2 * 1000).toFixed(1)} г</strong></span><span title="Разность масс: m₂ − m₁">Δm: <strong>{format(deltaMass * 1000, 1)} г</strong></span><span>Кольцо: <strong>{(RING_MASS * 1000).toFixed(1)} г</strong></span></div>
-            <label>Путь s, см<input type="number" inputMode="decimal" min="20" max={MAX_TRAVEL * 100} step="0.1" value={distanceInput} onChange={(e) => { setDistanceInput(e.target.value); const centimeters = Number(e.target.value); if (centimeters >= 20 && centimeters <= MAX_TRAVEL * 100) { setDistance(centimeters / 100); reset() } }} onBlur={() => setDistanceInput(String(Number((distance * 100).toFixed(10))))} /></label>
+            <label>Путь s, см<input type="number" inputMode="decimal" min="20" max={MAX_TRAVEL * 100} step="0.1" value={distanceInput} onFocus={(e) => selectZero(e.currentTarget)} onKeyDown={(e) => replaceZeroOnDigit(e, (value) => setDistanceInput(value))} onChange={(e) => { const normalized = normalizeNumberInput(e.target.value); setDistanceInput(normalized); const centimeters = Number(normalized); if (centimeters >= 20 && centimeters <= MAX_TRAVEL * 100) { setDistance(centimeters / 100); reset() } }} onBlur={() => setDistanceInput(String(Number((distance * 100).toFixed(10))))} /></label>
             <div className="atwood-constants atwood-pulley-constants"><span>Jᵣ: <strong>1,27·10⁻⁴ кг·м²</strong></span><span>R: <strong>33 мм</strong></span></div>
             <div className="atwood-control-buttons">
               <button className="atwood-primary" onClick={running ? () => setRunning(false) : start} disabled={acceleration <= 0}>{running ? 'Пауза' : measuredTime !== null ? 'Повторить' : 'Запустить'}</button>
