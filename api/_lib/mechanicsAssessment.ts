@@ -1,10 +1,16 @@
 import { randomBytes, randomInt } from 'node:crypto'
 
-export const ASSESSMENT_KEY = 'mechanics-cut-v1'
+export const ASSESSMENT_KEY = 'mechanics-cut-v2'
 export const ASSESSMENT_DURATION_MS = 30 * 60 * 1000
 
 export type MechanicsVariant = {
-  relativeMotion: { v1: number; v2: number; angle: number; expected: number }
+  relativeMotion: {
+    v1: number
+    v2: number
+    angle: number
+    expectedAcute: number
+    expectedObtuse: number
+  }
   incline: { length: number; time: number; angle: number; expected: number }
   skaters: { m1: number; m2: number; ropeSpeed: number; expected1: number; expected2: number }
 }
@@ -21,12 +27,17 @@ const pick = <T>(items: readonly T[]): T => items[randomInt(items.length)]
 const round = (value: number, digits = 4) => Number(value.toFixed(digits))
 
 export function createVariant(): MechanicsVariant {
-  const angle = pick([30, 45, 60, 75, 90] as const)
+  const angle = pick([30, 45, 60, 75] as const)
   const v1 = randomInt(9, 23) * 5
   let v2 = randomInt(8, 22) * 5
   if (v2 === v1) v2 += 5
   const angleRad = (angle * Math.PI) / 180
-  const relativeExpected = Math.sqrt(v1 ** 2 + v2 ** 2 - 2 * v1 * v2 * Math.cos(angleRad))
+  const relativeExpectedAcute = Math.sqrt(
+    v1 ** 2 + v2 ** 2 - 2 * v1 * v2 * Math.cos(angleRad)
+  )
+  const relativeExpectedObtuse = Math.sqrt(
+    v1 ** 2 + v2 ** 2 + 2 * v1 * v2 * Math.cos(angleRad)
+  )
 
   const inclineAngle = randomInt(18, 34)
   const length = randomInt(15, 41) / 10
@@ -48,7 +59,13 @@ export function createVariant(): MechanicsVariant {
   const skater2Expected = (m1 * ropeSpeed) / (m1 + m2)
 
   return {
-    relativeMotion: { v1, v2, angle, expected: round(relativeExpected) },
+    relativeMotion: {
+      v1,
+      v2,
+      angle,
+      expectedAcute: round(relativeExpectedAcute),
+      expectedObtuse: round(relativeExpectedObtuse),
+    },
     incline: { length, time, angle: inclineAngle, expected: round(friction) },
     skaters: {
       m1,
@@ -80,14 +97,17 @@ export function publicTasks(variant: MechanicsVariant): PublicTask[] {
       id: 'relativeMotion',
       order: 1,
       title: 'Относительное движение',
-      text: `Две прямые дороги пересекаются под углом ${a.angle}°. От перекрёстка одновременно удаляются два автомобиля: первый со скоростью ${a.v1} км/ч, второй — ${a.v2} км/ч. Определите скорость, с которой один автомобиль удаляется от другого.`,
-      fields: [{ id: 'speed', label: 'Скорость удаления', unit: 'км/ч', step: '0.1' }],
+      text: `Две прямые дороги пересекаются под углом ${a.angle}°. От перекрёстка одновременно удаляются два автомобиля: первый со скоростью ${a.v1} км/ч, второй — ${a.v2} км/ч. Найдите скорости удаления автомобилей для двух возможных направлений движения: когда угол между их скоростями равен ${a.angle}° и когда он равен ${180 - a.angle}°.`,
+      fields: [
+        { id: 'speedAcute', label: `Скорость при угле ${a.angle}°`, unit: 'км/ч', step: '0.1' },
+        { id: 'speedObtuse', label: `Скорость при угле ${180 - a.angle}°`, unit: 'км/ч', step: '0.1' },
+      ],
     },
     {
       id: 'incline',
       order: 2,
       title: 'Наклонная плоскость',
-      text: `Тело скользит из состояния покоя по наклонной плоскости с углом наклона ${b.angle}°. Длина пути равна ${b.length.toFixed(1)} м, время движения — ${b.time.toFixed(2)} с. Найдите коэффициент трения. Примите g = 9,81 м/с².`,
+      text: `Тело скользит из состояния покоя по наклонной плоскости с углом наклона ${b.angle}°. Длина пути равна ${b.length.toFixed(1)} м, время движения — ${b.time.toFixed(2)} с. Найдите коэффициент трения. Примите g = 9,81 м/с². Для расчётов: sin ${b.angle}° ≈ ${Math.sin((b.angle * Math.PI) / 180).toFixed(4).replace('.', ',')}; cos ${b.angle}° ≈ ${Math.cos((b.angle * Math.PI) / 180).toFixed(4).replace('.', ',')}.`,
       fields: [{ id: 'friction', label: 'Коэффициент трения', unit: '', step: '0.01' }],
     },
     {
@@ -118,12 +138,19 @@ function closeEnough(actual: number | null, expected: number, absolute: number, 
 }
 
 export function gradeVariant(variant: MechanicsVariant, answers: SubmittedAnswers) {
-  const task1 = closeEnough(
-    numeric(answers.relativeMotion?.speed),
-    variant.relativeMotion.expected,
-    0.2,
-    0.01
-  )
+  const task1 =
+    closeEnough(
+      numeric(answers.relativeMotion?.speedAcute),
+      variant.relativeMotion.expectedAcute,
+      0.2,
+      0.01
+    ) &&
+    closeEnough(
+      numeric(answers.relativeMotion?.speedObtuse),
+      variant.relativeMotion.expectedObtuse,
+      0.2,
+      0.01
+    )
   const task2 = closeEnough(
     numeric(answers.incline?.friction),
     variant.incline.expected,
