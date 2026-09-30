@@ -178,6 +178,34 @@ export const ktpLessons = pgTable(
   })
 )
 
+export const assessmentAttempts = pgTable(
+  'assessment_attempts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    assessmentKey: varchar('assessment_key', { length: 64 }).notNull(),
+    clerkUserId: varchar('clerk_user_id', { length: 64 }).notNull(),
+    variantCode: varchar('variant_code', { length: 16 }).notNull(),
+    variantFingerprint: varchar('variant_fingerprint', { length: 255 }).notNull(),
+    variantData: jsonb('variant_data').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }),
+    answers: jsonb('answers'),
+    score: smallint('score'),
+    violations: jsonb('violations'),
+  },
+  (t) => ({
+    userAssessmentIdx: uniqueIndex('assessment_attempts_user_key_idx').on(
+      t.clerkUserId,
+      t.assessmentKey
+    ),
+    variantCodeIdx: uniqueIndex('assessment_attempts_variant_code_idx').on(t.variantCode),
+    fingerprintIdx: uniqueIndex('assessment_attempts_fingerprint_idx').on(
+      t.variantFingerprint
+    ),
+  })
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Comment = typeof comments.$inferSelect
@@ -187,3 +215,4 @@ export type Ktp = typeof ktp.$inferSelect
 export type NewKtp = typeof ktp.$inferInsert
 export type KtpLesson = typeof ktpLessons.$inferSelect
 export type NewKtpLesson = typeof ktpLessons.$inferInsert
+export type AssessmentAttempt = typeof assessmentAttempts.$inferSelect
