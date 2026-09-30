@@ -1,4 +1,4 @@
-import './env'
+import './env.js'
 import { createClerkClient, verifyToken } from '@clerk/backend'
 import type { VercelRequest } from '@vercel/node'
 

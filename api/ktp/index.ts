@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { desc } from 'drizzle-orm'
-import { db, schema } from '../_lib/db'
-import { getClerkUser, isAdmin } from '../_lib/auth'
+import { db, schema } from '../_lib/db.js'
+import { getClerkUser, isAdmin } from '../_lib/auth.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { eq, asc } from 'drizzle-orm'
-import { db, schema } from '../_lib/db'
-import { getClerkUser, isAdmin } from '../_lib/auth'
+import { db, schema } from '../_lib/db.js'
+import { getClerkUser, isAdmin } from '../_lib/auth.js'
 
 type LessonInput = {
   orderNo?: number

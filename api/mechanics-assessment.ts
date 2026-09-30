@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq } from 'drizzle-orm'
-import { db, schema } from './_lib/db'
-import { getClerkUser } from './_lib/auth'
+import { db, schema } from './_lib/db.js'
+import { getClerkUser } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
   ASSESSMENT_KEY,
@@ -11,7 +11,7 @@ import {
   publicTasks,
   variantFingerprint,
   type MechanicsVariant,
-} from './_lib/mechanicsAssessment'
+} from './_lib/mechanicsAssessment.js'
 
 type Answers = Record<string, Record<string, string | number>>
 type Violation = { type: string; at: string }

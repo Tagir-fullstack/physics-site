@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import busboy from 'busboy'
 import { randomUUID } from 'node:crypto'
-import { db, schema } from '../_lib/db'
-import { requireAdmin } from '../_lib/auth'
-import { putObject } from '../_lib/r2'
-import { parseKtpDocx } from '../_lib/ktpParser'
+import { db, schema } from '../_lib/db.js'
+import { requireAdmin } from '../_lib/auth.js'
+import { putObject } from '../_lib/r2.js'
+import { parseKtpDocx } from '../_lib/ktpParser.js'
 
 export const config = {
   api: {
