@@ -28,7 +28,18 @@ const allowedEvents = new Set([
   'navigation-attempt',
 ])
 
-function bodyOf(req: VercelRequest): Record<string, unknown> {
+function readRawBody(req: VercelRequest): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+    req.on('data', (chunk: Buffer | string) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    })
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    req.on('error', reject)
+  })
+}
+
+async function bodyOf(req: VercelRequest): Promise<Record<string, unknown>> {
   if (req.body && typeof req.body === 'object') return req.body as Record<string, unknown>
   if (typeof req.body === 'string') {
     try {
@@ -37,7 +48,13 @@ function bodyOf(req: VercelRequest): Record<string, unknown> {
       return {}
     }
   }
-  return {}
+  const raw = await readRawBody(req)
+  if (!raw.trim()) return {}
+  try {
+    return JSON.parse(raw) as Record<string, unknown>
+  } catch {
+    return {}
+  }
 }
 
 async function findAttempt(userId: string) {
@@ -126,7 +143,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  const body = bodyOf(req)
+  const body = await bodyOf(req)
 
   if (body.action === 'start') {
     const attempt = await startAttempt(user.userId)
