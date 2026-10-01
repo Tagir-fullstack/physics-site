@@ -39,11 +39,141 @@ type SubmittedResponse = {
 };
 type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse;
 
+async function readAssessmentResponse(response: Response): Promise<AssessmentResponse> {
+  const text = await response.text();
+  let payload: (AssessmentResponse & { error?: string }) | null = null;
+  if (text.trim()) {
+    try {
+      payload = JSON.parse(text) as AssessmentResponse & { error?: string };
+    } catch {
+      throw new Error(`Сервер вернул некорректный ответ (HTTP ${response.status}). Обновите страницу.`);
+    }
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error || `Сервис контрольного среза временно недоступен (HTTP ${response.status}).`);
+  }
+  if (!payload) {
+    throw new Error(`Сервер не вернул данные (HTTP ${response.status}). Обновите страницу.`);
+  }
+  return payload;
+}
+
 const formatTime = (seconds: number) => {
   const safe = Math.max(0, seconds);
   const minutes = Math.floor(safe / 60);
   return `${String(minutes).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
 };
+
+type CalculatorOperation = '+' | '−' | '×' | '÷' | null;
+
+function AssessmentCalculator() {
+  const [open, setOpen] = useState(false);
+  const [display, setDisplay] = useState('0');
+  const [stored, setStored] = useState<number | null>(null);
+  const [operation, setOperation] = useState<CalculatorOperation>(null);
+  const [replaceDisplay, setReplaceDisplay] = useState(false);
+
+  const value = () => Number(display.replace(',', '.')) || 0;
+  const show = (next: number) => {
+    const safe = Number.isFinite(next) ? Number(next.toPrecision(12)) : 0;
+    setDisplay(String(safe).replace('.', ','));
+  };
+  const apply = (left: number, right: number, op: CalculatorOperation) => {
+    if (op === '+') return left + right;
+    if (op === '−') return left - right;
+    if (op === '×') return left * right;
+    if (op === '÷') return right === 0 ? 0 : left / right;
+    return right;
+  };
+  const digit = (symbol: string) => {
+    if (replaceDisplay || display === '0') {
+      setDisplay(symbol);
+      setReplaceDisplay(false);
+    } else if (display.length < 16) {
+      setDisplay(display + symbol);
+    }
+  };
+  const decimal = () => {
+    if (replaceDisplay) {
+      setDisplay('0,');
+      setReplaceDisplay(false);
+    } else if (!display.includes(',')) {
+      setDisplay(`${display},`);
+    }
+  };
+  const chooseOperation = (nextOperation: Exclude<CalculatorOperation, null>) => {
+    const current = value();
+    if (stored !== null && operation && !replaceDisplay) {
+      const result = apply(stored, current, operation);
+      show(result);
+      setStored(result);
+    } else {
+      setStored(current);
+    }
+    setOperation(nextOperation);
+    setReplaceDisplay(true);
+  };
+  const equals = () => {
+    if (stored === null || !operation) return;
+    show(apply(stored, value(), operation));
+    setStored(null);
+    setOperation(null);
+    setReplaceDisplay(true);
+  };
+  const unary = (kind: 'sqrt' | 'square' | 'sin' | 'cos') => {
+    const current = value();
+    if (kind === 'sqrt') show(Math.sqrt(Math.max(0, current)));
+    if (kind === 'square') show(current ** 2);
+    if (kind === 'sin') show(Math.sin((current * Math.PI) / 180));
+    if (kind === 'cos') show(Math.cos((current * Math.PI) / 180));
+    setReplaceDisplay(true);
+  };
+  const clear = () => {
+    setDisplay('0');
+    setStored(null);
+    setOperation(null);
+    setReplaceDisplay(false);
+  };
+
+  return (
+    <div className={`assessment-calculator${open ? ' open' : ''}`}>
+      <button
+        className="assessment-calculator-toggle"
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+      >
+        {open ? 'Закрыть' : 'Калькулятор'}
+      </button>
+      {open && (
+        <div className="assessment-calculator-panel">
+          <div className="assessment-calculator-title">
+            <span>Калькулятор</span><small>sin и cos — в градусах</small>
+          </div>
+          <output>{display}</output>
+          <div className="assessment-calculator-keys">
+            <button type="button" onClick={clear}>C</button>
+            <button type="button" onClick={() => setDisplay((current) => current.length > 1 ? current.slice(0, -1) : '0')}>⌫</button>
+            <button type="button" onClick={() => unary('sqrt')}>√</button>
+            <button type="button" className="operator" onClick={() => chooseOperation('÷')}>÷</button>
+            <button type="button" onClick={() => unary('sin')}>sin</button>
+            <button type="button" onClick={() => unary('cos')}>cos</button>
+            <button type="button" onClick={() => unary('square')}>x²</button>
+            <button type="button" className="operator" onClick={() => chooseOperation('×')}>×</button>
+            {[7, 8, 9].map((number) => <button type="button" key={number} onClick={() => digit(String(number))}>{number}</button>)}
+            <button type="button" className="operator" onClick={() => chooseOperation('−')}>−</button>
+            {[4, 5, 6].map((number) => <button type="button" key={number} onClick={() => digit(String(number))}>{number}</button>)}
+            <button type="button" className="operator" onClick={() => chooseOperation('+')}>+</button>
+            {[1, 2, 3].map((number) => <button type="button" key={number} onClick={() => digit(String(number))}>{number}</button>)}
+            <button type="button" className="equals" onClick={equals}>=</button>
+            <button type="button" className="zero" onClick={() => digit('0')}>0</button>
+            <button type="button" onClick={decimal}>,</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MechanicsAssessment() {
   const { user, isLoading: authLoading } = useAuth();
@@ -81,8 +211,7 @@ export default function MechanicsAssessment() {
     setLoading(true);
     authFetch('/api/mechanics-assessment')
       .then(async (response) => {
-        const json = await response.json();
-        if (!response.ok) throw new Error(json.error || 'Не удалось загрузить срез.');
+        const json = await readAssessmentResponse(response);
         if (!cancelled) {
           setData(json);
           if (json.status === 'active') setViolations(json.violationsCount || 0);
@@ -117,10 +246,9 @@ export default function MechanicsAssessment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'start' }),
       });
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || 'Не удалось начать срез.');
+      const json = await readAssessmentResponse(response);
       setData(json);
-      setViolations(json.violationsCount || 0);
+      setViolations('violationsCount' in json ? json.violationsCount : 0);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось начать срез.');
       if (document.fullscreenElement) void document.exitFullscreen();
@@ -158,8 +286,7 @@ export default function MechanicsAssessment() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'submit', answers: answersRef.current }),
         });
-        const json = await response.json();
-        if (!response.ok) throw new Error(json.error || 'Не удалось отправить ответы.');
+        const json = await readAssessmentResponse(response);
         setData(json);
         setConfirmSubmit(false);
         if (document.fullscreenElement) await document.exitFullscreen();
@@ -381,6 +508,8 @@ export default function MechanicsAssessment() {
         <div><span>Проверьте ответы</span><small>После отправки изменить их нельзя.</small></div>
         <button className="assessment-primary" onClick={() => setConfirmSubmit(true)} disabled={submitting}>Завершить работу</button>
       </div>
+
+      <AssessmentCalculator />
 
       {confirmSubmit && (
         <div className="assessment-modal" role="dialog" aria-modal="true" aria-labelledby="submit-title">

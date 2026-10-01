@@ -22,7 +22,9 @@ function vercelApiDevPlugin(): Plugin {
         let modulePath: string | null = null
         const query: Record<string, string> = {}
 
-        if (pathname === '/api/ktp') {
+        if (pathname === '/api/mechanics-assessment') {
+          modulePath = '/api/mechanics-assessment.ts'
+        } else if (pathname === '/api/ktp') {
           modulePath = '/api/ktp/index.ts'
         } else if (pathname === '/api/ktp/upload') {
           modulePath = '/api/ktp/upload.ts'

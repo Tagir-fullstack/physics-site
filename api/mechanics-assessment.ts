@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq } from 'drizzle-orm'
-import { db, schema } from './_lib/db'
-import { getClerkUser } from './_lib/auth'
+import { db, schema } from './_lib/db.js'
+import { getClerkUser } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
   ASSESSMENT_KEY,
@@ -11,7 +11,7 @@ import {
   publicTasks,
   variantFingerprint,
   type MechanicsVariant,
-} from './_lib/mechanicsAssessment'
+} from './_lib/mechanicsAssessment.js'
 
 type Answers = Record<string, Record<string, string | number>>
 type Violation = { type: string; at: string }
@@ -28,7 +28,18 @@ const allowedEvents = new Set([
   'navigation-attempt',
 ])
 
-function bodyOf(req: VercelRequest): Record<string, unknown> {
+function readRawBody(req: VercelRequest): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+    req.on('data', (chunk: Buffer | string) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    })
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    req.on('error', reject)
+  })
+}
+
+async function bodyOf(req: VercelRequest): Promise<Record<string, unknown>> {
   if (req.body && typeof req.body === 'object') return req.body as Record<string, unknown>
   if (typeof req.body === 'string') {
     try {
@@ -37,7 +48,13 @@ function bodyOf(req: VercelRequest): Record<string, unknown> {
       return {}
     }
   }
-  return {}
+  const raw = await readRawBody(req)
+  if (!raw.trim()) return {}
+  try {
+    return JSON.parse(raw) as Record<string, unknown>
+  } catch {
+    return {}
+  }
 }
 
 async function findAttempt(userId: string) {
@@ -115,7 +132,7 @@ async function startAttempt(userId: string) {
   throw new Error('Could not create a unique assessment variant')
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+async function handleRequest(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store, max-age=0')
   const user = await getClerkUser(req)
   if (!user) return res.status(401).json({ error: 'Войдите в аккаунт, чтобы пройти срез.' })
@@ -126,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  const body = bodyOf(req)
+  const body = await bodyOf(req)
 
   if (body.action === 'start') {
     const attempt = await startAttempt(user.userId)
@@ -167,4 +184,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   return res.status(400).json({ error: 'Unknown action' })
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    return await handleRequest(req, res)
+  } catch (error) {
+    console.error('Mechanics assessment API error:', error)
+    if (res.headersSent) return
+    return res.status(500).json({
+      error: 'Сервис контрольного среза временно недоступен. Попробуйте обновить страницу.',
+    })
+  }
 }
