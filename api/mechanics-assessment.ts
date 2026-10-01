@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq } from 'drizzle-orm'
-import { db, schema } from './_lib/db.js'
+import { db, hasDatabaseConfig, schema } from './_lib/db.js'
 import { getClerkUser } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
@@ -167,6 +167,11 @@ async function startAttempt(userId: string, student?: StudentIdentity) {
 
 async function handleRequest(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store, max-age=0')
+  if (!hasDatabaseConfig) {
+    return res.status(503).json({
+      error: 'База данных контрольного среза не подключена в Vercel (DATABASE_URL).',
+    })
+  }
   const user = await getClerkUser(req)
 
   if (req.method === 'GET') {
