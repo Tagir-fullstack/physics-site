@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from './_lib/db.js'
@@ -11,10 +12,41 @@ import {
   publicTasks,
   variantFingerprint,
   type MechanicsVariant,
+  type StudentIdentity,
 } from './_lib/mechanicsAssessment.js'
 
 type Answers = Record<string, Record<string, string | number>>
 type Violation = { type: string; at: string }
+
+const namePattern = /^[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі'’ -]+$/u
+
+function normalizePart(value: unknown, maxLength: number) {
+  if (typeof value !== 'string') return ''
+  return value.trim().replace(/\s+/g, ' ').slice(0, maxLength)
+}
+
+function studentFrom(value: unknown): StudentIdentity | null {
+  if (!value || typeof value !== 'object') return null
+  const raw = value as Record<string, unknown>
+  const lastName = normalizePart(raw.lastName, 60)
+  const firstName = normalizePart(raw.firstName, 60)
+  const group = normalizePart(raw.group, 32)
+  if (
+    lastName.length < 2 ||
+    firstName.length < 2 ||
+    group.length < 1 ||
+    !namePattern.test(lastName) ||
+    !namePattern.test(firstName)
+  ) return null
+  return { lastName, firstName, group }
+}
+
+function studentUserId(student: StudentIdentity) {
+  const normalized = [student.lastName, student.firstName, student.group]
+    .map((part) => part.toLocaleLowerCase('ru-RU'))
+    .join('|')
+  return `guest_${createHash('sha256').update(normalized).digest('hex').slice(0, 56)}`
+}
 
 const allowedEvents = new Set([
   'tab-hidden',
@@ -79,6 +111,7 @@ function responseFor(attempt: NonNullable<Awaited<ReturnType<typeof findAttempt>
     startedAt: attempt.startedAt.toISOString(),
     expiresAt: attempt.expiresAt.toISOString(),
     serverNow: new Date().toISOString(),
+    student: variant.student,
   }
   if (attempt.submittedAt) {
     const result = gradeVariant(variant, (attempt.answers ?? {}) as Answers)
@@ -103,12 +136,12 @@ function responseFor(attempt: NonNullable<Awaited<ReturnType<typeof findAttempt>
   }
 }
 
-async function startAttempt(userId: string) {
+async function startAttempt(userId: string, student?: StudentIdentity) {
   const existing = await findAttempt(userId)
   if (existing) return existing
 
   for (let tries = 0; tries < 8; tries += 1) {
-    const variant = createVariant()
+    const variant = { ...createVariant(), student }
     const startedAt = new Date()
     const expiresAt = new Date(startedAt.getTime() + ASSESSMENT_DURATION_MS)
     const [created] = await db
@@ -135,22 +168,36 @@ async function startAttempt(userId: string) {
 async function handleRequest(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store, max-age=0')
   const user = await getClerkUser(req)
-  if (!user) return res.status(401).json({ error: 'Войдите в аккаунт, чтобы пройти срез.' })
 
   if (req.method === 'GET') {
+    if (!user) return res.status(200).json({ status: 'ready' })
     const attempt = await findAttempt(user.userId)
     return res.status(200).json(attempt ? responseFor(attempt) : { status: 'ready' })
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   const body = await bodyOf(req)
+  const student = studentFrom(body.student)
+  const participantId = student ? studentUserId(student) : user?.userId
+
+  if (body.action === 'resume') {
+    if (!student || !participantId) {
+      return res.status(400).json({ error: 'Введите фамилию, имя и группу.' })
+    }
+    const attempt = await findAttempt(participantId)
+    return res.status(200).json(attempt ? responseFor(attempt) : { status: 'ready' })
+  }
 
   if (body.action === 'start') {
-    const attempt = await startAttempt(user.userId)
+    if (!student || !participantId) {
+      return res.status(400).json({ error: 'Проверьте фамилию, имя и группу.' })
+    }
+    const attempt = await startAttempt(participantId, student)
     return res.status(200).json(responseFor(attempt))
   }
 
-  const attempt = await findAttempt(user.userId)
+  if (!participantId) return res.status(401).json({ error: 'Укажите данные студента заново.' })
+  const attempt = await findAttempt(participantId)
   if (!attempt) return res.status(409).json({ error: 'Сначала начните контрольный срез.' })
   if (attempt.submittedAt) return res.status(200).json(responseFor(attempt))
 

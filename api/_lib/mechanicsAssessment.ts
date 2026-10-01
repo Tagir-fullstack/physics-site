@@ -3,7 +3,14 @@ import { randomBytes, randomInt } from 'node:crypto'
 export const ASSESSMENT_KEY = 'mechanics-cut-v2'
 export const ASSESSMENT_DURATION_MS = 30 * 60 * 1000
 
+export type StudentIdentity = {
+  lastName: string
+  firstName: string
+  group: string
+}
+
 export type MechanicsVariant = {
+  student?: StudentIdentity
   relativeMotion: {
     v1: number
     v2: number

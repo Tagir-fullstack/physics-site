@@ -1,4 +1,3 @@
-import { SignInButton } from '@clerk/clerk-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useQuizMode } from '../context/QuizModeContext';
@@ -14,6 +13,7 @@ type Task = {
   fields: Field[];
 };
 type Answers = Record<string, Record<string, string>>;
+type StudentIdentity = { lastName: string; firstName: string; group: string };
 type ReadyResponse = { status: 'ready' };
 type ActiveResponse = {
   status: 'active';
@@ -24,6 +24,7 @@ type ActiveResponse = {
   serverNow: string;
   tasks: Task[];
   violationsCount: number;
+  student?: StudentIdentity;
 };
 type SubmittedResponse = {
   status: 'submitted';
@@ -36,8 +37,26 @@ type SubmittedResponse = {
   violationsCount: number;
   sources: string[];
   late?: boolean;
+  student?: StudentIdentity;
 };
 type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse;
+
+const STUDENT_STORAGE_KEY = 'mechanics-assessment-student';
+const emptyStudent: StudentIdentity = { lastName: '', firstName: '', group: '' };
+
+function savedStudent(): StudentIdentity {
+  try {
+    const value = JSON.parse(localStorage.getItem(STUDENT_STORAGE_KEY) || 'null') as Partial<StudentIdentity> | null;
+    return value && typeof value.lastName === 'string' && typeof value.firstName === 'string' && typeof value.group === 'string'
+      ? { lastName: value.lastName, firstName: value.firstName, group: value.group }
+      : emptyStudent;
+  } catch {
+    return emptyStudent;
+  }
+}
+
+const completeStudent = (student: StudentIdentity) =>
+  student.lastName.trim().length >= 2 && student.firstName.trim().length >= 2 && student.group.trim().length >= 1;
 
 async function readAssessmentResponse(response: Response): Promise<AssessmentResponse> {
   const text = await response.text();
@@ -180,6 +199,8 @@ export default function MechanicsAssessment() {
   const { authFetch } = useApiClient();
   const { setQuizActive } = useQuizMode();
   const [data, setData] = useState<AssessmentResponse | null>(null);
+  const [student, setStudent] = useState<StudentIdentity>(savedStudent);
+  const studentRef = useRef<StudentIdentity>(student);
   const [answers, setAnswers] = useState<Answers>({});
   const answersRef = useRef<Answers>({});
   const [remaining, setRemaining] = useState(30 * 60);
@@ -201,19 +222,31 @@ export default function MechanicsAssessment() {
   }, [answers]);
 
   useEffect(() => {
+    studentRef.current = student;
+  }, [student]);
+
+  useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      setData(null);
-      return;
-    }
     let cancelled = false;
     setLoading(true);
-    authFetch('/api/mechanics-assessment')
+    const stored = savedStudent();
+    const request = completeStudent(stored)
+      ? authFetch('/api/mechanics-assessment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'resume', student: stored }),
+        })
+      : authFetch('/api/mechanics-assessment');
+    request
       .then(async (response) => {
         const json = await readAssessmentResponse(response);
         if (!cancelled) {
           setData(json);
+          if (json.status !== 'ready' && json.student) {
+            setStudent(json.student);
+            studentRef.current = json.student;
+            localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(json.student));
+          }
           if (json.status === 'active') setViolations(json.violationsCount || 0);
         }
       })
@@ -244,10 +277,11 @@ export default function MechanicsAssessment() {
       const response = await authFetch('/api/mechanics-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start' }),
+        body: JSON.stringify({ action: 'start', student }),
       });
       const json = await readAssessmentResponse(response);
       setData(json);
+      localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(student));
       setViolations('violationsCount' in json ? json.violationsCount : 0);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось начать срез.');
@@ -267,7 +301,7 @@ export default function MechanicsAssessment() {
       void authFetch('/api/mechanics-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'event', eventType }),
+        body: JSON.stringify({ action: 'event', eventType, student: studentRef.current }),
         keepalive: true,
       });
     },
@@ -284,7 +318,7 @@ export default function MechanicsAssessment() {
         const response = await authFetch('/api/mechanics-assessment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'submit', answers: answersRef.current }),
+          body: JSON.stringify({ action: 'submit', answers: answersRef.current, student: studentRef.current }),
         });
         const json = await readAssessmentResponse(response);
         setData(json);
@@ -389,19 +423,6 @@ export default function MechanicsAssessment() {
     return <main className="assessment-shell"><div className="assessment-loading">Подготавливаем контрольный срез…</div></main>;
   }
 
-  if (!user) {
-    return (
-      <main className="assessment-shell">
-        <section className="assessment-intro assessment-intro--compact">
-          <span className="assessment-kicker">Контрольный срез по механике</span>
-          <h1>Сначала войдите в аккаунт</h1>
-          <p>Вход нужен, чтобы закрепить за вами один индивидуальный вариант и сохранить результат.</p>
-          <SignInButton mode="modal"><button className="assessment-primary">Войти и продолжить</button></SignInButton>
-        </section>
-      </main>
-    );
-  }
-
   if (submitted) {
     return (
       <main className="assessment-shell">
@@ -411,6 +432,11 @@ export default function MechanicsAssessment() {
           <p className="assessment-result-lead">
             {submitted.late ? 'Время истекло до отправки: результат не засчитан.' : 'Ответы проверены и результат сохранён.'}
           </p>
+          {submitted.student && (
+            <p className="assessment-student-summary">
+              {submitted.student.lastName} {submitted.student.firstName} · группа {submitted.student.group}
+            </p>
+          )}
           <div className="assessment-result-grid">
             {submitted.correctness.map((correct, index) => (
               <div className={correct ? 'result-task correct' : 'result-task incorrect'} key={index}>
@@ -434,7 +460,39 @@ export default function MechanicsAssessment() {
         <section className="assessment-intro">
           <span className="assessment-kicker">Контрольный срез по механике</span>
           <h1>Три задачи. Один индивидуальный вариант.</h1>
-          <p className="assessment-intro-lead">Открытые числовые ответы, 30 минут, задачи расположены по возрастанию. Повторный вариант после запуска не выдаётся.</p>
+          <p className="assessment-intro-lead">Регистрация не требуется. Укажите свои данные, получите индивидуальный вариант и решите три задачи за 30 минут.</p>
+          <div className="assessment-student-form">
+            <label>
+              <span>Фамилия</span>
+              <input
+                autoComplete="family-name"
+                maxLength={60}
+                value={student.lastName}
+                onChange={(event) => setStudent((current) => ({ ...current, lastName: event.target.value }))}
+                placeholder="Иванов"
+              />
+            </label>
+            <label>
+              <span>Имя</span>
+              <input
+                autoComplete="given-name"
+                maxLength={60}
+                value={student.firstName}
+                onChange={(event) => setStudent((current) => ({ ...current, firstName: event.target.value }))}
+                placeholder="Иван"
+              />
+            </label>
+            <label>
+              <span>Группа</span>
+              <input
+                autoComplete="organization-title"
+                maxLength={32}
+                value={student.group}
+                onChange={(event) => setStudent((current) => ({ ...current, group: event.target.value }))}
+                placeholder="ФИЗ-101"
+              />
+            </label>
+          </div>
           <div className="assessment-rules">
             <div><strong>01</strong><span>Подготовьте бумагу, ручку и калькулятор.</span></div>
             <div><strong>02</strong><span>Не покидайте вкладку и полноэкранный режим.</span></div>
@@ -442,7 +500,7 @@ export default function MechanicsAssessment() {
             <div><strong>04</strong><span>Введите только числа, единицы уже указаны рядом.</span></div>
           </div>
           {error && <p className="assessment-error">{error}</p>}
-          <button className="assessment-primary" onClick={start}>Начать срез</button>
+          <button className="assessment-primary" onClick={start} disabled={!completeStudent(student)}>Начать срез</button>
           <small>Нажимая кнопку, вы подтверждаете самостоятельное выполнение.</small>
         </section>
       </main>
@@ -452,7 +510,11 @@ export default function MechanicsAssessment() {
   return (
     <main className="assessment-shell assessment-shell--active">
       <div className="assessment-watermark" aria-hidden="true">
-        {Array.from({ length: 18 }, (_, index) => <span key={index}>{active.variantCode} · {user.email}</span>)}
+        {Array.from({ length: 18 }, (_, index) => (
+          <span key={index}>
+            {active.variantCode} · {active.student ? `${active.student.lastName} ${active.student.firstName} · ${active.student.group}` : user?.email}
+          </span>
+        ))}
       </div>
       <section className="assessment-topbar">
         <div><span>Вариант</span><strong>{active.variantCode}</strong></div>
