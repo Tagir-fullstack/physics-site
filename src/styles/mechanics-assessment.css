@@ -109,6 +109,32 @@
   color: #777;
 }
 
+.assessment-language {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid #3d3d3d;
+  border-radius: 999px;
+  background: #111;
+}
+
+.assessment-language button {
+  padding: 0.42rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.assessment-language button.active {
+  background: #4a90e2;
+  color: #fff;
+}
+
 .assessment-student-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -211,6 +237,12 @@
   display: flex;
   flex-direction: column;
   min-width: 90px;
+}
+
+.assessment-topbar > .assessment-language {
+  flex-direction: row;
+  min-width: auto;
+  padding: 0.2rem;
 }
 
 .assessment-topbar span {
@@ -629,6 +661,21 @@
   color: #171717 !important;
 }
 
+.a11y-light-theme .assessment-language {
+  border-color: #aeb3ba !important;
+  background: #f1f2f4 !important;
+}
+
+.a11y-light-theme .assessment-language button {
+  background: transparent !important;
+  color: #51565d !important;
+}
+
+.a11y-light-theme .assessment-language button.active {
+  background: #367fc9 !important;
+  color: #fff !important;
+}
+
 .a11y-light-theme .assessment-topbar {
   border-color: #92979e !important;
   background: rgba(255, 255, 255, 0.96) !important;
@@ -825,6 +872,15 @@
   .assessment-topbar span { font-size: 0.65rem; }
   .assessment-topbar strong { font-size: 0.88rem; }
   .assessment-topbar button { grid-column: 1 / -1; padding: 0.4rem; }
+
+  .assessment-topbar > .assessment-language {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .assessment-topbar > .assessment-language button {
+    width: 50%;
+  }
 
   .assessment-heading {
     margin-top: 2rem;

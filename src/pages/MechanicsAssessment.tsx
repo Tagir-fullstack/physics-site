@@ -14,6 +14,7 @@ type Task = {
 };
 type Answers = Record<string, Record<string, string>>;
 type StudentIdentity = { lastName: string; firstName: string; group: string };
+type AssessmentLanguage = 'ru' | 'kk';
 type ReadyResponse = { status: 'ready' };
 type ActiveResponse = {
   status: 'active';
@@ -42,7 +43,59 @@ type SubmittedResponse = {
 type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse;
 
 const STUDENT_STORAGE_KEY = 'mechanics-assessment-student';
+const LANGUAGE_STORAGE_KEY = 'mechanics-assessment-language';
 const emptyStudent: StudentIdentity = { lastName: '', firstName: '', group: '' };
+
+const COPY = {
+  ru: {
+    loading: 'Подготавливаем контрольный срез…', completed: 'Работа завершена', scoreJoin: 'из',
+    late: 'Время истекло до отправки: результат не засчитан.', saved: 'Ответы проверены и результат сохранён.',
+    group: 'группа', task: 'Задача', correct: 'Верно', incorrect: 'Неверно', variant: 'Вариант',
+    eventsRecorded: 'Зафиксировано событий', sources: 'Источники заданий после сдачи',
+    kicker: 'Контрольный срез по механике', introTitle: 'Три задачи. Один индивидуальный вариант.',
+    introLead: 'Регистрация не требуется. Укажите свои данные, получите индивидуальный вариант и решите три задачи за 30 минут.',
+    lastName: 'Фамилия', firstName: 'Имя', groupLabel: 'Группа', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'ФИЗ-101',
+    rules: ['Подготовьте бумагу, ручку и калькулятор.', 'Не покидайте вкладку и полноэкранный режим.', 'Копирование, вставка и печать блокируются и фиксируются.', 'Введите только числа, единицы уже указаны рядом.'],
+    start: 'Начать срез', consent: 'Нажимая кнопку, вы подтверждаете самостоятельное выполнение.',
+    remaining: 'Осталось', filled: 'Заполнено', events: 'События', fullscreen: 'На весь экран',
+    heading: 'Решите задачи и запишите числовые ответы', headingLead: 'Промежуточные вычисления выполняйте на бумаге. Десятичную дробь можно вводить через точку или запятую.',
+    check: 'Проверьте ответы', cannotChange: 'После отправки изменить их нельзя.', finish: 'Завершить работу',
+    confirmation: 'Подтверждение', sendQuestion: 'Отправить ответы?', allFilled: 'Все поля заполнены.',
+    filledFields: (count: number, total: number) => `Заполнено ${count} из ${total} полей.`,
+    cannotReturn: 'После отправки вернуться к работе нельзя.', continue: 'Продолжить решение', sending: 'Отправляем…', send: 'Отправить',
+    calculator: 'Калькулятор', close: 'Закрыть', trigNote: 'sin и cos — в градусах',
+    startError: 'Не удалось начать срез.', submitError: 'Не удалось отправить ответы.', fullscreenError: 'Полноэкранный режим не поддерживается этим браузером.',
+    invalidResponse: (status: number) => `Сервер вернул некорректный ответ (HTTP ${status}). Обновите страницу.`,
+    unavailable: (status: number) => `Сервис контрольного среза временно недоступен (HTTP ${status}).`,
+    emptyResponse: (status: number) => `Сервер не вернул данные (HTTP ${status}). Обновите страницу.`,
+  },
+  kk: {
+    loading: 'Бақылау жұмысы дайындалуда…', completed: 'Жұмыс аяқталды', scoreJoin: '/',
+    late: 'Жіберу уақыты өтіп кетті: нәтиже есептелмеді.', saved: 'Жауаптар тексеріліп, нәтиже сақталды.',
+    group: 'тобы', task: 'Есеп', correct: 'Дұрыс', incorrect: 'Қате', variant: 'Нұсқа',
+    eventsRecorded: 'Тіркелген оқиғалар', sources: 'Тапсырғаннан кейінгі есептердің дереккөздері',
+    kicker: 'Механика бойынша бақылау жұмысы', introTitle: 'Үш есеп. Бір жеке нұсқа.',
+    introLead: 'Тіркелу қажет емес. Деректеріңізді енгізіп, жеке нұсқаңызды алыңыз және үш есепті 30 минут ішінде шығарыңыз.',
+    lastName: 'Тегі', firstName: 'Аты', groupLabel: 'Тобы', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'ФИЗ-101',
+    rules: ['Қағаз, қалам және калькулятор дайындаңыз.', 'Қойындыдан және толық экран режимінен шықпаңыз.', 'Көшіру, қою және басып шығару бұғатталып, тіркеледі.', 'Тек сандарды енгізіңіз, өлшем бірліктері жанында көрсетілген.'],
+    start: 'Бақылауды бастау', consent: 'Түймені басу арқылы жұмысты өз бетіңізше орындайтыныңызды растайсыз.',
+    remaining: 'Қалды', filled: 'Толтырылды', events: 'Оқиғалар', fullscreen: 'Толық экран',
+    heading: 'Есептерді шығарып, сандық жауаптарды жазыңыз', headingLead: 'Аралық есептеулерді қағазда орындаңыз. Ондық бөлшекті нүкте немесе үтір арқылы енгізуге болады.',
+    check: 'Жауаптарды тексеріңіз', cannotChange: 'Жібергеннен кейін оларды өзгертуге болмайды.', finish: 'Жұмысты аяқтау',
+    confirmation: 'Растау', sendQuestion: 'Жауаптарды жіберу керек пе?', allFilled: 'Барлық өріс толтырылды.',
+    filledFields: (count: number, total: number) => `${total} өрістің ${count} толтырылды.`,
+    cannotReturn: 'Жібергеннен кейін жұмысқа қайта оралу мүмкін емес.', continue: 'Шешуді жалғастыру', sending: 'Жіберілуде…', send: 'Жіберу',
+    calculator: 'Калькулятор', close: 'Жабу', trigNote: 'sin және cos — градуспен',
+    startError: 'Бақылау жұмысын бастау мүмкін болмады.', submitError: 'Жауаптарды жіберу мүмкін болмады.', fullscreenError: 'Бұл браузер толық экран режимін қолдамайды.',
+    invalidResponse: (status: number) => `Сервер қате жауап қайтарды (HTTP ${status}). Бетті жаңартыңыз.`,
+    unavailable: (status: number) => `Бақылау жұмысының қызметі уақытша қолжетімсіз (HTTP ${status}).`,
+    emptyResponse: (status: number) => `Сервер дерек қайтармады (HTTP ${status}). Бетті жаңартыңыз.`,
+  },
+} as const;
+
+function savedLanguage(): AssessmentLanguage {
+  return localStorage.getItem(LANGUAGE_STORAGE_KEY) === 'kk' ? 'kk' : 'ru';
+}
 
 function savedStudent(): StudentIdentity {
   try {
@@ -58,21 +111,22 @@ function savedStudent(): StudentIdentity {
 const completeStudent = (student: StudentIdentity) =>
   student.lastName.trim().length >= 2 && student.firstName.trim().length >= 2 && student.group.trim().length >= 1;
 
-async function readAssessmentResponse(response: Response): Promise<AssessmentResponse> {
+async function readAssessmentResponse(response: Response, language: AssessmentLanguage): Promise<AssessmentResponse> {
+  const copy = COPY[language];
   const text = await response.text();
   let payload: (AssessmentResponse & { error?: string }) | null = null;
   if (text.trim()) {
     try {
       payload = JSON.parse(text) as AssessmentResponse & { error?: string };
     } catch {
-      throw new Error(`Сервер вернул некорректный ответ (HTTP ${response.status}). Обновите страницу.`);
+      throw new Error(copy.invalidResponse(response.status));
     }
   }
   if (!response.ok) {
-    throw new Error(payload?.error || `Сервис контрольного среза временно недоступен (HTTP ${response.status}).`);
+    throw new Error(payload?.error || copy.unavailable(response.status));
   }
   if (!payload) {
-    throw new Error(`Сервер не вернул данные (HTTP ${response.status}). Обновите страницу.`);
+    throw new Error(copy.emptyResponse(response.status));
   }
   return payload;
 }
@@ -85,7 +139,8 @@ const formatTime = (seconds: number) => {
 
 type CalculatorOperation = '+' | '−' | '×' | '÷' | null;
 
-function AssessmentCalculator() {
+function AssessmentCalculator({ language }: { language: AssessmentLanguage }) {
+  const copy = COPY[language];
   const [open, setOpen] = useState(false);
   const [display, setDisplay] = useState('0');
   const [stored, setStored] = useState<number | null>(null);
@@ -162,12 +217,12 @@ function AssessmentCalculator() {
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
       >
-        {open ? 'Закрыть' : 'Калькулятор'}
+        {open ? copy.close : copy.calculator}
       </button>
       {open && (
         <div className="assessment-calculator-panel">
           <div className="assessment-calculator-title">
-            <span>Калькулятор</span><small>sin и cos — в градусах</small>
+            <span>{copy.calculator}</span><small>{copy.trigNote}</small>
           </div>
           <output>{display}</output>
           <div className="assessment-calculator-keys">
@@ -194,10 +249,27 @@ function AssessmentCalculator() {
   );
 }
 
+function AssessmentLanguageSwitch({
+  language,
+  onChange,
+}: {
+  language: AssessmentLanguage;
+  onChange: (language: AssessmentLanguage) => void;
+}) {
+  return (
+    <div className="assessment-language" role="group" aria-label="Тіл / Язык">
+      <button type="button" className={language === 'ru' ? 'active' : ''} onClick={() => onChange('ru')}>Русский</button>
+      <button type="button" className={language === 'kk' ? 'active' : ''} onClick={() => onChange('kk')}>Қазақша</button>
+    </div>
+  );
+}
+
 export default function MechanicsAssessment() {
   const { user, isLoading: authLoading } = useAuth();
   const { authFetch } = useApiClient();
   const { setQuizActive } = useQuizMode();
+  const [language, setLanguage] = useState<AssessmentLanguage>(savedLanguage);
+  const copy = COPY[language];
   const [data, setData] = useState<AssessmentResponse | null>(null);
   const [student, setStudent] = useState<StudentIdentity>(savedStudent);
   const studentRef = useRef<StudentIdentity>(student);
@@ -217,6 +289,12 @@ export default function MechanicsAssessment() {
   const active = data?.status === 'active' ? data : null;
   const submitted = data?.status === 'submitted' ? data : null;
 
+  const changeLanguage = (nextLanguage: AssessmentLanguage) => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+    setLanguage(nextLanguage);
+    setError('');
+  };
+
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
@@ -234,12 +312,12 @@ export default function MechanicsAssessment() {
       ? authFetch('/api/mechanics-assessment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'resume', student: stored }),
+          body: JSON.stringify({ action: 'resume', student: stored, language }),
         })
-      : authFetch('/api/mechanics-assessment');
+      : authFetch(`/api/mechanics-assessment?lang=${language}`);
     request
       .then(async (response) => {
-        const json = await readAssessmentResponse(response);
+        const json = await readAssessmentResponse(response, language);
         if (!cancelled) {
           setData(json);
           if (json.status !== 'ready' && json.student) {
@@ -255,7 +333,7 @@ export default function MechanicsAssessment() {
     return () => {
       cancelled = true;
     };
-  }, [authFetch, authLoading, user]);
+  }, [authFetch, authLoading, user, language]);
 
   useEffect(() => {
     setQuizActive(Boolean(active));
@@ -277,14 +355,14 @@ export default function MechanicsAssessment() {
       const response = await authFetch('/api/mechanics-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', student }),
+        body: JSON.stringify({ action: 'start', student, language }),
       });
-      const json = await readAssessmentResponse(response);
+      const json = await readAssessmentResponse(response, language);
       setData(json);
       localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(student));
       setViolations('violationsCount' in json ? json.violationsCount : 0);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Не удалось начать срез.');
+      setError(reason instanceof Error ? reason.message : copy.startError);
       if (document.fullscreenElement) void document.exitFullscreen();
     } finally {
       setLoading(false);
@@ -301,11 +379,11 @@ export default function MechanicsAssessment() {
       void authFetch('/api/mechanics-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'event', eventType, student: studentRef.current }),
+        body: JSON.stringify({ action: 'event', eventType, student: studentRef.current, language }),
         keepalive: true,
       });
     },
-    [active, authFetch]
+    [active, authFetch, language]
   );
 
   const submit = useCallback(
@@ -318,20 +396,20 @@ export default function MechanicsAssessment() {
         const response = await authFetch('/api/mechanics-assessment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'submit', answers: answersRef.current, student: studentRef.current }),
+          body: JSON.stringify({ action: 'submit', answers: answersRef.current, student: studentRef.current, language }),
         });
-        const json = await readAssessmentResponse(response);
+        const json = await readAssessmentResponse(response, language);
         setData(json);
         setConfirmSubmit(false);
         if (document.fullscreenElement) await document.exitFullscreen();
       } catch (reason) {
         autoSubmitted.current = false;
-        setError(reason instanceof Error ? reason.message : 'Не удалось отправить ответы.');
+        setError(reason instanceof Error ? reason.message : copy.submitError);
       } finally {
         setSubmitting(false);
       }
     },
-    [active, authFetch, submitting]
+    [active, authFetch, submitting, language, copy.submitError]
   );
 
   useEffect(() => {
@@ -415,40 +493,41 @@ export default function MechanicsAssessment() {
       await document.documentElement.requestFullscreen();
       fullscreenWasUsed.current = true;
     } catch {
-      setError('Полноэкранный режим не поддерживается этим браузером.');
+      setError(copy.fullscreenError);
     }
   };
 
   if (loading || authLoading) {
-    return <main className="assessment-shell"><div className="assessment-loading">Подготавливаем контрольный срез…</div></main>;
+    return <main className="assessment-shell"><div className="assessment-loading">{copy.loading}</div></main>;
   }
 
   if (submitted) {
     return (
       <main className="assessment-shell">
         <section className="assessment-result">
-          <span className="assessment-kicker">Работа завершена</span>
-          <h1>{submitted.score} из {submitted.maxScore}</h1>
+          <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
+          <span className="assessment-kicker">{copy.completed}</span>
+          <h1>{submitted.score} {copy.scoreJoin} {submitted.maxScore}</h1>
           <p className="assessment-result-lead">
-            {submitted.late ? 'Время истекло до отправки: результат не засчитан.' : 'Ответы проверены и результат сохранён.'}
+            {submitted.late ? copy.late : copy.saved}
           </p>
           {submitted.student && (
             <p className="assessment-student-summary">
-              {submitted.student.lastName} {submitted.student.firstName} · группа {submitted.student.group}
+              {submitted.student.lastName} {submitted.student.firstName} · {copy.group} {submitted.student.group}
             </p>
           )}
           <div className="assessment-result-grid">
             {submitted.correctness.map((correct, index) => (
               <div className={correct ? 'result-task correct' : 'result-task incorrect'} key={index}>
-                <span>Задача {index + 1}</span><strong>{correct ? 'Верно' : 'Неверно'}</strong>
+                <span>{copy.task} {index + 1}</span><strong>{correct ? copy.correct : copy.incorrect}</strong>
               </div>
             ))}
           </div>
           <div className="assessment-result-meta">
-            <span>Вариант: <strong>{submitted.variantCode}</strong></span>
-            <span>Зафиксировано событий: <strong>{submitted.violationsCount}</strong></span>
+            <span>{copy.variant}: <strong>{submitted.variantCode}</strong></span>
+            <span>{copy.eventsRecorded}: <strong>{submitted.violationsCount}</strong></span>
           </div>
-          <p className="assessment-source">Источники заданий после сдачи: Чертов А. Г., Воробьёв А. А. — {submitted.sources.join(', ')}.</p>
+          <p className="assessment-source">{copy.sources}: Чертов А. Г., Воробьёв А. А. — {submitted.sources.join(', ')}.</p>
         </section>
       </main>
     );
@@ -458,50 +537,48 @@ export default function MechanicsAssessment() {
     return (
       <main className="assessment-shell">
         <section className="assessment-intro">
-          <span className="assessment-kicker">Контрольный срез по механике</span>
-          <h1>Три задачи. Один индивидуальный вариант.</h1>
-          <p className="assessment-intro-lead">Регистрация не требуется. Укажите свои данные, получите индивидуальный вариант и решите три задачи за 30 минут.</p>
+          <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
+          <span className="assessment-kicker">{copy.kicker}</span>
+          <h1>{copy.introTitle}</h1>
+          <p className="assessment-intro-lead">{copy.introLead}</p>
           <div className="assessment-student-form">
             <label>
-              <span>Фамилия</span>
+              <span>{copy.lastName}</span>
               <input
                 autoComplete="family-name"
                 maxLength={60}
                 value={student.lastName}
                 onChange={(event) => setStudent((current) => ({ ...current, lastName: event.target.value }))}
-                placeholder="Иванов"
+                placeholder={copy.lastNamePlaceholder}
               />
             </label>
             <label>
-              <span>Имя</span>
+              <span>{copy.firstName}</span>
               <input
                 autoComplete="given-name"
                 maxLength={60}
                 value={student.firstName}
                 onChange={(event) => setStudent((current) => ({ ...current, firstName: event.target.value }))}
-                placeholder="Иван"
+                placeholder={copy.firstNamePlaceholder}
               />
             </label>
             <label>
-              <span>Группа</span>
+              <span>{copy.groupLabel}</span>
               <input
                 autoComplete="organization-title"
                 maxLength={32}
                 value={student.group}
                 onChange={(event) => setStudent((current) => ({ ...current, group: event.target.value }))}
-                placeholder="ФИЗ-101"
+                placeholder={copy.groupPlaceholder}
               />
             </label>
           </div>
           <div className="assessment-rules">
-            <div><strong>01</strong><span>Подготовьте бумагу, ручку и калькулятор.</span></div>
-            <div><strong>02</strong><span>Не покидайте вкладку и полноэкранный режим.</span></div>
-            <div><strong>03</strong><span>Копирование, вставка и печать блокируются и фиксируются.</span></div>
-            <div><strong>04</strong><span>Введите только числа, единицы уже указаны рядом.</span></div>
+            {copy.rules.map((rule, index) => <div key={rule}><strong>{String(index + 1).padStart(2, '0')}</strong><span>{rule}</span></div>)}
           </div>
           {error && <p className="assessment-error">{error}</p>}
-          <button className="assessment-primary" onClick={start} disabled={!completeStudent(student)}>Начать срез</button>
-          <small>Нажимая кнопку, вы подтверждаете самостоятельное выполнение.</small>
+          <button className="assessment-primary" onClick={start} disabled={!completeStudent(student)}>{copy.start}</button>
+          <small>{copy.consent}</small>
         </section>
       </main>
     );
@@ -517,17 +594,18 @@ export default function MechanicsAssessment() {
         ))}
       </div>
       <section className="assessment-topbar">
-        <div><span>Вариант</span><strong>{active.variantCode}</strong></div>
-        <div className={remaining < 300 ? 'assessment-timer urgent' : 'assessment-timer'}><span>Осталось</span><strong>{formatTime(remaining)}</strong></div>
-        <div><span>Заполнено</span><strong>{answeredFields}/{totalFields}</strong></div>
-        <div><span>События</span><strong>{violations}</strong></div>
-        {!fullscreen && <button onClick={enterFullscreen}>На весь экран</button>}
+        <div><span>{copy.variant}</span><strong>{active.variantCode}</strong></div>
+        <div className={remaining < 300 ? 'assessment-timer urgent' : 'assessment-timer'}><span>{copy.remaining}</span><strong>{formatTime(remaining)}</strong></div>
+        <div><span>{copy.filled}</span><strong>{answeredFields}/{totalFields}</strong></div>
+        <div><span>{copy.events}</span><strong>{violations}</strong></div>
+        <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
+        {!fullscreen && <button onClick={enterFullscreen}>{copy.fullscreen}</button>}
       </section>
 
       <header className="assessment-heading">
-        <span className="assessment-kicker">Контрольный срез по механике</span>
-        <h1>Решите задачи и запишите числовые ответы</h1>
-        <p>Промежуточные вычисления выполняйте на бумаге. Десятичную дробь можно вводить через точку или запятую.</p>
+        <span className="assessment-kicker">{copy.kicker}</span>
+        <h1>{copy.heading}</h1>
+        <p>{copy.headingLead}</p>
       </header>
 
       <section className="assessment-tasks">
@@ -535,7 +613,7 @@ export default function MechanicsAssessment() {
           <article className="assessment-task" key={task.id}>
             <div className="assessment-task-number">{String(task.order).padStart(2, '0')}</div>
             <div className="assessment-task-content">
-              <span className="assessment-task-level">Задача {task.order}</span>
+              <span className="assessment-task-level">{copy.task} {task.order}</span>
               <h2>{task.title}</h2>
               <p>{task.text}</p>
               <div className="assessment-fields">
@@ -567,21 +645,21 @@ export default function MechanicsAssessment() {
 
       {error && <p className="assessment-error">{error}</p>}
       <div className="assessment-submit-row">
-        <div><span>Проверьте ответы</span><small>После отправки изменить их нельзя.</small></div>
-        <button className="assessment-primary" onClick={() => setConfirmSubmit(true)} disabled={submitting}>Завершить работу</button>
+        <div><span>{copy.check}</span><small>{copy.cannotChange}</small></div>
+        <button className="assessment-primary" onClick={() => setConfirmSubmit(true)} disabled={submitting}>{copy.finish}</button>
       </div>
 
-      <AssessmentCalculator />
+      <AssessmentCalculator language={language} />
 
       {confirmSubmit && (
         <div className="assessment-modal" role="dialog" aria-modal="true" aria-labelledby="submit-title">
           <div>
-            <span className="assessment-kicker">Подтверждение</span>
-            <h2 id="submit-title">Отправить ответы?</h2>
-            <p>{answeredFields < totalFields ? `Заполнено ${answeredFields} из ${totalFields} полей.` : 'Все поля заполнены.'} После отправки вернуться к работе нельзя.</p>
+            <span className="assessment-kicker">{copy.confirmation}</span>
+            <h2 id="submit-title">{copy.sendQuestion}</h2>
+            <p>{answeredFields < totalFields ? copy.filledFields(answeredFields, totalFields) : copy.allFilled} {copy.cannotReturn}</p>
             <div className="assessment-modal-actions">
-              <button onClick={() => setConfirmSubmit(false)} disabled={submitting}>Продолжить решение</button>
-              <button className="assessment-primary" onClick={() => void submit(false)} disabled={submitting}>{submitting ? 'Отправляем…' : 'Отправить'}</button>
+              <button onClick={() => setConfirmSubmit(false)} disabled={submitting}>{copy.continue}</button>
+              <button className="assessment-primary" onClick={() => void submit(false)} disabled={submitting}>{submitting ? copy.sending : copy.send}</button>
             </div>
           </div>
         </div>

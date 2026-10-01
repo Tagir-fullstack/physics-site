@@ -11,12 +11,18 @@ import {
   gradeVariant,
   publicTasks,
   variantFingerprint,
+  type AssessmentLanguage,
   type MechanicsVariant,
   type StudentIdentity,
 } from './_lib/mechanicsAssessment.js'
 
 type Answers = Record<string, Record<string, string | number>>
 type Violation = { type: string; at: string }
+
+function languageOf(value: unknown): AssessmentLanguage {
+  const candidate = Array.isArray(value) ? value[0] : value
+  return candidate === 'kk' ? 'kk' : 'ru'
+}
 
 const namePattern = /^[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі'’ -]+$/u
 
@@ -103,7 +109,10 @@ async function findAttempt(userId: string) {
   return attempt
 }
 
-function responseFor(attempt: NonNullable<Awaited<ReturnType<typeof findAttempt>>>) {
+function responseFor(
+  attempt: NonNullable<Awaited<ReturnType<typeof findAttempt>>>,
+  language: AssessmentLanguage = 'ru'
+) {
   const variant = attempt.variantData as MechanicsVariant
   const base = {
     attemptId: attempt.id,
@@ -131,7 +140,7 @@ function responseFor(attempt: NonNullable<Awaited<ReturnType<typeof findAttempt>
   return {
     status: 'active' as const,
     ...base,
-    tasks: publicTasks(variant),
+    tasks: publicTasks(variant, language),
     violationsCount: Array.isArray(attempt.violations) ? attempt.violations.length : 0,
   }
 }
@@ -167,9 +176,12 @@ async function startAttempt(userId: string, student?: StudentIdentity) {
 
 async function handleRequest(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store, max-age=0')
+  const queryLanguage = languageOf(req.query.lang)
   if (!hasDatabaseConfig) {
     return res.status(503).json({
-      error: 'База данных контрольного среза не подключена в Vercel (DATABASE_URL).',
+      error: queryLanguage === 'kk'
+        ? 'Бақылау жұмысының дерекқоры Vercel жүйесіне қосылмаған (DATABASE_URL).'
+        : 'База данных контрольного среза не подключена в Vercel (DATABASE_URL).',
     })
   }
   const user = await getClerkUser(req)
@@ -177,34 +189,43 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     if (!user) return res.status(200).json({ status: 'ready' })
     const attempt = await findAttempt(user.userId)
-    return res.status(200).json(attempt ? responseFor(attempt) : { status: 'ready' })
+    return res.status(200).json(attempt ? responseFor(attempt, queryLanguage) : { status: 'ready' })
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   const body = await bodyOf(req)
+  const language = languageOf(body.language)
   const student = studentFrom(body.student)
   const participantId = student ? studentUserId(student) : user?.userId
 
   if (body.action === 'resume') {
     if (!student || !participantId) {
-      return res.status(400).json({ error: 'Введите фамилию, имя и группу.' })
+      return res.status(400).json({
+        error: language === 'kk' ? 'Тегіңізді, атыңызды және тобыңызды енгізіңіз.' : 'Введите фамилию, имя и группу.',
+      })
     }
     const attempt = await findAttempt(participantId)
-    return res.status(200).json(attempt ? responseFor(attempt) : { status: 'ready' })
+    return res.status(200).json(attempt ? responseFor(attempt, language) : { status: 'ready' })
   }
 
   if (body.action === 'start') {
     if (!student || !participantId) {
-      return res.status(400).json({ error: 'Проверьте фамилию, имя и группу.' })
+      return res.status(400).json({
+        error: language === 'kk' ? 'Тегіңізді, атыңызды және тобыңызды тексеріңіз.' : 'Проверьте фамилию, имя и группу.',
+      })
     }
     const attempt = await startAttempt(participantId, student)
-    return res.status(200).json(responseFor(attempt))
+    return res.status(200).json(responseFor(attempt, language))
   }
 
-  if (!participantId) return res.status(401).json({ error: 'Укажите данные студента заново.' })
+  if (!participantId) return res.status(401).json({
+    error: language === 'kk' ? 'Студент деректерін қайта енгізіңіз.' : 'Укажите данные студента заново.',
+  })
   const attempt = await findAttempt(participantId)
-  if (!attempt) return res.status(409).json({ error: 'Сначала начните контрольный срез.' })
-  if (attempt.submittedAt) return res.status(200).json(responseFor(attempt))
+  if (!attempt) return res.status(409).json({
+    error: language === 'kk' ? 'Алдымен бақылау жұмысын бастаңыз.' : 'Сначала начните контрольный срез.',
+  })
+  if (attempt.submittedAt) return res.status(200).json(responseFor(attempt, language))
 
   if (body.action === 'event') {
     const eventType = typeof body.eventType === 'string' ? body.eventType : ''
@@ -232,7 +253,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
       .set({ answers, score: result.score, submittedAt })
       .where(eq(schema.assessmentAttempts.id, attempt.id))
       .returning()
-    return res.status(200).json(responseFor(updated))
+    return res.status(200).json(responseFor(updated, language))
   }
 
   return res.status(400).json({ error: 'Unknown action' })

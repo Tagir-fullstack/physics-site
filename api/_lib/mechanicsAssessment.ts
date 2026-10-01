@@ -2,6 +2,7 @@ import { randomBytes, randomInt } from 'node:crypto'
 
 export const ASSESSMENT_KEY = 'mechanics-cut-v2'
 export const ASSESSMENT_DURATION_MS = 30 * 60 * 1000
+export type AssessmentLanguage = 'ru' | 'kk'
 
 export type StudentIdentity = {
   lastName: string
@@ -95,10 +96,41 @@ export function createVariantCode(): string {
   return randomBytes(4).toString('hex').toUpperCase()
 }
 
-export function publicTasks(variant: MechanicsVariant): PublicTask[] {
+export function publicTasks(variant: MechanicsVariant, language: AssessmentLanguage = 'ru'): PublicTask[] {
   const a = variant.relativeMotion
   const b = variant.incline
   const c = variant.skaters
+  if (language === 'kk') {
+    return [
+      {
+        id: 'relativeMotion',
+        order: 1,
+        title: 'Салыстырмалы қозғалыс',
+        text: `Екі түзу жол ${a.angle}° бұрышпен қиылысады. Қиылыстан бір мезетте екі автокөлік алыстайды: біріншісінің жылдамдығы ${a.v1} км/сағ, екіншісінікі — ${a.v2} км/сағ. Автокөліктердің бір-бірінен алыстау жылдамдығын қозғалыстың екі ықтимал бағыты үшін табыңыз: жылдамдық векторлары арасындағы бұрыш ${a.angle}° және ${180 - a.angle}° болғанда.`,
+        fields: [
+          { id: 'speedAcute', label: `${a.angle}° бұрыш кезіндегі жылдамдық`, unit: 'км/сағ', step: '0.1' },
+          { id: 'speedObtuse', label: `${180 - a.angle}° бұрыш кезіндегі жылдамдық`, unit: 'км/сағ', step: '0.1' },
+        ],
+      },
+      {
+        id: 'incline',
+        order: 2,
+        title: 'Көлбеу жазықтық',
+        text: `Дене тыныштық күйінен көлбеу бұрышы ${b.angle}° болатын жазықтық бойымен сырғиды. Жүрілген жол ${b.length.toFixed(1)} м, қозғалыс уақыты — ${b.time.toFixed(2)} с. Үйкеліс коэффициентін табыңыз. g = 9,81 м/с² деп алыңыз. Есептеу үшін: sin ${b.angle}° ≈ ${Math.sin((b.angle * Math.PI) / 180).toFixed(4).replace('.', ',')}; cos ${b.angle}° ≈ ${Math.cos((b.angle * Math.PI) / 180).toFixed(4).replace('.', ',')}.`,
+        fields: [{ id: 'friction', label: 'Үйкеліс коэффициенті', unit: '', step: '0.01' }],
+      },
+      {
+        id: 'skaters',
+        order: 3,
+        title: 'Импульстің сақталу заңы',
+        text: `Массалары ${c.m1} кг және ${c.m2} кг болатын екі конькиші мұз үстінде қозғалмай тұрып, ұзын керілген арқанның ұштарынан ұстап тұр. Олардың бірі арқанды ${c.ropeSpeed.toFixed(1)} м/с жылдамдықпен қысқартады. Конькишілер қандай жылдамдықпен қозғалады? Үйкелісті ескермеңіз.`,
+        fields: [
+          { id: 'speed1', label: `Массасы ${c.m1} кг конькишінің жылдамдығы`, unit: 'м/с', step: '0.01' },
+          { id: 'speed2', label: `Массасы ${c.m2} кг конькишінің жылдамдығы`, unit: 'м/с', step: '0.01' },
+        ],
+      },
+    ]
+  }
   return [
     {
       id: 'relativeMotion',
