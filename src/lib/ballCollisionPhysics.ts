@@ -144,13 +144,13 @@ export function measure(state: PendulumState, config: PhysicsConfig, noisy: bool
   if (!impact || state.peak2 === null) return null
   const read = (value: number, halfWidth: number, resolution: number) => noisy
     ? Math.round((value + (2 * random() - 1) * halfWidth) / resolution) * resolution : value
-  const v1 = read(impact.v1, .005, .001)
-  const u1 = read(impact.u1, .005, .001)
-  const u2 = read(impact.u2, .005, .001)
+  const v1 = read(impact.v1, .008, .001)
+  const u1 = read(impact.u1, .008, .001)
+  const u2 = read(impact.u2, .008, .001)
   const before = .5 * config.mass1 * v1 ** 2
   const after = .5 * (config.mass1 * u1 ** 2 + config.mass2 * u2 ** 2)
   return {
-    beta: Math.max(0, read(state.peak2, 1, 2)), time: read(impact.time, .001, .001),
+    beta: Math.max(0, read(state.peak2, 1, 2)), time: read(impact.time, .002, .001),
     v1, u1, u2, k: before > 0 ? after / before : 0, energyLoss: before - after,
     momentumError: config.mass1 * u1 + config.mass2 * u2 - config.mass1 * v1,
   }

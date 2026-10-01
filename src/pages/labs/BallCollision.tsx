@@ -206,8 +206,19 @@ export default function BallCollision() {
   const start = (restart = false) => {
     if (!isValid) return
     if (restart || simulationRef.current.time === 0 || simulationRef.current.settled) {
-      // Small release-angle variation models repeatability; sensor errors never push the balls.
-      const runConfig = { ...config, angle: config.angle + (realistic && errors ? (Math.random() * 2 - 1) * .15 : 0) }
+      // Small run-to-run variations model release repeatability and real contact losses.
+      // Sensor errors remain separate and never push the balls.
+      const variation = realistic && errors
+      const runConfig = {
+        ...config,
+        angle: config.angle + (variation ? (Math.random() * 2 - 1) * .35 : 0),
+        restitution: mode === 'elastic' && variation
+          ? Math.max(0, Math.min(1, config.restitution + (Math.random() * 2 - 1) * .012))
+          : config.restitution,
+        damping: variation
+          ? Math.max(0, config.damping + (Math.random() * 2 - 1) * .04)
+          : config.damping,
+      }
       runConfigRef.current = runConfig
       const initial = createPendulums(runConfig)
       simulationRef.current = initial
@@ -358,7 +369,7 @@ export default function BallCollision() {
             <div className="collision-reading">
               <h3>Показания виртуальных приборов</h3>
               <p className="collision-hint">{realistic && errors
-                ? 'Транспортир: цена деления 2° и ошибка считывания ±1°. Датчик скорости: шаг 0,001 м/с, ошибка ±0,005 м/с. Таймер: шаг 0,001 с, ошибка ±0,001 с. Отпускание: разброс ±0,15°. Округление добавляет до половины шага.'
+                ? 'Транспортир: цена деления 2° и ошибка считывания ±1°. Датчик скорости: шаг 0,001 м/с, ошибка ±0,008 м/с. Таймер: шаг 0,001 с, ошибка ±0,002 с. Отпускание: разброс ±0,35°. Между запусками немного меняются потери при контакте и сопротивление воздуха.'
                 : 'Погрешности выключены: показания совпадают с моделью.'}</p>
               {reading ? <>
                 <div className="collision-metrics">
