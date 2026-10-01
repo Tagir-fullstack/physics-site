@@ -578,6 +578,213 @@
   grid-column: span 2;
 }
 
+/* Accessibility light theme: override the global accessibility palette for
+   assessment surfaces that otherwise keep their dark backgrounds. */
+.a11y-light-theme .assessment-shell {
+  background: #f4f5f7 !important;
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-intro,
+.a11y-light-theme .assessment-result {
+  border-color: #aeb2b8 !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: 0 28px 70px rgba(32, 38, 46, 0.16) !important;
+}
+
+.a11y-light-theme .assessment-kicker,
+.a11y-light-theme .assessment-timer strong,
+.a11y-light-theme .assessment-student-summary {
+  color: #276fbd !important;
+}
+
+.a11y-light-theme .assessment-intro-lead,
+.a11y-light-theme .assessment-result-lead,
+.a11y-light-theme .assessment-heading p,
+.a11y-light-theme .assessment-intro--compact p {
+  color: #4f555d !important;
+}
+
+.a11y-light-theme .assessment-rules div {
+  border-color: #c8cbd0 !important;
+  background: #f8f8f9 !important;
+  color: #30343a !important;
+}
+
+.a11y-light-theme .assessment-rules strong,
+.a11y-light-theme .assessment-task-number,
+.a11y-light-theme .result-task.incorrect strong,
+.a11y-light-theme .assessment-timer.urgent strong {
+  color: #d84339 !important;
+}
+
+.a11y-light-theme .assessment-student-form label,
+.a11y-light-theme .assessment-fields label {
+  color: #51565d !important;
+}
+
+.a11y-light-theme .assessment-student-form input {
+  border-color: #aeb3ba !important;
+  background: #fff !important;
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-topbar {
+  border-color: #92979e !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 14px 35px rgba(20, 27, 35, 0.2) !important;
+}
+
+.a11y-light-theme .assessment-topbar span {
+  color: #61666d !important;
+}
+
+.a11y-light-theme .assessment-topbar strong {
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-topbar button {
+  border-color: #858b92 !important;
+  background: #fff !important;
+  color: #34383d !important;
+}
+
+.a11y-light-theme .assessment-task {
+  border-color: #b8bcc2 !important;
+  background: #fff !important;
+  box-shadow: 0 12px 32px rgba(28, 35, 43, 0.08) !important;
+}
+
+.a11y-light-theme .assessment-task-number {
+  border-color: #c8cbd0 !important;
+  background: linear-gradient(180deg, rgba(252, 98, 85, 0.13), rgba(252, 98, 85, 0.025)) !important;
+}
+
+.a11y-light-theme .assessment-task-level {
+  color: #666c74 !important;
+}
+
+.a11y-light-theme .assessment-task h2 {
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-task p {
+  color: #34383e !important;
+}
+
+.a11y-light-theme .assessment-input-wrap {
+  border-color: #aeb3ba !important;
+  background: #fff !important;
+}
+
+.a11y-light-theme .assessment-input-wrap input {
+  background: transparent !important;
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-input-wrap > span {
+  color: #62676e !important;
+}
+
+.a11y-light-theme .assessment-submit-row {
+  border-color: #b8bcc2 !important;
+  background: #fff !important;
+}
+
+.a11y-light-theme .assessment-submit-row small,
+.a11y-light-theme .assessment-intro > small,
+.a11y-light-theme .assessment-result-meta,
+.a11y-light-theme .assessment-result-meta span,
+.a11y-light-theme .assessment-source {
+  color: #5f646b !important;
+}
+
+.a11y-light-theme .result-task {
+  border-color: #b8bcc2 !important;
+  background: #f7f7f8 !important;
+}
+
+.a11y-light-theme .result-task span {
+  color: #5d6269 !important;
+}
+
+.a11y-light-theme .result-task.correct strong {
+  color: #267a45 !important;
+}
+
+.a11y-light-theme .assessment-error {
+  border-color: rgba(190, 48, 39, 0.55) !important;
+  background: #fff0ee !important;
+  color: #a92d25 !important;
+}
+
+.a11y-light-theme .assessment-modal {
+  background: rgba(24, 28, 34, 0.58) !important;
+}
+
+.a11y-light-theme .assessment-modal > div {
+  border-color: #aeb3ba !important;
+  background: #fff !important;
+}
+
+.a11y-light-theme .assessment-modal p {
+  color: #4f555d !important;
+}
+
+.a11y-light-theme .assessment-modal-actions > button:not(.assessment-primary) {
+  border-color: #979ca3 !important;
+  background: #fff !important;
+  color: #30343a !important;
+}
+
+.a11y-light-theme .assessment-calculator-toggle {
+  border-color: #276fbd !important;
+  background: #fff !important;
+  color: #276fbd !important;
+  box-shadow: 0 10px 26px rgba(22, 34, 48, 0.2) !important;
+}
+
+.a11y-light-theme .assessment-calculator-panel {
+  border-color: #9fa4ab !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 24px 60px rgba(22, 30, 40, 0.24) !important;
+}
+
+.a11y-light-theme .assessment-calculator-title span {
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-calculator-title small {
+  color: #5f646b !important;
+}
+
+.a11y-light-theme .assessment-calculator output {
+  border-color: #aeb3ba !important;
+  background: #f7f8fa !important;
+  color: #171717 !important;
+}
+
+.a11y-light-theme .assessment-calculator-keys button {
+  border-color: #c1c5ca !important;
+  background: #f1f2f4 !important;
+  color: #25292e !important;
+}
+
+.a11y-light-theme .assessment-calculator-keys button:hover {
+  border-color: #949aa2 !important;
+  background: #e5e8ec !important;
+}
+
+.a11y-light-theme .assessment-calculator-keys .operator {
+  color: #276fbd !important;
+}
+
+.a11y-light-theme .assessment-calculator-keys .equals {
+  border-color: #276fbd !important;
+  background: #367fc9 !important;
+  color: #fff !important;
+}
+
 @media (max-width: 720px) {
   .assessment-shell {
     padding: 6.5rem 1rem 3rem;
