@@ -70,4 +70,16 @@ function vercelApiDevPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vercelApiDevPlugin(), react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          clerk: ['@clerk/clerk-react'],
+          motion: ['framer-motion'],
+          i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+        },
+      },
+    },
+  },
 })
