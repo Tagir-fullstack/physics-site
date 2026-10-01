@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq } from 'drizzle-orm'
 import { db, hasDatabaseConfig, schema } from './_lib/db.js'
-import { getClerkUser } from './_lib/auth.js'
+import { getClerkUser, isAdmin } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
   ASSESSMENT_KEY,
@@ -216,6 +216,32 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
     }
     const attempt = await startAttempt(participantId, student)
     return res.status(200).json(responseFor(attempt, language))
+  }
+
+  if (body.action === 'restart') {
+    if (!isAdmin(user)) {
+      return res.status(403).json({
+        error: language === 'kk' ? 'Қайта өту тек әкімшіге қолжетімді.' : 'Повторный запуск доступен только администратору.',
+      })
+    }
+    if (!student || !participantId) {
+      return res.status(400).json({
+        error: language === 'kk' ? 'Студент деректерін қайта енгізіңіз.' : 'Укажите данные студента заново.',
+      })
+    }
+    const attempt = await findAttempt(participantId)
+    if (!attempt) return res.status(200).json({ status: 'ready' })
+    if (!attempt.submittedAt) {
+      return res.status(409).json({
+        error: language === 'kk' ? 'Алдымен ағымдағы жұмысты аяқтаңыз.' : 'Сначала завершите текущую попытку.',
+      })
+    }
+    const archiveKey = `${ASSESSMENT_KEY}-archive-${Date.now().toString(36)}-${attempt.variantCode}`
+    await db
+      .update(schema.assessmentAttempts)
+      .set({ assessmentKey: archiveKey })
+      .where(eq(schema.assessmentAttempts.id, attempt.id))
+    return res.status(200).json({ status: 'ready' })
   }
 
   if (!participantId) return res.status(401).json({

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useQuizMode } from '../context/QuizModeContext';
-import { useApiClient } from '../lib/apiClient';
+import { isEmailAdmin, useApiClient } from '../lib/apiClient';
 import '../styles/mechanics-assessment.css';
 
 type Field = { id: string; label: string; unit: string; step: string };
@@ -64,6 +64,7 @@ const COPY = {
     filledFields: (count: number, total: number) => `Заполнено ${count} из ${total} полей.`,
     cannotReturn: 'После отправки вернуться к работе нельзя.', continue: 'Продолжить решение', sending: 'Отправляем…', send: 'Отправить',
     calculator: 'Калькулятор', close: 'Закрыть', trigNote: 'sin и cos — в градусах',
+    retry: 'Пройти ещё раз', retrying: 'Создаём новый вариант…', retryError: 'Не удалось открыть новую попытку.',
     startError: 'Не удалось начать срез.', submitError: 'Не удалось отправить ответы.', fullscreenError: 'Полноэкранный режим не поддерживается этим браузером.',
     invalidResponse: (status: number) => `Сервер вернул некорректный ответ (HTTP ${status}). Обновите страницу.`,
     unavailable: (status: number) => `Сервис контрольного среза временно недоступен (HTTP ${status}).`,
@@ -86,6 +87,7 @@ const COPY = {
     filledFields: (count: number, total: number) => `${total} өрістің ${count} толтырылды.`,
     cannotReturn: 'Жібергеннен кейін жұмысқа қайта оралу мүмкін емес.', continue: 'Шешуді жалғастыру', sending: 'Жіберілуде…', send: 'Жіберу',
     calculator: 'Калькулятор', close: 'Жабу', trigNote: 'sin және cos — градуспен',
+    retry: 'Қайта өту', retrying: 'Жаңа нұсқа жасалуда…', retryError: 'Жаңа әрекетті ашу мүмкін болмады.',
     startError: 'Бақылау жұмысын бастау мүмкін болмады.', submitError: 'Жауаптарды жіберу мүмкін болмады.', fullscreenError: 'Бұл браузер толық экран режимін қолдамайды.',
     invalidResponse: (status: number) => `Сервер қате жауап қайтарды (HTTP ${status}). Бетті жаңартыңыз.`,
     unavailable: (status: number) => `Бақылау жұмысының қызметі уақытша қолжетімсіз (HTTP ${status}).`,
@@ -278,6 +280,7 @@ export default function MechanicsAssessment() {
   const [remaining, setRemaining] = useState(30 * 60);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [error, setError] = useState('');
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
@@ -288,6 +291,7 @@ export default function MechanicsAssessment() {
 
   const active = data?.status === 'active' ? data : null;
   const submitted = data?.status === 'submitted' ? data : null;
+  const canRestart = isEmailAdmin(user?.email);
 
   const changeLanguage = (nextLanguage: AssessmentLanguage) => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
@@ -497,6 +501,29 @@ export default function MechanicsAssessment() {
     }
   };
 
+  const restart = async () => {
+    if (!submitted?.student || restarting) return;
+    setRestarting(true);
+    setError('');
+    try {
+      const response = await authFetch('/api/mechanics-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'restart', student: submitted.student, language }),
+      });
+      const json = await readAssessmentResponse(response, language);
+      setAnswers({});
+      answersRef.current = {};
+      autoSubmitted.current = false;
+      setViolations(0);
+      setData(json);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : copy.retryError);
+    } finally {
+      setRestarting(false);
+    }
+  };
+
   if (loading || authLoading) {
     return <main className="assessment-shell"><div className="assessment-loading">{copy.loading}</div></main>;
   }
@@ -528,6 +555,12 @@ export default function MechanicsAssessment() {
             <span>{copy.eventsRecorded}: <strong>{submitted.violationsCount}</strong></span>
           </div>
           <p className="assessment-source">{copy.sources}: Чертов А. Г., Воробьёв А. А. — {submitted.sources.join(', ')}.</p>
+          {error && <p className="assessment-error">{error}</p>}
+          {canRestart && submitted.student && (
+            <button className="assessment-primary assessment-restart" type="button" onClick={restart} disabled={restarting}>
+              {restarting ? copy.retrying : copy.retry}
+            </button>
+          )}
         </section>
       </main>
     );

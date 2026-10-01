@@ -466,6 +466,10 @@
   color: #6f6f6f;
 }
 
+.assessment-restart {
+  margin-top: 1.5rem;
+}
+
 .assessment-modal {
   position: fixed;
   z-index: 500;

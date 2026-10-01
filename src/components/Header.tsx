@@ -238,7 +238,6 @@ export default function Header() {
                     <div className="dropdown">
                       <button className="dropdown-item" onClick={() => handleLinkClick('/labs/atwood')}>Машина Атвуда</button>
                       <button className="dropdown-item" onClick={() => handleLinkClick('/labs/ball-collision')}>Столкновение шаров</button>
-                      <button className="dropdown-item" onClick={() => handleLinkClick('/assessment/mechanics')}>Контрольный срез по механике</button>
                     </div>
                   </div>
                 </div>
