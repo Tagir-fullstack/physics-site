@@ -267,7 +267,7 @@ function AssessmentLanguageSwitch({
 }
 
 export default function MechanicsAssessment() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isPremium, isLoading: authLoading } = useAuth();
   const { authFetch } = useApiClient();
   const { setQuizActive } = useQuizMode();
   const [language, setLanguage] = useState<AssessmentLanguage>(savedLanguage);
@@ -291,7 +291,7 @@ export default function MechanicsAssessment() {
 
   const active = data?.status === 'active' ? data : null;
   const submitted = data?.status === 'submitted' ? data : null;
-  const canRestart = isEmailAdmin(user?.email);
+  const canRestart = isPremium || isEmailAdmin(user?.email);
 
   const changeLanguage = (nextLanguage: AssessmentLanguage) => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);

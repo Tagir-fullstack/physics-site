@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq } from 'drizzle-orm'
 import { db, hasDatabaseConfig, schema } from './_lib/db.js'
-import { getClerkUser, isAdmin } from './_lib/auth.js'
+import { getClerkUser, hasPremiumAccess } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
   ASSESSMENT_KEY,
@@ -219,9 +219,9 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   }
 
   if (body.action === 'restart') {
-    if (!isAdmin(user)) {
+    if (!hasPremiumAccess(user)) {
       return res.status(403).json({
-        error: language === 'kk' ? 'Қайта өту тек әкімшіге қолжетімді.' : 'Повторный запуск доступен только администратору.',
+        error: language === 'kk' ? 'Қайта өту тек PRO пайдаланушыларына қолжетімді.' : 'Повторный запуск доступен только пользователям PRO.',
       })
     }
     if (!student || !participantId) {

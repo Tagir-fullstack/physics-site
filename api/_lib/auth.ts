@@ -13,6 +13,18 @@ const adminEmails = (process.env.ADMIN_EMAILS || '')
 export type ClerkUser = {
   userId: string
   email: string
+  isPremium: boolean
+}
+
+function premiumFromMetadata(...sources: Array<Record<string, unknown> | null | undefined>) {
+  const metadata = Object.assign({}, ...sources.filter(Boolean)) as Record<string, unknown>
+  const subscription = metadata.subscription
+  const subscriptionData = subscription && typeof subscription === 'object'
+    ? subscription as Record<string, unknown>
+    : null
+  const plan = String(metadata.plan ?? subscriptionData?.plan ?? '').toLowerCase()
+  const status = String(metadata.subscriptionStatus ?? subscriptionData?.status ?? 'active').toLowerCase()
+  return ['pro', 'premium', 'teacher'].includes(plan) && !['cancelled', 'expired', 'inactive'].includes(status)
 }
 
 export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null> {
@@ -27,7 +39,11 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
     if (!userId) return null
     const user = await clerk.users.getUser(userId)
     const email = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress
-    return { userId, email: (email || '').toLowerCase() }
+    return {
+      userId,
+      email: (email || '').toLowerCase(),
+      isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata, user.unsafeMetadata),
+    }
   } catch {
     return null
   }
@@ -36,6 +52,10 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
 export function isAdmin(user: ClerkUser | null): boolean {
   if (!user?.email) return false
   return adminEmails.includes(user.email.toLowerCase())
+}
+
+export function hasPremiumAccess(user: ClerkUser | null): boolean {
+  return isAdmin(user) || Boolean(user?.isPremium)
 }
 
 export async function requireAdmin(req: VercelRequest) {

@@ -33,6 +33,20 @@ function toProfile(user: ReturnType<typeof useUser>['user']): Profile | null {
   };
 }
 
+function hasPremiumMetadata(user: ReturnType<typeof useUser>['user']): boolean {
+  if (!user) return false;
+  const metadata = {
+    ...(user.publicMetadata ?? {}),
+    ...(user.unsafeMetadata ?? {}),
+  } as Record<string, unknown>;
+  const subscription = metadata.subscription && typeof metadata.subscription === 'object'
+    ? metadata.subscription as Record<string, unknown>
+    : null;
+  const plan = String(metadata.plan ?? subscription?.plan ?? '').toLowerCase();
+  const status = String(metadata.subscriptionStatus ?? subscription?.status ?? 'active').toLowerCase();
+  return ['pro', 'premium', 'teacher'].includes(plan) && !['cancelled', 'expired', 'inactive'].includes(status);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isLoaded, user } = useUser();
   const { signOut: clerkSignOut } = useClerk();
@@ -52,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile: toProfile(user),
       subscription: null,
       isLoading: !isLoaded,
-      isPremium: false,
+      isPremium: hasPremiumMetadata(user),
       signOut: async () => {
         await clerkSignOut();
       },

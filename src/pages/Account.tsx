@@ -529,7 +529,10 @@ export default function Account() {
                 />
               </div>
               <div>
-                <div className="account-profile-name">{profile?.full_name || 'Не указано'}</div>
+                <div className="account-profile-name-row">
+                  <div className="account-profile-name">{profile?.full_name || 'Не указано'}</div>
+                  {isAdmin && <span className="account-admin-badge">Администратор</span>}
+                </div>
                 <div className="account-profile-email">{user.email}</div>
               </div>
             </div>
@@ -648,6 +651,18 @@ export default function Account() {
               </div>
               <p className="account-plan-description">{planInfo.description}</p>
             </div>
+
+            {isAdmin && (
+              <div className="account-admin-access">
+                <div>
+                  <strong>Права администратора активны</strong>
+                  <p>Как пользователю PRO вам доступны повторные прохождения контрольного среза. Каждая завершённая попытка сохраняется в архиве.</p>
+                </div>
+                <Link to="/assessment/mechanics" className="account-btn account-btn-admin">
+                  Открыть контрольный срез →
+                </Link>
+              </div>
+            )}
 
             {isPro && profile?.role && isEducatorRole(profile.role) && (
               <div className="account-upgrade">

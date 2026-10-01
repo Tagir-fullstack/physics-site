@@ -84,6 +84,28 @@
   font-family: 'CCUltimatum', Arial, sans-serif;
 }
 
+.account-profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.account-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(252, 98, 85, 0.45);
+  border-radius: 999px;
+  background: rgba(252, 98, 85, 0.12);
+  color: #ff8075;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .account-profile-email {
   color: #888;
   font-size: 0.85rem;
@@ -346,6 +368,43 @@
   background: #3a7fd0;
   color: rgba(255, 255, 255, 0.82);
 }
+
+.account-btn-admin {
+  display: inline-block;
+  background: #FC6255;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.account-btn-admin:hover {
+  background: #e8554a;
+  color: #ffffff;
+}
+
+.account-admin-access {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-admin-access strong {
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.account-admin-access p {
+  max-width: 420px;
+  margin: 0.25rem 0 0;
+  color: #999999;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
 .a11y-light-theme .account-btn-teacher {
   color: #ffffff !important;
 }
@@ -599,6 +658,11 @@
 .a11y-light-theme .account-profile-email {
   color: #6b7280;
 }
+.a11y-light-theme .account-admin-badge {
+  background: rgba(217, 68, 56, 0.08);
+  border-color: rgba(217, 68, 56, 0.3);
+  color: #b8352b !important;
+}
 .a11y-light-theme .account-label {
   color: #6b7280;
 }
@@ -663,6 +727,23 @@
 }
 .a11y-light-theme .account-upgrade-text {
   color: #4b5563;
+}
+
+.a11y-light-theme .account-admin-access {
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+.a11y-light-theme .account-admin-access strong {
+  color: #1a1a1a;
+}
+
+.a11y-light-theme .account-admin-access p {
+  color: #4b5563;
+}
+
+.a11y-light-theme .account-btn-admin,
+.a11y-light-theme .account-btn-admin:hover {
+  color: #ffffff !important;
 }
 
 .a11y-light-theme .account-history-empty,
