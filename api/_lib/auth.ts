@@ -3,12 +3,7 @@ import { createClerkClient, verifyToken } from '@clerk/backend'
 import type { VercelRequest } from '@vercel/node'
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY
-
-if (!CLERK_SECRET_KEY) {
-  throw new Error('CLERK_SECRET_KEY is not set')
-}
-
-const clerk = createClerkClient({ secretKey: CLERK_SECRET_KEY })
+const clerk = CLERK_SECRET_KEY ? createClerkClient({ secretKey: CLERK_SECRET_KEY }) : null
 
 const adminEmails = (process.env.ADMIN_EMAILS || '')
   .split(',')
@@ -21,6 +16,7 @@ export type ClerkUser = {
 }
 
 export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null> {
+  if (!CLERK_SECRET_KEY || !clerk) return null
   const auth = req.headers.authorization
   if (!auth?.startsWith('Bearer ')) return null
   const token = auth.slice(7)
