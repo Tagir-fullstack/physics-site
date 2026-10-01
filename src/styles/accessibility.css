@@ -697,6 +697,50 @@ html.a11y-font-xlarge .header .burger span {
   border-color: rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Clerk renders its modal in a body-level portal, outside #root. */
+.a11y-light-theme .cl-modalBackdrop {
+  background-color: rgba(20, 20, 20, 0.48) !important;
+}
+
+.a11y-light-theme .cl-cardBox,
+.a11y-light-theme .cl-card,
+.a11y-light-theme .cl-footer {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+}
+
+.a11y-light-theme .cl-cardBox {
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2) !important;
+}
+
+.a11y-light-theme .cl-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.a11y-light-theme .cl-headerTitle,
+.a11y-light-theme .cl-formFieldLabel,
+.a11y-light-theme .cl-dividerText,
+.a11y-light-theme .cl-footerActionText {
+  color: #1a1a1a !important;
+}
+
+.a11y-light-theme .cl-headerSubtitle,
+.a11y-light-theme .cl-formFieldHintText,
+.a11y-light-theme .cl-identityPreviewText {
+  color: #595959 !important;
+}
+
+.a11y-light-theme .cl-formFieldInput {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border-color: rgba(0, 0, 0, 0.24) !important;
+}
+
+.a11y-light-theme .cl-formButtonPrimary {
+  color: #1a1a1a !important;
+}
+
 /* --- Quiz --- */
 .a11y-light-theme button[style*="text-align: left"] {
   background-color: #ffffff !important;
