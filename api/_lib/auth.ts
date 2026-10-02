@@ -47,6 +47,10 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
     return null
   }
 
+  if (adminUserIds.includes(userId)) {
+    return { userId, email: '', isPremium: true }
+  }
+
   try {
     const user = await clerk.users.getUser(userId)
     const email = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress
