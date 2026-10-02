@@ -47,6 +47,7 @@ const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
 const MechanicsAssessment = lazy(() => import('./pages/MechanicsAssessment'));
+const AssessmentMonitor = lazy(() => import('./pages/AssessmentMonitor'));
 
 // Nuclear Physics pages - lazy loaded
 const Rutherford = lazy(() => import('./pages/nuclear/Rutherford'));
@@ -124,6 +125,7 @@ function App() {
                   <Route path="/labs/atwood" element={<AtwoodMachine />} />
                   <Route path="/labs/ball-collision" element={<BallCollision />} />
                   <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />
+                  <Route path="/admin/assessment-monitor" element={<AssessmentMonitor />} />
 
                   {/* Nuclear Physics Routes */}
                   <Route path="/nuclear/rutherford" element={<Rutherford />} />

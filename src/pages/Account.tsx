@@ -661,6 +661,9 @@ export default function Account() {
                 <Link to="/assessment/mechanics" className="account-btn account-btn-admin">
                   Открыть контрольный срез →
                 </Link>
+                <Link to="/admin/assessment-monitor" className="account-btn account-btn-monitor">
+                  Мониторинг результатов →
+                </Link>
               </div>
             )}
 

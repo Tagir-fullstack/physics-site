@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq, like } from 'drizzle-orm'
 import { db, hasDatabaseConfig, schema } from './_lib/db.js'
-import { getClerkUser, hasPremiumAccess } from './_lib/auth.js'
+import { getClerkUser, hasPremiumAccess, isAdmin } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
   ASSESSMENT_KEY,
@@ -145,6 +145,51 @@ function responseFor(
   }
 }
 
+function answeredCount(value: unknown) {
+  if (!value || typeof value !== 'object') return 0
+  return Object.values(value as Record<string, unknown>).reduce((total, task) => {
+    if (!task || typeof task !== 'object') return total
+    return total + Object.values(task as Record<string, unknown>)
+      .filter((answer) => String(answer ?? '').trim().length > 0).length
+  }, 0)
+}
+
+async function monitorResponse() {
+  const attempts = await db
+    .select()
+    .from(schema.assessmentAttempts)
+    .where(like(schema.assessmentAttempts.assessmentKey, `${ASSESSMENT_KEY}%`))
+    .orderBy(desc(schema.assessmentAttempts.startedAt))
+    .limit(250)
+  const now = Date.now()
+  return {
+    serverNow: new Date(now).toISOString(),
+    attempts: attempts.map((attempt) => {
+      const variant = attempt.variantData as MechanicsVariant
+      const submitted = Boolean(attempt.submittedAt)
+      const expired = !submitted && attempt.expiresAt.getTime() < now
+      const result = submitted ? gradeVariant(variant, (attempt.answers ?? {}) as Answers) : null
+      const late = submitted && attempt.submittedAt!.getTime() > attempt.expiresAt.getTime() + 30_000
+      return {
+        id: attempt.id,
+        student: variant.student ?? null,
+        variantCode: attempt.variantCode,
+        startedAt: attempt.startedAt.toISOString(),
+        expiresAt: attempt.expiresAt.toISOString(),
+        submittedAt: attempt.submittedAt?.toISOString() ?? null,
+        status: submitted ? 'submitted' : expired ? 'expired' : 'active',
+        score: submitted ? (attempt.score ?? result?.score ?? 0) : null,
+        maxScore: 3,
+        correctness: late ? [false, false, false] : (result?.correctness ?? null),
+        answeredFields: answeredCount(attempt.answers),
+        totalFields: publicTasks(variant).reduce((sum, task) => sum + task.fields.length, 0),
+        violationsCount: Array.isArray(attempt.violations) ? attempt.violations.length : 0,
+        archived: attempt.assessmentKey !== ASSESSMENT_KEY,
+      }
+    }),
+  }
+}
+
 async function startAttempt(userId: string, student?: StudentIdentity) {
   const existing = await findAttempt(userId)
   if (existing) return existing
@@ -187,6 +232,10 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   const user = await getClerkUser(req)
 
   if (req.method === 'GET') {
+    if (req.query.view === 'monitor') {
+      if (!isAdmin(user)) return res.status(403).json({ error: 'Доступ разрешён только администратору.' })
+      return res.status(200).json(await monitorResponse())
+    }
     if (!user) return res.status(200).json({ status: 'ready' })
     const attempt = await findAttempt(user.userId)
     return res.status(200).json(attempt ? responseFor(attempt, queryLanguage) : { status: 'ready' })
@@ -263,6 +312,15 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
       .set({ violations })
       .where(eq(schema.assessmentAttempts.id, attempt.id))
     return res.status(200).json({ ok: true, violationsCount: violations.length })
+  }
+
+  if (body.action === 'progress') {
+    const answers = body.answers && typeof body.answers === 'object' ? body.answers as Answers : {}
+    await db
+      .update(schema.assessmentAttempts)
+      .set({ answers })
+      .where(eq(schema.assessmentAttempts.id, attempt.id))
+    return res.status(200).json({ ok: true })
   }
 
   if (body.action === 'submit') {

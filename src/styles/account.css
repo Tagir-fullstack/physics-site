@@ -382,6 +382,19 @@
   color: #ffffff;
 }
 
+.account-btn-monitor {
+  display: inline-block;
+  background: #4a90e2;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.account-btn-monitor:hover {
+  background: #3a7fd0;
+  color: #ffffff;
+}
+
 .account-admin-access {
   display: flex;
   align-items: center;
@@ -742,7 +755,9 @@
 }
 
 .a11y-light-theme .account-btn-admin,
-.a11y-light-theme .account-btn-admin:hover {
+.a11y-light-theme .account-btn-admin:hover,
+.a11y-light-theme .account-btn-monitor,
+.a11y-light-theme .account-btn-monitor:hover {
   color: #ffffff !important;
 }
 

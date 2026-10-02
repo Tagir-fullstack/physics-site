@@ -304,6 +304,18 @@ export default function MechanicsAssessment() {
   }, [answers]);
 
   useEffect(() => {
+    if (!active) return;
+    const timer = window.setTimeout(() => {
+      void authFetch('/api/mechanics-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'progress', answers, student: studentRef.current, language }),
+      });
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [active, answers, authFetch, language]);
+
+  useEffect(() => {
     studentRef.current = student;
   }, [student]);
 
