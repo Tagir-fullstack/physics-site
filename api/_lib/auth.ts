@@ -35,8 +35,10 @@ function premiumFromMetadata(...sources: Array<Record<string, unknown> | null | 
 export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null> {
   if (!CLERK_SECRET_KEY || !clerk) return null
   const auth = req.headers.authorization
-  if (!auth?.startsWith('Bearer ')) return null
-  const token = auth.slice(7)
+  const bearerToken = auth?.startsWith('Bearer ') ? auth.slice(7) : ''
+  const cookieToken = typeof req.cookies?.__session === 'string' ? req.cookies.__session : ''
+  const token = bearerToken || cookieToken
+  if (!token) return null
 
   let userId = ''
   try {

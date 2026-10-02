@@ -19,7 +19,7 @@ export function useApiClient() {
       const request = async (token: string | null) => {
         const headers = new Headers(init.headers || {})
         if (token) headers.set('Authorization', `Bearer ${token}`)
-        return fetch(input, { ...init, headers })
+        return fetch(input, { ...init, credentials: 'include', headers })
       }
 
       const response = await request(await getToken())
