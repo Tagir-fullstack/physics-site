@@ -236,6 +236,19 @@
   background: rgba(252, 98, 85, 0.13);
 }
 
+.nav-direct-link {
+  color: #ffffff;
+  background: rgba(74, 144, 226, 0.12);
+}
+
+.nav-direct-link:hover {
+  background: rgba(74, 144, 226, 0.22);
+}
+
+.nav-direct-link > span:last-child {
+  color: #4a90e2;
+}
+
 .nav-section-trigger > span:last-child {
   color: #FC6255;
   font-size: 1.35rem;
@@ -469,6 +482,10 @@
 
   .nav-section-trigger > span:last-child {
     transform: rotate(-90deg);
+  }
+
+  .nav-direct-link > span:last-child {
+    transform: none;
   }
 
   .nav-flyout,

@@ -242,6 +242,17 @@ export default function Header() {
                   </div>
                 </div>
               </div>
+
+              <div className="nav-section">
+                <button
+                  className="nav-section-trigger nav-direct-link"
+                  type="button"
+                  onMouseEnter={() => setActiveMenuPanel(null)}
+                  onClick={() => handleLinkClick('/assessment/mechanics')}
+                >
+                  <span>Контрольный срез</span><span aria-hidden="true">→</span>
+                </button>
+              </div>
             </div>
 
             {/* Порядок: Доступность -> Бургер -> Аккаунт */}
