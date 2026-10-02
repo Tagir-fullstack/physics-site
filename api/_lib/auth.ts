@@ -1,8 +1,10 @@
 import './env.js'
+import { createPublicKey } from 'node:crypto'
 import { createClerkClient, verifyToken } from '@clerk/backend'
 import type { VercelRequest } from '@vercel/node'
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY
+const CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY
 const clerk = CLERK_SECRET_KEY ? createClerkClient({ secretKey: CLERK_SECRET_KEY }) : null
 
 const adminEmails = (process.env.ADMIN_EMAILS || '')
@@ -14,6 +16,67 @@ const adminUserIds = (process.env.ADMIN_USER_IDS || '')
   .split(',')
   .map((id) => id.trim())
   .filter(Boolean)
+
+const adminUserIdSuffixes = (process.env.ADMIN_USER_ID_SUFFIXES || '')
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean)
+
+const clerkFrontendHost = (() => {
+  if (!CLERK_PUBLISHABLE_KEY) return ''
+  try {
+    return Buffer.from(
+      CLERK_PUBLISHABLE_KEY.replace(/^pk_(?:test|live)_/, ''),
+      'base64'
+    ).toString('utf8').replace(/\$+$/, '')
+  } catch {
+    return ''
+  }
+})()
+
+let cachedJwtKey: { kid: string; pem: string; expiresAt: number } | null = null
+
+function tokenKid(token: string) {
+  try {
+    const header = JSON.parse(Buffer.from(token.split('.')[0], 'base64url').toString('utf8')) as Record<string, unknown>
+    return header.alg === 'RS256' && typeof header.kid === 'string' ? header.kid : ''
+  } catch {
+    return ''
+  }
+}
+
+async function jwtKeyFor(token: string) {
+  const kid = tokenKid(token)
+  if (!kid || !clerkFrontendHost) return ''
+  if (cachedJwtKey?.kid === kid && cachedJwtKey.expiresAt > Date.now()) return cachedJwtKey.pem
+
+  const response = await fetch(`https://${clerkFrontendHost}/.well-known/jwks.json`)
+  if (!response.ok) throw new Error('Could not load Clerk JWKS')
+  const body = await response.json() as { keys?: JsonWebKey[] }
+  const jwk = body.keys?.find((key) => key.kid === kid && key.kty === 'RSA')
+  if (!jwk) throw new Error('Clerk signing key not found')
+  const pem = createPublicKey({ key: jwk, format: 'jwk' })
+    .export({ type: 'spki', format: 'pem' })
+    .toString()
+  cachedJwtKey = { kid, pem, expiresAt: Date.now() + 60 * 60 * 1000 }
+  return pem
+}
+
+async function verifyClerkToken(token: string) {
+  try {
+    const jwtKey = await jwtKeyFor(token)
+    if (jwtKey) {
+      return await verifyToken(token, {
+        jwtKey,
+        authorizedParties: ['https://physez.com', 'https://www.physez.com'],
+      })
+    }
+  } catch {
+    // Fall through to the secret-key verifier for local development.
+  }
+  if (!CLERK_SECRET_KEY) throw new Error('Clerk verification is not configured')
+  return verifyToken(token, { secretKey: CLERK_SECRET_KEY })
+}
 
 export type ClerkUser = {
   userId: string
@@ -33,7 +96,6 @@ function premiumFromMetadata(...sources: Array<Record<string, unknown> | null | 
 }
 
 export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null> {
-  if (!CLERK_SECRET_KEY || !clerk) return null
   const auth = req.headers.authorization
   const bearerToken = auth?.startsWith('Bearer ') ? auth.slice(7) : ''
   const cookieToken = typeof req.cookies?.__session === 'string' ? req.cookies.__session : ''
@@ -42,16 +104,21 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
 
   let userId = ''
   try {
-    const payload = await verifyToken(token, { secretKey: CLERK_SECRET_KEY })
+    const payload = await verifyClerkToken(token)
     userId = payload.sub as string
     if (!userId) return null
   } catch {
     return null
   }
 
-  if (adminUserIds.includes(userId)) {
+  if (
+    adminUserIds.includes(userId) ||
+    adminUserIdSuffixes.some((suffix) => userId.endsWith(suffix))
+  ) {
     return { userId, email: '', isPremium: true }
   }
+
+  if (!clerk) return { userId, email: '', isPremium: false }
 
   try {
     const user = await clerk.users.getUser(userId)
@@ -69,7 +136,8 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
 
 export function isAdmin(user: ClerkUser | null): boolean {
   if (!user) return false
-  return adminUserIds.includes(user.userId) || (
+  return adminUserIds.includes(user.userId) ||
+    adminUserIdSuffixes.some((suffix) => user.userId.endsWith(suffix)) || (
     Boolean(user.email) && adminEmails.includes(user.email.toLowerCase())
   )
 }
