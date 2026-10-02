@@ -233,6 +233,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     if (req.query.view === 'monitor') {
+      if (!user) return res.status(401).json({ error: 'Сессия не распознана. Обновите страницу.' })
       if (!isAdmin(user)) return res.status(403).json({ error: 'Доступ разрешён только администратору.' })
       return res.status(200).json(await monitorResponse())
     }

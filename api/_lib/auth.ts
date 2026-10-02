@@ -10,6 +10,11 @@ const adminEmails = (process.env.ADMIN_EMAILS || '')
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean)
 
+const adminUserIds = (process.env.ADMIN_USER_IDS || '')
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean)
+
 export type ClerkUser = {
   userId: string
   email: string
@@ -33,10 +38,16 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
   if (!auth?.startsWith('Bearer ')) return null
   const token = auth.slice(7)
 
+  let userId = ''
   try {
     const payload = await verifyToken(token, { secretKey: CLERK_SECRET_KEY })
-    const userId = payload.sub as string
+    userId = payload.sub as string
     if (!userId) return null
+  } catch {
+    return null
+  }
+
+  try {
     const user = await clerk.users.getUser(userId)
     const email = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress
     return {
@@ -45,13 +56,16 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
       isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata, user.unsafeMetadata),
     }
   } catch {
-    return null
+    // A verified session must remain usable if Clerk's user API is temporarily unavailable.
+    return { userId, email: '', isPremium: false }
   }
 }
 
 export function isAdmin(user: ClerkUser | null): boolean {
-  if (!user?.email) return false
-  return adminEmails.includes(user.email.toLowerCase())
+  if (!user) return false
+  return adminUserIds.includes(user.userId) || (
+    Boolean(user.email) && adminEmails.includes(user.email.toLowerCase())
+  )
 }
 
 export function hasPremiumAccess(user: ClerkUser | null): boolean {

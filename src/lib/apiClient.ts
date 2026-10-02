@@ -16,10 +16,18 @@ export function useApiClient() {
 
   const authFetch = useCallback(
     async (input: string, init: RequestInit = {}): Promise<Response> => {
-      const token = await getToken()
-      const headers = new Headers(init.headers || {})
-      if (token) headers.set('Authorization', `Bearer ${token}`)
-      return fetch(input, { ...init, headers })
+      const request = async (token: string | null) => {
+        const headers = new Headers(init.headers || {})
+        if (token) headers.set('Authorization', `Bearer ${token}`)
+        return fetch(input, { ...init, headers })
+      }
+
+      const response = await request(await getToken())
+      if (response.status !== 401 && response.status !== 403) return response
+
+      // Clerk may briefly return a stale cached token after session/metadata changes.
+      const freshToken = await getToken({ skipCache: true })
+      return freshToken ? request(freshToken) : response
     },
     [getToken]
   )
