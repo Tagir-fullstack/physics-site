@@ -52,10 +52,10 @@ async function jwtKeyFor(token: string) {
 
   const response = await fetch(`https://${clerkFrontendHost}/.well-known/jwks.json`)
   if (!response.ok) throw new Error('Could not load Clerk JWKS')
-  const body = await response.json() as { keys?: JsonWebKey[] }
+  const body = await response.json() as { keys?: Array<JsonWebKey & { kid?: string; kty?: string }> }
   const jwk = body.keys?.find((key) => key.kid === kid && key.kty === 'RSA')
   if (!jwk) throw new Error('Clerk signing key not found')
-  const pem = createPublicKey({ key: jwk, format: 'jwk' })
+  const pem = createPublicKey({ key: jwk as import('node:crypto').JsonWebKey, format: 'jwk' })
     .export({ type: 'spki', format: 'pem' })
     .toString()
   cachedJwtKey = { kid, pem, expiresAt: Date.now() + 60 * 60 * 1000 }

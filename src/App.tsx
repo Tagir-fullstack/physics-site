@@ -43,6 +43,10 @@ const Teacher = lazy(() => import('./pages/Teacher'));
 const KtpList = lazy(() => import('./pages/teacher/KtpList'));
 const KtpNew = lazy(() => import('./pages/teacher/KtpNew'));
 const KtpView = lazy(() => import('./pages/teacher/KtpView'));
+const TeacherTests = lazy(() => import('./pages/teacher/TeacherTests'));
+const TeacherTestView = lazy(() => import('./pages/teacher/TeacherTestView'));
+const StudentTests = lazy(() => import('./pages/StudentTests'));
+const StudentTestRunner = lazy(() => import('./pages/StudentTestRunner'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
@@ -114,6 +118,10 @@ function App() {
                   <Route path="/teacher/ktp" element={<KtpList />} />
                   <Route path="/teacher/ktp/new" element={<KtpNew />} />
                   <Route path="/teacher/ktp/:id" element={<KtpView />} />
+                  <Route path="/teacher/tests" element={<TeacherTests />} />
+                  <Route path="/teacher/tests/:id" element={<TeacherTestView />} />
+                  <Route path="/join/:code" element={<StudentTests />} />
+                  <Route path="/student/test/:attemptId" element={<StudentTestRunner />} />
                   <Route path="/thesis" element={<Thesis />} />
                   <Route path="/labs/atwood" element={<AtwoodMachine />} />
                   <Route path="/labs/ball-collision" element={<BallCollision />} />

@@ -28,6 +28,14 @@ function vercelApiDevPlugin(): Plugin {
           modulePath = '/api/account.ts'
         } else if (pathname === '/api/mechanics-assessment') {
           modulePath = '/api/mechanics-assessment.ts'
+        } else if (pathname === '/api/teacher-platform') {
+          modulePath = '/api/teacher-platform.ts'
+        } else if (pathname === '/api/student-platform') {
+          modulePath = '/api/student-platform.ts'
+        } else if (pathname === '/api/test-template') {
+          modulePath = '/api/test-template.ts'
+        } else if (pathname === '/api/test-upload') {
+          modulePath = '/api/test-upload.ts'
         } else if (pathname === '/api/ktp') {
           modulePath = '/api/ktp/index.ts'
         } else if (pathname === '/api/ktp/upload') {

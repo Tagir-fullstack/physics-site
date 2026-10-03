@@ -164,6 +164,18 @@ export function publicTasks(variant: MechanicsVariant, language: AssessmentLangu
 
 type SubmittedAnswers = Record<string, Record<string, string | number>>
 
+export type MechanicsReviewField = {
+  taskId: PublicTask['id']
+  taskTitle: string
+  fieldId: string
+  label: string
+  unit: string
+  submitted: string | number | null
+  expected: number
+  tolerance: string
+  correct: boolean
+}
+
 function numeric(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
   if (typeof value !== 'string') return null
@@ -201,4 +213,43 @@ export function gradeVariant(variant: MechanicsVariant, answers: SubmittedAnswer
     closeEnough(numeric(answers.skaters?.speed2), variant.skaters.expected2, 0.02, 0.02)
   const correctness = [task1, task2, task3]
   return { score: correctness.filter(Boolean).length, correctness }
+}
+
+export function reviewVariant(
+  variant: MechanicsVariant,
+  answers: SubmittedAnswers,
+  language: AssessmentLanguage = 'ru'
+) {
+  const tasks = publicTasks(variant, language)
+  const expected: Record<string, Record<string, { value: number; absolute: number; relative: number }>> = {
+    relativeMotion: {
+      speedAcute: { value: variant.relativeMotion.expectedAcute, absolute: 0.2, relative: 0.01 },
+      speedObtuse: { value: variant.relativeMotion.expectedObtuse, absolute: 0.2, relative: 0.01 },
+    },
+    incline: {
+      friction: { value: variant.incline.expected, absolute: 0.01, relative: 0.03 },
+    },
+    skaters: {
+      speed1: { value: variant.skaters.expected1, absolute: 0.02, relative: 0.02 },
+      speed2: { value: variant.skaters.expected2, absolute: 0.02, relative: 0.02 },
+    },
+  }
+
+  const fields: MechanicsReviewField[] = tasks.flatMap((task) => task.fields.map((field) => {
+    const rule = expected[task.id][field.id]
+    const submitted = answers[task.id]?.[field.id] ?? null
+    return {
+      taskId: task.id,
+      taskTitle: task.title,
+      fieldId: field.id,
+      label: field.label,
+      unit: field.unit,
+      submitted,
+      expected: rule.value,
+      tolerance: `± max(${rule.absolute}; ${(rule.relative * 100).toFixed(0)}%)`,
+      correct: closeEnough(numeric(submitted), rule.value, rule.absolute, rule.relative),
+    }
+  }))
+
+  return { tasks, fields }
 }

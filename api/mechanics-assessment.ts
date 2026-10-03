@@ -10,6 +10,7 @@ import {
   createVariantCode,
   gradeVariant,
   publicTasks,
+  reviewVariant,
   variantFingerprint,
   type AssessmentLanguage,
   type MechanicsVariant,
@@ -149,7 +150,7 @@ function responseFor(
 
 function answeredCount(value: unknown) {
   if (!value || typeof value !== 'object') return 0
-  return Object.values(value as Record<string, unknown>).reduce((total, task) => {
+  return Object.values(value as Record<string, unknown>).reduce<number>((total, task) => {
     if (!task || typeof task !== 'object') return total
     return total + Object.values(task as Record<string, unknown>)
       .filter((answer) => String(answer ?? '').trim().length > 0).length
@@ -189,6 +190,34 @@ async function monitorResponse() {
         archived: attempt.assessmentKey !== ASSESSMENT_KEY,
       }
     }),
+  }
+}
+
+async function monitorAttemptResponse(attemptId: string, language: AssessmentLanguage) {
+  const [attempt] = await db
+    .select()
+    .from(schema.assessmentAttempts)
+    .where(eq(schema.assessmentAttempts.id, attemptId))
+    .limit(1)
+  if (!attempt) return null
+  const variant = attempt.variantData as MechanicsVariant
+  const answers = (attempt.answers ?? {}) as Answers
+  const review = reviewVariant(variant, answers, language)
+  const result = gradeVariant(variant, answers)
+  return {
+    id: attempt.id,
+    student: variant.student ?? null,
+    variantCode: attempt.variantCode,
+    startedAt: attempt.startedAt.toISOString(),
+    expiresAt: attempt.expiresAt.toISOString(),
+    submittedAt: attempt.submittedAt?.toISOString() ?? null,
+    score: attempt.score ?? (attempt.submittedAt ? result.score : null),
+    maxScore: 3,
+    answers,
+    tasks: review.tasks,
+    fields: review.fields,
+    violations: Array.isArray(attempt.violations) ? attempt.violations : [],
+    archived: attempt.assessmentKey !== ASSESSMENT_KEY,
   }
 }
 
@@ -234,6 +263,14 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   const user = await getClerkUser(req)
 
   if (req.method === 'GET') {
+    if (req.query.view === 'attempt') {
+      if (!user) return res.status(401).json({ error: 'Сессия не распознана. Обновите страницу.' })
+      if (!isAdmin(user)) return res.status(403).json({ error: 'Доступ разрешён только администратору.' })
+      const attemptId = Array.isArray(req.query.attemptId) ? req.query.attemptId[0] : req.query.attemptId
+      if (!attemptId) return res.status(400).json({ error: 'Не указана попытка.' })
+      const detail = await monitorAttemptResponse(attemptId, queryLanguage)
+      return detail ? res.status(200).json(detail) : res.status(404).json({ error: 'Попытка не найдена.' })
+    }
     if (req.query.view === 'monitor') {
       if (!user) return res.status(401).json({ error: 'Сессия не распознана. Обновите страницу.' })
       if (!isAdmin(user)) return res.status(403).json({ error: 'Доступ разрешён только администратору.' })

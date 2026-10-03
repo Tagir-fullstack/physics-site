@@ -62,6 +62,25 @@ export default function Teacher() {
         <div style={{ display: 'grid', gap: '1rem' }}>
           {isAdmin && <CurrentWeekWidget isLight={isLight} />}
 
+          <Link
+            to="/teacher/tests"
+            style={{
+              display: 'block',
+              background: isLight ? 'linear-gradient(135deg, #fff, #eef5ff)' : 'linear-gradient(135deg, #141414, #111d2b)',
+              border: isLight ? '1px solid rgba(74,144,226,.22)' : '1px solid rgba(74,144,226,.3)',
+              borderRadius: 16,
+              padding: '1.35rem 1.25rem',
+              textDecoration: 'none',
+              color: textPrimary,
+            }}
+          >
+            <div style={{ color: '#4a90e2', fontSize: '.75rem', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: '.35rem' }}>Новое · PRO</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.3rem' }}>Тесты и классы →</div>
+            <div style={{ color: textMuted, fontSize: '0.9rem' }}>
+              Шаблоны XLSX, коды для учеников, назначение работ и мониторинг результатов.
+            </div>
+          </Link>
+
           {isAdmin && (
             <Link
               to="/teacher/ktp"

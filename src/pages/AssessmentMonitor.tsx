@@ -24,6 +24,16 @@ type Attempt = {
 };
 type MonitorResponse = { serverNow: string; attempts: Attempt[]; error?: string };
 type Filter = 'all' | AttemptStatus;
+type ReviewField = {
+  taskId: string; taskTitle: string; fieldId: string; label: string; unit: string;
+  submitted: string | number | null; expected: number; tolerance: string; correct: boolean;
+};
+type ReviewTask = { id: string; order: number; title: string; text: string };
+type AttemptDetail = {
+  id: string; student: Student | null; variantCode: string; startedAt: string; expiresAt: string;
+  submittedAt: string | null; score: number | null; maxScore: number; archived: boolean;
+  tasks: ReviewTask[]; fields: ReviewField[]; violations: Array<{ type: string; at: string }>;
+};
 
 const statusText: Record<AttemptStatus, string> = {
   active: 'Выполняет',
@@ -54,6 +64,9 @@ export default function AssessmentMonitor() {
   const [query, setQuery] = useState('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [detail, setDetail] = useState<AttemptDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -132,6 +145,21 @@ export default function AssessmentMonitor() {
     URL.revokeObjectURL(url);
   };
 
+  const openDetail = async (attemptId: string) => {
+    setDetailLoading(true);
+    setDetailError('');
+    try {
+      const response = await authFetch(`/api/mechanics-assessment?view=attempt&attemptId=${encodeURIComponent(attemptId)}`);
+      const payload = await response.json() as AttemptDetail & { error?: string };
+      if (!response.ok) throw new Error(payload.error || `Ошибка HTTP ${response.status}`);
+      setDetail(payload);
+    } catch (reason) {
+      setDetailError(reason instanceof Error ? reason.message : 'Не удалось открыть попытку.');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   if (authLoading || (loading && !attempts.length)) {
     return <main className="monitor-page"><div className="monitor-loading">Загружаем мониторинг…</div></main>;
   }
@@ -184,7 +212,17 @@ export default function AssessmentMonitor() {
               const student = attempt.student;
               const progress = attempt.totalFields ? (attempt.answeredFields / attempt.totalFields) * 100 : 0;
               return (
-                <article className={`monitor-attempt ${attempt.status}`} key={attempt.id}>
+                <article
+                  className={`monitor-attempt ${attempt.status}`}
+                  key={attempt.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => void openDetail(attempt.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') void openDetail(attempt.id);
+                  }}
+                  aria-label={`Открыть работу ${student ? `${student.lastName} ${student.firstName}` : attempt.variantCode}`}
+                >
                   <div className="monitor-status-column">
                     <span className={`monitor-status ${attempt.status}`}>{statusText[attempt.status]}</span>
                     {attempt.archived && <small>архив</small>}
@@ -216,6 +254,57 @@ export default function AssessmentMonitor() {
           </div>
         </section>
       </div>
+
+      {(detailLoading || detail || detailError) && (
+        <div className="monitor-detail-backdrop" role="presentation" onMouseDown={() => !detailLoading && (setDetail(null), setDetailError(''))}>
+          <section className="monitor-detail" role="dialog" aria-modal="true" aria-label="Подробности попытки" onMouseDown={(event) => event.stopPropagation()}>
+            <header>
+              <div>
+                <span>Разбор попытки</span>
+                <h2>{detail?.student ? `${detail.student.lastName} ${detail.student.firstName}` : 'Загрузка…'}</h2>
+                {detail && <p>{detail.student?.group || 'Группа не указана'} · вариант {detail.variantCode}</p>}
+              </div>
+              <button type="button" onClick={() => { setDetail(null); setDetailError(''); }} aria-label="Закрыть">×</button>
+            </header>
+            {detailLoading && <div className="monitor-detail-state">Загружаем точный вариант и ответы…</div>}
+            {detailError && <div className="monitor-error">{detailError}</div>}
+            {detail && !detailLoading && (
+              <>
+                <div className="monitor-detail-summary">
+                  <div><span>Начало</span><strong>{formatDate(detail.startedAt)}</strong></div>
+                  <div><span>Сдача</span><strong>{formatDate(detail.submittedAt)}</strong></div>
+                  <div><span>Результат</span><strong>{detail.score === null ? 'Ещё выполняет' : `${detail.score}/${detail.maxScore}`}</strong></div>
+                  <div><span>События</span><strong>{detail.violations.length}</strong></div>
+                </div>
+                <div className="monitor-review-tasks">
+                  {detail.tasks.map((task) => (
+                    <article key={task.id}>
+                      <span>Задача {task.order}</span>
+                      <h3>{task.title}</h3>
+                      <p>{task.text}</p>
+                      <div className="monitor-review-fields">
+                        {detail.fields.filter((field) => field.taskId === task.id).map((field) => (
+                          <div className={field.correct ? 'correct' : 'incorrect'} key={field.fieldId}>
+                            <span>{field.label}</span>
+                            <strong>Студент: {field.submitted === null || field.submitted === '' ? 'нет ответа' : `${field.submitted}${field.unit ? ` ${field.unit}` : ''}`}</strong>
+                            <small>Правильный: {field.expected}{field.unit ? ` ${field.unit}` : ''} · допуск {field.tolerance}</small>
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <section className="monitor-violations">
+                  <h3>Журнал событий</h3>
+                  {detail.violations.length ? detail.violations.map((violation, index) => (
+                    <div key={`${violation.at}-${index}`}><strong>{violation.type}</strong><span>{formatDate(violation.at)}</span></div>
+                  )) : <p>Нарушений не зафиксировано.</p>}
+                </section>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </main>
   );
 }
