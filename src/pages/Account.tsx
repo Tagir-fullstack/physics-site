@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
-import { isEmailAdmin } from '../lib/apiClient';
 import type { UserRole } from '../types/auth';
 import '../styles/account.css';
+import AccountAccess, { type AccountAccessState } from '../components/AccountAccess';
 
 interface QuizHistoryItem {
   id: string;
@@ -53,13 +53,14 @@ const getExperienceLabel = (experience: number) =>
   EXPERIENCE_OPTIONS.find(option => Number(option.value) === experience)?.label || `${experience} лет`;
 
 export default function Account() {
-  const { user, profile, subscription, isPremium, signOut, updateProfile } = useAuth();
+  const { user, profile, isPremium, isLoading, signOut, updateProfile } = useAuth();
   const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [accountAccess, setAccountAccess] = useState<AccountAccessState | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Quiz history state (пока не подключено к БД после миграции на Clerk/Neon)
@@ -79,10 +80,10 @@ export default function Account() {
   });
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
 
   useEffect(() => {
     if (profile) {
@@ -220,25 +221,8 @@ export default function Account() {
     }
   };
 
-  const isAdmin = isEmailAdmin(user.email);
-  const isPro = isPremium || isAdmin;
-
-  const getPlanInfo = () => {
-    if (isPro) {
-      return { name: 'Pro', description: 'Полный доступ к платформе' };
-    }
-    if (!subscription) {
-      return { name: 'Бесплатный', description: 'Базовый доступ к анимациям' };
-    }
-    switch (subscription.plan) {
-      case 'teacher':
-        return { name: 'Учитель', description: 'Полный доступ + КТП/КСП документы' };
-      case 'premium':
-        return { name: 'Premium', description: 'Расширенный доступ ко всем функциям' };
-      default:
-        return { name: 'Бесплатный', description: 'Базовый доступ к анимациям' };
-    }
-  };
+  const isAdmin = accountAccess?.role === 'owner' || accountAccess?.role === 'admin';
+  const isPro = accountAccess?.isPremium ?? isPremium;
 
   const getRoleLabel = (role: UserRole) => {
     return ROLES.find(r => r.value === role)?.label || role;
@@ -436,7 +420,6 @@ export default function Account() {
     }
   };
 
-  const planInfo = getPlanInfo();
   const roleFields = getRoleFields();
 
   // Calculate stats
@@ -643,29 +626,7 @@ export default function Account() {
           {/* Subscription */}
           <section className="account-section account-subscription">
             <h2 className="account-section-title">Подписка</h2>
-
-            <div className="account-plan">
-              <div className="account-plan-header">
-                <span className="account-plan-name">{planInfo.name}</span>
-                {isPro && <span className="account-plan-badge">Активна</span>}
-              </div>
-              <p className="account-plan-description">{planInfo.description}</p>
-            </div>
-
-            {isAdmin && (
-              <div className="account-admin-access">
-                <div>
-                  <strong>Права администратора активны</strong>
-                  <p>Как пользователю PRO вам доступны повторные прохождения контрольного среза. Каждая завершённая попытка сохраняется в архиве.</p>
-                </div>
-                <Link to="/assessment/mechanics" className="account-btn account-btn-admin">
-                  Открыть контрольный срез →
-                </Link>
-                <Link to="/admin/assessment-monitor" className="account-btn account-btn-monitor">
-                  Мониторинг результатов →
-                </Link>
-              </div>
-            )}
+            <AccountAccess onChange={setAccountAccess} />
 
             {isPro && profile?.role && isEducatorRole(profile.role) && (
               <div className="account-upgrade">
@@ -687,8 +648,8 @@ export default function Account() {
               <div className="account-history-loading">Загрузка...</div>
             ) : quizHistory.length === 0 ? (
               <div className="account-history-empty">
-                <p>Вы ещё не проходили тесты</p>
-                <p className="account-history-hint">После прохождения тестов здесь появится история</p>
+                <p>История тестов в кабинете пока не подключена</p>
+                <p className="account-history-hint">Результаты контрольного среза доступны на странице работы, а преподавателю — в мониторинге.</p>
               </div>
             ) : (
               <div className="account-history-list">

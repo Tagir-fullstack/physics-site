@@ -79,20 +79,13 @@ function PageLoadingFallback() {
 }
 
 function App() {
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(
+    () => sessionStorage.getItem('hasVisitedThisSession') !== 'true'
+  );
 
   useEffect(() => {
-    // Проверяем, был ли пользователь на сайте в этой сессии
-    const hasVisited = sessionStorage.getItem('hasVisitedThisSession');
-
-    if (hasVisited) {
-      // Если уже был, не показываем загрузочный экран
-      setIsInitialLoading(false);
-    } else {
-      // Показываем LoadingScreen при первом визите
-      sessionStorage.setItem('hasVisitedThisSession', 'true');
-    }
-  }, []);
+    if (isInitialLoading) sessionStorage.setItem('hasVisitedThisSession', 'true');
+  }, [isInitialLoading]);
 
   return (
     <AuthProvider>

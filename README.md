@@ -1,4 +1,23 @@
-# React + TypeScript + Vite
+# Physez
+
+Образовательная платформа на React, TypeScript и Vite. Серверные функции работают в Vercel, данные контрольного среза хранятся в Neon, а авторизация — в Clerk.
+
+## Production access setup
+
+Для единой системы владельца, администраторов и PRO в Vercel должны быть заданы:
+
+- `VITE_CLERK_PUBLISHABLE_KEY` — production publishable key (`pk_live_…`);
+- `CLERK_SECRET_KEY` — production secret key (`sk_live_…`), только как серверная переменная;
+- `OWNER_USER_IDS` — полный Clerk User ID владельца (`user_…`);
+- `DATABASE_URL` — строка подключения к Neon.
+
+После настройки владелец может назначать администраторов в личном кабинете. Временные переменные `ADMIN_USER_IDS`, `ADMIN_USER_ID_SUFFIXES` и `ADMIN_EMAILS` поддерживаются для совместимости, но для постоянной конфигурации следует использовать полный `OWNER_USER_IDS` и роли Clerk.
+
+Production secret нельзя добавлять в клиентские переменные, репозиторий или сообщения. Его нужно вставлять непосредственно в Vercel → Project Settings → Environment Variables.
+
+Мониторинг контрольного среза доступен по `/admin/assessment-monitor`. Покупка PRO намеренно отключена до подключения расчётного счёта и платёжного провайдера.
+
+## Development
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

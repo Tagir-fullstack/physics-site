@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useQuizMode } from '../context/QuizModeContext';
-import { isEmailAdmin, useApiClient } from '../lib/apiClient';
+import { useApiClient } from '../lib/apiClient';
 import '../styles/mechanics-assessment.css';
 
 type Field = { id: string; label: string; unit: string; step: string };
@@ -24,6 +24,7 @@ type ActiveResponse = {
   expiresAt: string;
   serverNow: string;
   tasks: Task[];
+  answers?: Answers;
   violationsCount: number;
   student?: StudentIdentity;
 };
@@ -38,6 +39,7 @@ type SubmittedResponse = {
   violationsCount: number;
   sources: string[];
   late?: boolean;
+  canRestart: boolean;
   student?: StudentIdentity;
 };
 type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse;
@@ -267,7 +269,7 @@ function AssessmentLanguageSwitch({
 }
 
 export default function MechanicsAssessment() {
-  const { user, isPremium, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { authFetch } = useApiClient();
   const { setQuizActive } = useQuizMode();
   const [language, setLanguage] = useState<AssessmentLanguage>(savedLanguage);
@@ -288,10 +290,11 @@ export default function MechanicsAssessment() {
   const autoSubmitted = useRef(false);
   const fullscreenWasUsed = useRef(false);
   const lastEvent = useRef<Record<string, number>>({});
+  const deadline = useRef(0);
 
   const active = data?.status === 'active' ? data : null;
   const submitted = data?.status === 'submitted' ? data : null;
-  const canRestart = isPremium || isEmailAdmin(user?.email);
+  const canRestart = Boolean(submitted?.canRestart);
 
   const changeLanguage = (nextLanguage: AssessmentLanguage) => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
@@ -304,16 +307,16 @@ export default function MechanicsAssessment() {
   }, [answers]);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || loading || submitting) return;
     const timer = window.setTimeout(() => {
       void authFetch('/api/mechanics-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'progress', answers, student: studentRef.current, language }),
-      });
+      }).catch(() => setError(language === 'kk' ? 'Жауаптарды сақтау мүмкін болмады. Байланысты тексеріңіз.' : 'Не удалось сохранить ответы. Проверьте соединение.'));
     }, 800);
     return () => window.clearTimeout(timer);
-  }, [active, answers, authFetch, language]);
+  }, [active, answers, authFetch, language, loading, submitting]);
 
   useEffect(() => {
     studentRef.current = student;
@@ -341,7 +344,12 @@ export default function MechanicsAssessment() {
             studentRef.current = json.student;
             localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(json.student));
           }
-          if (json.status === 'active') setViolations(json.violationsCount || 0);
+          if (json.status === 'active') {
+            setViolations(json.violationsCount || 0);
+            setAnswers(json.answers ?? {});
+            answersRef.current = json.answers ?? {};
+            deadline.current = Date.now() + new Date(json.expiresAt).getTime() - new Date(json.serverNow).getTime();
+          }
         }
       })
       .catch((reason: Error) => !cancelled && setError(reason.message))
@@ -375,6 +383,11 @@ export default function MechanicsAssessment() {
       });
       const json = await readAssessmentResponse(response, language);
       setData(json);
+      if (json.status === 'active') {
+        setAnswers(json.answers ?? {});
+        answersRef.current = json.answers ?? {};
+        deadline.current = Date.now() + new Date(json.expiresAt).getTime() - new Date(json.serverNow).getTime();
+      }
       localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(student));
       setViolations('violationsCount' in json ? json.violationsCount : 0);
     } catch (reason) {
@@ -397,7 +410,7 @@ export default function MechanicsAssessment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'event', eventType, student: studentRef.current, language }),
         keepalive: true,
-      });
+      }).catch(() => { /* The assessment must remain usable during a connection interruption. */ });
     },
     [active, authFetch, language]
   );
@@ -417,7 +430,7 @@ export default function MechanicsAssessment() {
         const json = await readAssessmentResponse(response, language);
         setData(json);
         setConfirmSubmit(false);
-        if (document.fullscreenElement) await document.exitFullscreen();
+        if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
       } catch (reason) {
         autoSubmitted.current = false;
         setError(reason instanceof Error ? reason.message : copy.submitError);
@@ -430,10 +443,8 @@ export default function MechanicsAssessment() {
 
   useEffect(() => {
     if (!active) return;
-    const serverRemaining = new Date(active.expiresAt).getTime() - new Date(active.serverNow).getTime();
-    const localStarted = Date.now();
     const tick = () => {
-      const seconds = Math.max(0, Math.ceil((serverRemaining - (Date.now() - localStarted)) / 1000));
+      const seconds = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000));
       setRemaining(seconds);
       if (seconds === 0) void submit(true);
     };
@@ -445,7 +456,6 @@ export default function MechanicsAssessment() {
   useEffect(() => {
     if (!active) return;
     const onVisibility = () => document.hidden && sendEvent('tab-hidden');
-    const onBlur = () => sendEvent('window-blur');
     const onFullscreen = () => {
       const isFullscreen = Boolean(document.fullscreenElement);
       setFullscreen(isFullscreen);
@@ -472,7 +482,6 @@ export default function MechanicsAssessment() {
     };
     window.history.pushState({ mechanicsAssessmentActive: true }, '');
     document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('blur', onBlur);
     document.addEventListener('fullscreenchange', onFullscreen);
     document.addEventListener('copy', onCopy);
     document.addEventListener('cut', onCut);
@@ -483,7 +492,6 @@ export default function MechanicsAssessment() {
     window.addEventListener('popstate', onPopState);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('blur', onBlur);
       document.removeEventListener('fullscreenchange', onFullscreen);
       document.removeEventListener('copy', onCopy);
       document.removeEventListener('cut', onCut);
@@ -622,7 +630,7 @@ export default function MechanicsAssessment() {
             {copy.rules.map((rule, index) => <div key={rule}><strong>{String(index + 1).padStart(2, '0')}</strong><span>{rule}</span></div>)}
           </div>
           {error && <p className="assessment-error">{error}</p>}
-          <button className="assessment-primary" onClick={start} disabled={!completeStudent(student)}>{copy.start}</button>
+          <button className="assessment-primary" onClick={start} disabled={loading || !completeStudent(student)}>{copy.start}</button>
           <small>{copy.consent}</small>
         </section>
       </main>

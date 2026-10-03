@@ -3,7 +3,6 @@ import { useUser, useClerk } from '@clerk/clerk-react';
 import type {
   AuthContextType,
   AuthUser,
-  PremiumFeature,
   Profile,
   UserRole,
 } from '../types/auth';
@@ -37,7 +36,6 @@ function hasPremiumMetadata(user: ReturnType<typeof useUser>['user']): boolean {
   if (!user) return false;
   const metadata = {
     ...(user.publicMetadata ?? {}),
-    ...(user.unsafeMetadata ?? {}),
   } as Record<string, unknown>;
   const subscription = metadata.subscription && typeof metadata.subscription === 'object'
     ? metadata.subscription as Record<string, unknown>
@@ -70,12 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut: async () => {
         await clerkSignOut();
       },
-      hasFeature: (_feature: PremiumFeature) => false,
+      hasFeature: () => hasPremiumMetadata(user),
       updateProfile: async (data: Partial<Profile>) => {
         if (!user) throw new Error('Not authenticated');
-        const nextMeta: Record<string, unknown> = { ...(user.publicMetadata ?? {}) };
+        const nextMeta: Record<string, unknown> = { ...(user.unsafeMetadata ?? {}) };
+        const editableFields = new Set(['full_name', 'role', 'grade', 'course', 'institution', 'city', 'subject', 'experience', 'profile_completed']);
         for (const [key, val] of Object.entries(data)) {
-          if (val !== undefined) nextMeta[key] = val;
+          if (val !== undefined && editableFields.has(key)) nextMeta[key] = val;
         }
         await user.update({ unsafeMetadata: nextMeta });
         await user.reload();
@@ -86,6 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Context hooks intentionally live beside their provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {

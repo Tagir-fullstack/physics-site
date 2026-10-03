@@ -1449,7 +1449,10 @@ export default function Thesis() {
     const onStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
     const onEnd = (e: TouchEvent) => {
       const dx = e.changedTouches[0].clientX - startX;
-      if (Math.abs(dx) > 60) dx < 0 ? next() : prev();
+      if (Math.abs(dx) > 60) {
+        if (dx < 0) next();
+        else prev();
+      }
     };
     window.addEventListener('touchstart', onStart, { passive: true });
     window.addEventListener('touchend', onEnd);

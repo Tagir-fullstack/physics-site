@@ -365,7 +365,7 @@ const sommerfeldOrbits = [
 ];
 
 function SommerfeldModel() {
-  const [angles, setAngles] = useState(sommerfeldOrbits.map(() => Math.random() * Math.PI * 2));
+  const [angles, setAngles] = useState(() => sommerfeldOrbits.map((_, index) => index * 1.23));
   const containerSize = 400;
   const cx = containerSize * 0.35;
   const cy = containerSize / 2;
@@ -559,23 +559,17 @@ export default function RandomAtomModel() {
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [fastSwitch, setFastSwitch] = useState(false);
-  const [showHoverHint, setShowHoverHint] = useState(false);
+  const [showHoverHint, setShowHoverHint] = useState(
+    () => localStorage.getItem('physez-atom-hover-hint-seen') !== 'true'
+  );
   const isTouchRef = useRef(false);
   const elapsedRef = useRef(0);
-  const lastTimeRef = useRef(performance.now());
+  const lastTimeRef = useRef(0);
+  const isPaused = hoverPause && (paused || hovered);
 
   useEffect(() => {
-    const hintSeen = localStorage.getItem('physez-atom-hover-hint-seen');
-    if (!hintSeen) {
-      setShowHoverHint(true);
-      localStorage.setItem('physez-atom-hover-hint-seen', 'true');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!hoverPause) setPaused(false);
-    else if (hovered) setPaused(true);
-  }, [hoverPause, hovered]);
+    if (showHoverHint) localStorage.setItem('physez-atom-hover-hint-seen', 'true');
+  }, [showHoverHint]);
 
   const switchTo = (next: number | ((prev: number) => number)) => {
     setFastSwitch(true);
@@ -608,7 +602,7 @@ export default function RandomAtomModel() {
 
   // Timer: runs when not paused
   useEffect(() => {
-    if (paused) return;
+    if (isPaused) return;
 
     const remaining = duration - elapsedRef.current;
     lastTimeRef.current = performance.now();
@@ -622,7 +616,7 @@ export default function RandomAtomModel() {
       elapsedRef.current += performance.now() - lastTimeRef.current;
       clearTimeout(timer);
     };
-  }, [paused, index, duration]);
+  }, [isPaused, index, duration]);
 
   const model = models[index];
   const ModelComponent = modelComponents[model.id];
@@ -696,7 +690,7 @@ export default function RandomAtomModel() {
               className="atom-model-status-fill"
               style={{
                 animationDuration: `${duration}ms`,
-                animationPlayState: paused ? 'paused' : 'running',
+                animationPlayState: isPaused ? 'paused' : 'running',
                 background: statusColor,
               }}
             />

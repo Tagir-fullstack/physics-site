@@ -17,6 +17,8 @@ export function QuizModeProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Context hooks intentionally live beside their provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useQuizMode() {
   const context = useContext(QuizModeContext);
   if (!context) {

@@ -41,7 +41,7 @@
 .account-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr auto;
+  grid-template-rows: auto auto auto;
   gap: 1rem;
 }
 
@@ -820,5 +820,160 @@
 
   .account-history-list {
     max-height: 200px;
+  }
+}
+.account-access-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(74, 144, 226, 0.08), rgba(252, 98, 85, 0.04));
+}
+
+.account-access-heading,
+.account-pro-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account-access-card h3 {
+  margin: 0.25rem 0 0;
+  color: #fff;
+  font: 1rem 'CCUltimatum', Arial, sans-serif;
+}
+
+.account-access-eyebrow {
+  color: #7bb5f3;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-access-status {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: #aaa;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.account-access-status.pro {
+  border-color: rgba(39, 174, 96, 0.4);
+  background: rgba(39, 174, 96, 0.12);
+  color: #58cf89;
+}
+
+.account-access-description,
+.account-pro-preview p,
+.account-admin-form p {
+  margin: 0;
+  color: #999;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.account-access-id {
+  color: #777;
+  overflow-wrap: anywhere;
+}
+
+.account-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.account-admin-form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-admin-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: #aaa;
+  font-size: 0.75rem;
+}
+
+.account-admin-form input,
+.account-admin-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+
+.account-access-error,
+.account-access-message {
+  margin: 0;
+  color: #ff8075;
+  font-size: 0.78rem;
+}
+
+.account-pro-preview {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-plan-badge.active {
+  background: rgba(39, 174, 96, 0.2);
+  color: #58cf89;
+}
+
+.account-access-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.a11y-light-theme .account-access-card {
+  border-color: rgba(74, 144, 226, 0.22);
+  background: linear-gradient(145deg, rgba(74, 144, 226, 0.08), rgba(252, 98, 85, 0.035));
+}
+
+.a11y-light-theme .account-access-card h3,
+.a11y-light-theme .account-admin-form input,
+.a11y-light-theme .account-admin-form select {
+  color: #1a1a1a;
+}
+
+.a11y-light-theme .account-access-description,
+.a11y-light-theme .account-pro-preview p,
+.a11y-light-theme .account-admin-form p,
+.a11y-light-theme .account-admin-form label,
+.a11y-light-theme .account-access-id {
+  color: #5f6773;
+}
+
+.a11y-light-theme .account-admin-form,
+.a11y-light-theme .account-pro-preview {
+  border-top-color: rgba(15, 23, 42, 0.1);
+}
+
+.a11y-light-theme .account-admin-form input,
+.a11y-light-theme .account-admin-form select {
+  border-color: rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 560px) {
+  .account-access-actions {
+    display: grid;
+  }
+
+  .account-access-actions .account-btn {
+    text-align: center;
   }
 }

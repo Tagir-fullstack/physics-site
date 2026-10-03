@@ -118,6 +118,8 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Context hooks intentionally live beside their provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAccessibility() {
   const ctx = useContext(AccessibilityContext);
   if (!ctx) throw new Error('useAccessibility must be used within AccessibilityProvider');

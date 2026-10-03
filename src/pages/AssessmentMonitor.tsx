@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { isEmailAdmin, useApiClient } from '../lib/apiClient';
+import { useApiClient } from '../lib/apiClient';
 import '../styles/assessment-monitor.css';
 
 type AttemptStatus = 'active' | 'submitted' | 'expired';
@@ -44,10 +44,8 @@ const formatRemaining = (expiresAt: string, now: number) => {
 };
 
 export default function AssessmentMonitor() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
   const { authFetch } = useApiClient();
-  const navigate = useNavigate();
-  const isAdmin = isEmailAdmin(user?.email);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,8 +65,10 @@ export default function AssessmentMonitor() {
       setAttempts(payload.attempts);
       setLastUpdated(new Date());
       setError('');
+      return true;
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось загрузить мониторинг.');
+      return false;
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -77,18 +77,18 @@ export default function AssessmentMonitor() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!isAdmin) {
-      navigate('/account', { replace: true });
-      return;
-    }
-    void load();
-    const refreshTimer = window.setInterval(() => void load(true), 3000);
+    let refreshTimer = 0;
+    let disposed = false;
+    void load().then((allowed) => {
+      if (allowed && !disposed) refreshTimer = window.setInterval(() => void load(true), 3000);
+    });
     const clockTimer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => {
-      window.clearInterval(refreshTimer);
+      disposed = true;
+      if (refreshTimer) window.clearInterval(refreshTimer);
       window.clearInterval(clockTimer);
     };
-  }, [authLoading, isAdmin, load, navigate]);
+  }, [authLoading, load]);
 
   const stats = useMemo(() => {
     const submitted = attempts.filter((attempt) => attempt.status === 'submitted');

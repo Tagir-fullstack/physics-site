@@ -63,16 +63,16 @@ async function jwtKeyFor(token: string) {
 }
 
 async function verifyClerkToken(token: string) {
-  try {
+  if (clerkFrontendHost) {
     const jwtKey = await jwtKeyFor(token)
-    if (jwtKey) {
-      return await verifyToken(token, {
+    if (!jwtKey) throw new Error('Invalid Clerk token header')
+    const payload = await verifyToken(token, {
         jwtKey,
-        authorizedParties: ['https://physez.com', 'https://www.physez.com'],
+        authorizedParties: process.env.VERCEL_ENV === 'production'
+          ? ['https://physez.com', 'https://www.physez.com'] : undefined,
       })
-    }
-  } catch {
-    // Fall through to the secret-key verifier for local development.
+    if (payload.iss !== `https://${clerkFrontendHost}`) throw new Error('Unexpected Clerk issuer')
+    return payload
   }
   if (!CLERK_SECRET_KEY) throw new Error('Clerk verification is not configured')
   return verifyToken(token, { secretKey: CLERK_SECRET_KEY })
@@ -82,6 +82,11 @@ export type ClerkUser = {
   userId: string
   email: string
   isPremium: boolean
+  accessRole?: 'admin' | 'user'
+}
+
+export function isOwner(user: ClerkUser | null): boolean {
+  return Boolean(user && (process.env.OWNER_USER_IDS || '').split(',').map(id => id.trim()).includes(user.userId))
 }
 
 function premiumFromMetadata(...sources: Array<Record<string, unknown> | null | undefined>) {
@@ -126,7 +131,8 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
     return {
       userId,
       email: (email || '').toLowerCase(),
-      isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata, user.unsafeMetadata),
+      isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata),
+      accessRole: user.publicMetadata.accessRole === 'admin' ? 'admin' : 'user',
     }
   } catch {
     // A verified session must remain usable if Clerk's user API is temporarily unavailable.
@@ -136,7 +142,7 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
 
 export function isAdmin(user: ClerkUser | null): boolean {
   if (!user) return false
-  return adminUserIds.includes(user.userId) ||
+  return isOwner(user) || user.accessRole === 'admin' || adminUserIds.includes(user.userId) ||
     adminUserIdSuffixes.some((suffix) => user.userId.endsWith(suffix)) || (
     Boolean(user.email) && adminEmails.includes(user.email.toLowerCase())
   )

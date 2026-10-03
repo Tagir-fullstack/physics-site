@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { and, desc, eq, like } from 'drizzle-orm'
+import { and, desc, eq, like, isNull, gt } from 'drizzle-orm'
 import { db, hasDatabaseConfig, schema } from './_lib/db.js'
 import { getClerkUser, hasPremiumAccess, isAdmin } from './_lib/auth.js'
 import {
@@ -56,7 +56,6 @@ function studentUserId(student: StudentIdentity) {
 
 const allowedEvents = new Set([
   'tab-hidden',
-  'window-blur',
   'fullscreen-exit',
   'copy',
   'cut',
@@ -111,7 +110,8 @@ async function findAttempt(userId: string) {
 
 function responseFor(
   attempt: NonNullable<Awaited<ReturnType<typeof findAttempt>>>,
-  language: AssessmentLanguage = 'ru'
+  language: AssessmentLanguage = 'ru',
+  canRestart = false
 ) {
   const variant = attempt.variantData as MechanicsVariant
   const base = {
@@ -135,12 +135,14 @@ function responseFor(
       late,
       violationsCount: Array.isArray(attempt.violations) ? attempt.violations.length : 0,
       sources: ['№ 1.1', '№ 2.6', '№ 2.41'],
+      canRestart,
     }
   }
   return {
     status: 'active' as const,
     ...base,
     tasks: publicTasks(variant, language),
+    answers: attempt.answers ?? {},
     violationsCount: Array.isArray(attempt.violations) ? attempt.violations.length : 0,
   }
 }
@@ -239,7 +241,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
     }
     if (!user) return res.status(200).json({ status: 'ready' })
     const attempt = await findAttempt(user.userId)
-    return res.status(200).json(attempt ? responseFor(attempt, queryLanguage) : { status: 'ready' })
+    return res.status(200).json(attempt ? responseFor(attempt, queryLanguage, hasPremiumAccess(user)) : { status: 'ready' })
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -255,7 +257,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
       })
     }
     const attempt = await findAttempt(participantId)
-    return res.status(200).json(attempt ? responseFor(attempt, language) : { status: 'ready' })
+    return res.status(200).json(attempt ? responseFor(attempt, language, hasPremiumAccess(user)) : { status: 'ready' })
   }
 
   if (body.action === 'start') {
@@ -265,7 +267,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
       })
     }
     const attempt = await startAttempt(participantId, student)
-    return res.status(200).json(responseFor(attempt, language))
+    return res.status(200).json(responseFor(attempt, language, hasPremiumAccess(user)))
   }
 
   if (body.action === 'restart') {
@@ -301,7 +303,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   if (!attempt) return res.status(409).json({
     error: language === 'kk' ? 'Алдымен бақылау жұмысын бастаңыз.' : 'Сначала начните контрольный срез.',
   })
-  if (attempt.submittedAt) return res.status(200).json(responseFor(attempt, language))
+  if (attempt.submittedAt) return res.status(200).json(responseFor(attempt, language, hasPremiumAccess(user)))
 
   if (body.action === 'event') {
     const eventType = typeof body.eventType === 'string' ? body.eventType : ''
@@ -320,7 +322,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
     await db
       .update(schema.assessmentAttempts)
       .set({ answers })
-      .where(eq(schema.assessmentAttempts.id, attempt.id))
+      .where(and(eq(schema.assessmentAttempts.id, attempt.id), isNull(schema.assessmentAttempts.submittedAt), gt(schema.assessmentAttempts.expiresAt, new Date())))
     return res.status(200).json({ ok: true })
   }
 
@@ -336,9 +338,11 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
     const [updated] = await db
       .update(schema.assessmentAttempts)
       .set({ answers, score: result.score, submittedAt })
-      .where(eq(schema.assessmentAttempts.id, attempt.id))
+      .where(and(eq(schema.assessmentAttempts.id, attempt.id), isNull(schema.assessmentAttempts.submittedAt)))
       .returning()
-    return res.status(200).json(responseFor(updated, language))
+    const saved = updated ?? await findAttempt(participantId)
+    if (!saved) throw new Error('Attempt disappeared during submission')
+    return res.status(200).json(responseFor(saved, language, hasPremiumAccess(user)))
   }
 
   return res.status(400).json({ error: 'Unknown action' })

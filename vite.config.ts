@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 
 type DevRequest = IncomingMessage & {
   query: Record<string, string>
+  cookies: Record<string, string>
   body?: unknown
 }
 
@@ -18,11 +19,14 @@ function vercelApiDevPlugin(): Plugin {
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        const pathname = new URL(req.url || '/', 'http://localhost').pathname
+        const url = new URL(req.url || '/', 'http://localhost')
+        const pathname = url.pathname
         let modulePath: string | null = null
-        const query: Record<string, string> = {}
+        const query: Record<string, string> = Object.fromEntries(url.searchParams)
 
-        if (pathname === '/api/mechanics-assessment') {
+        if (pathname === '/api/account') {
+          modulePath = '/api/account.ts'
+        } else if (pathname === '/api/mechanics-assessment') {
           modulePath = '/api/mechanics-assessment.ts'
         } else if (pathname === '/api/ktp') {
           modulePath = '/api/ktp/index.ts'
@@ -41,6 +45,10 @@ function vercelApiDevPlugin(): Plugin {
         const devReq = req as DevRequest
         const devRes = res as DevResponse
         devReq.query = query
+        devReq.cookies = Object.fromEntries((req.headers.cookie || '').split(';').flatMap((part) => {
+          const index = part.indexOf('=')
+          return index < 0 ? [] : [[part.slice(0, index).trim(), part.slice(index + 1).trim()]]
+        }))
         devRes.status = (code) => {
           devRes.statusCode = code
           return devRes
