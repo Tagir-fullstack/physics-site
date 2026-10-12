@@ -71,7 +71,11 @@ button {
 button:hover {
   border-color: #FC6255;
 }
-button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Pointer clicks should not leave a focus frame around navigation or actions. */
+:is(button, a, summary, [role="button"], [tabindex]):focus:not(:focus-visible) {
+  outline: none !important;
 }

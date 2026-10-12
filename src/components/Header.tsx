@@ -11,7 +11,7 @@ import '../styles/accessibility.css';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeMenuPanel, setActiveMenuPanel] = useState<'nuclear' | 'labs' | null>(null);
+  const [activeMenuPanel, setActiveMenuPanel] = useState<'nuclear' | 'labs' | 'assessments' | null>(null);
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const menuTimeoutRef = useRef<number | null>(null);
@@ -25,6 +25,14 @@ export default function Header() {
   const visibleSections = sections.filter(section => section.title === "Физика Атомного ядра");
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setIsMenuOpen(false); setActiveMenuPanel(null); }
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -195,7 +203,7 @@ export default function Header() {
                   type="button"
                   aria-expanded={activeMenuPanel === 'nuclear'}
                   onMouseEnter={() => setActiveMenuPanel('nuclear')}
-                  onClick={() => setActiveMenuPanel(activeMenuPanel === 'nuclear' ? null : 'nuclear')}
+                  onClick={() => setActiveMenuPanel('nuclear')}
                 >
                   <span>Физика атомного ядра</span><span aria-hidden="true">‹</span>
                 </button>
@@ -224,11 +232,11 @@ export default function Header() {
 
               <div className="nav-section">
                 <button
-                  className={`nav-section-trigger${activeMenuPanel === 'labs' ? ' active' : ''}`}
+                  className={`nav-section-trigger nav-section-trigger--labs${activeMenuPanel === 'labs' ? ' active' : ''}`}
                   type="button"
                   aria-expanded={activeMenuPanel === 'labs'}
                   onMouseEnter={() => setActiveMenuPanel('labs')}
-                  onClick={() => setActiveMenuPanel(activeMenuPanel === 'labs' ? null : 'labs')}
+                  onClick={() => setActiveMenuPanel('labs')}
                 >
                   <span>Лаборатории</span><span aria-hidden="true">‹</span>
                 </button>
@@ -236,8 +244,9 @@ export default function Header() {
                   <div className="nav-item">
                     <span className="nav-title">Лабораторные работы</span>
                     <div className="dropdown">
-                      <button className="dropdown-item" onClick={() => handleLinkClick('/labs/atwood')}>Машина Атвуда</button>
-                      <button className="dropdown-item" onClick={() => handleLinkClick('/labs/ball-collision')}>Столкновение шаров</button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/atwood')}><span className="nav-lab-number">01</span><span>Машина Атвуда</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/ball-collision')}><span className="nav-lab-number">02</span><span>Столкновение шаров</span></button>
+                      <button className="dropdown-item nav-lab-item nav-lab-new" onClick={() => handleLinkClick('/labs/oberbeck')}><span className="nav-lab-number">03</span><span>Маятник Обербека</span><span className="nav-new-badge">NEW</span></button>
                     </div>
                   </div>
                 </div>
@@ -245,13 +254,17 @@ export default function Header() {
 
               <div className="nav-section">
                 <button
-                  className="nav-section-trigger nav-direct-link"
+                  className={`nav-section-trigger${activeMenuPanel === 'assessments' ? ' active' : ''}`}
                   type="button"
-                  onMouseEnter={() => setActiveMenuPanel(null)}
-                  onClick={() => handleLinkClick('/assessment/mechanics')}
+                  aria-expanded={activeMenuPanel === 'assessments'}
+                  onMouseEnter={() => setActiveMenuPanel('assessments')}
+                  onClick={() => setActiveMenuPanel('assessments')}
                 >
-                  <span>Контрольный срез</span><span aria-hidden="true">→</span>
+                  <span>Контрольные срезы</span><span aria-hidden="true">‹</span>
                 </button>
+                <div className={`nav-flyout${activeMenuPanel === 'assessments' ? ' open' : ''}`}>
+                  <div className="nav-item"><span className="nav-title">Контрольные работы</span><div className="dropdown"><button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/assessment/mechanics')}><span className="nav-lab-number">01</span><span>Механика</span></button></div></div>
+                </div>
               </div>
             </div>
 

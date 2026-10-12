@@ -1,7 +1,9 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { and, desc, eq, like, isNull, gt } from 'drizzle-orm'
-import { db, hasDatabaseConfig, schema } from './_lib/db.js'
+import { and, desc, eq, isNull, gt, sql } from 'drizzle-orm'
+import { currentPeriod, periodCatalog, selectedPeriod, periodCondition, rotatePeriod } from './_lib/assessmentPeriods.js'
+import { assessmentPenalty } from '../src/lib/assessmentPolicy.js'
+import { db, hasDatabaseConfig, schema, databaseSql } from './_lib/db.js'
 import { getClerkUser, hasPremiumAccess, isAdmin } from './_lib/auth.js'
 import {
   ASSESSMENT_DURATION_MS,
@@ -95,14 +97,14 @@ async function bodyOf(req: VercelRequest): Promise<Record<string, unknown>> {
   }
 }
 
-async function findAttempt(userId: string) {
+async function findAttempt(userId: string, assessmentKey = ASSESSMENT_KEY) {
   const [attempt] = await db
     .select()
     .from(schema.assessmentAttempts)
     .where(
       and(
         eq(schema.assessmentAttempts.clerkUserId, userId),
-        eq(schema.assessmentAttempts.assessmentKey, ASSESSMENT_KEY)
+        eq(schema.assessmentAttempts.assessmentKey, assessmentKey)
       )
     )
     .limit(1)
@@ -122,6 +124,7 @@ function responseFor(
     expiresAt: attempt.expiresAt.toISOString(),
     serverNow: new Date().toISOString(),
     student: variant.student,
+    ...assessmentPenalty(variant.penaltyPolicy, Array.isArray(attempt.violations) ? attempt.violations as Violation[] : [], attempt.submittedAt ? attempt.score ?? gradeVariant(variant, (attempt.answers ?? {}) as Answers).score : null),
   }
   if (attempt.submittedAt) {
     const result = gradeVariant(variant, (attempt.answers ?? {}) as Answers)
@@ -157,13 +160,12 @@ function answeredCount(value: unknown) {
   }, 0)
 }
 
-async function monitorResponse() {
+async function monitorResponse(key: string, active: boolean) {
   const attempts = await db
     .select()
     .from(schema.assessmentAttempts)
-    .where(like(schema.assessmentAttempts.assessmentKey, `${ASSESSMENT_KEY}%`))
+    .where(periodCondition(key))
     .orderBy(desc(schema.assessmentAttempts.startedAt))
-    .limit(250)
   const now = Date.now()
   return {
     serverNow: new Date(now).toISOString(),
@@ -187,7 +189,8 @@ async function monitorResponse() {
         answeredFields: answeredCount(attempt.answers),
         totalFields: publicTasks(variant).reduce((sum, task) => sum + task.fields.length, 0),
         violationsCount: Array.isArray(attempt.violations) ? attempt.violations.length : 0,
-        archived: attempt.assessmentKey !== ASSESSMENT_KEY,
+        archived: !active || attempt.assessmentKey !== key,
+        ...assessmentPenalty(variant.penaltyPolicy, Array.isArray(attempt.violations) ? attempt.violations as Violation[] : [], submitted ? attempt.score ?? result?.score ?? 0 : null),
       }
     }),
   }
@@ -217,22 +220,35 @@ async function monitorAttemptResponse(attemptId: string, language: AssessmentLan
     tasks: review.tasks,
     fields: review.fields,
     violations: Array.isArray(attempt.violations) ? attempt.violations : [],
-    archived: attempt.assessmentKey !== ASSESSMENT_KEY,
+    archived: attempt.assessmentKey !== (await currentPeriod()).key,
+    ...assessmentPenalty(variant.penaltyPolicy, Array.isArray(attempt.violations) ? attempt.violations as Violation[] : [], attempt.submittedAt ? attempt.score ?? result.score : null),
   }
 }
 
-async function startAttempt(userId: string, student?: StudentIdentity) {
-  const existing = await findAttempt(userId)
+async function startAttempt(userId: string, student: StudentIdentity, period: Awaited<ReturnType<typeof currentPeriod>>) {
+  const existing = await findAttempt(userId, period.key)
   if (existing) return existing
 
   for (let tries = 0; tries < 8; tries += 1) {
-    const variant = { ...createVariant(), student }
+    const variant: MechanicsVariant = { ...createVariant(), student, penaltyPolicy: { version: 1 } }
     const startedAt = new Date()
     const expiresAt = new Date(startedAt.getTime() + ASSESSMENT_DURATION_MS)
+    if (period.available) {
+      await databaseSql.transaction([
+        databaseSql`select pg_advisory_xact_lock(hashtext('assessment-period:mechanics'))`,
+        databaseSql`with current_period as (select key from assessment_periods where key = ${period.key} and active = true)
+        insert into assessment_attempts (assessment_key, clerk_user_id, variant_code, variant_fingerprint, variant_data, started_at, expires_at, violations)
+        select key, ${userId}, ${createVariantCode()}, ${variantFingerprint(variant)}, ${JSON.stringify(variant)}::jsonb, ${startedAt.toISOString()}::timestamptz, ${expiresAt.toISOString()}::timestamptz, '[]'::jsonb from current_period
+        on conflict do nothing`], { isolationLevel: 'ReadCommitted' })
+      const created = await findAttempt(userId, period.key)
+      if (created) return created
+      if ((await currentPeriod()).key !== period.key) return null
+      continue
+    }
     const [created] = await db
       .insert(schema.assessmentAttempts)
       .values({
-        assessmentKey: ASSESSMENT_KEY,
+        assessmentKey: period.key,
         clerkUserId: userId,
         variantCode: createVariantCode(),
         variantFingerprint: variantFingerprint(variant),
@@ -244,7 +260,7 @@ async function startAttempt(userId: string, student?: StudentIdentity) {
       .onConflictDoNothing()
       .returning()
     if (created) return created
-    const raced = await findAttempt(userId)
+    const raced = await findAttempt(userId, period.key)
     if (raced) return raced
   }
   throw new Error('Could not create a unique assessment variant')
@@ -263,6 +279,10 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   const user = await getClerkUser(req)
 
   if (req.method === 'GET') {
+    if (req.query.view === 'catalog') {
+      if (!isAdmin(user)) return res.status(403).json({ error: 'Выбор среза доступен администратору.' })
+      return res.status(200).json(await periodCatalog())
+    }
     if (req.query.view === 'attempt') {
       if (!user) return res.status(401).json({ error: 'Сессия не распознана. Обновите страницу.' })
       if (!isAdmin(user)) return res.status(403).json({ error: 'Доступ разрешён только администратору.' })
@@ -274,18 +294,46 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
     if (req.query.view === 'monitor') {
       if (!user) return res.status(401).json({ error: 'Сессия не распознана. Обновите страницу.' })
       if (!isAdmin(user)) return res.status(403).json({ error: 'Доступ разрешён только администратору.' })
-      return res.status(200).json(await monitorResponse())
+      const key = Array.isArray(req.query.period) ? req.query.period[0] : req.query.period
+      const period = await selectedPeriod(key)
+      if (!period) return res.status(404).json({ error: 'Учебный период не найден.' })
+      return res.status(200).json(await monitorResponse(period.key, period.active))
     }
     if (!user) return res.status(200).json({ status: 'ready' })
-    const attempt = await findAttempt(user.userId)
+    const attempt = await findAttempt(user.userId, (await currentPeriod()).key)
     return res.status(200).json(attempt ? responseFor(attempt, queryLanguage, hasPremiumAccess(user)) : { status: 'ready' })
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   const body = await bodyOf(req)
+  if (body.action === 'newPeriod') {
+    if (!isAdmin(user) || !req.headers.authorization?.startsWith('Bearer ')) return res.status(403).json({ error: 'Начать новый период может только администратор.' })
+    const period = await currentPeriod()
+    if (!period.available) return res.status(503).json({ error: 'Хранение учебных периодов ещё не подключено.' })
+    const name = normalizePart(body.name, 120)
+    if (name.length < 2 || body.currentKey !== period.key) return res.status(409).json({ error: 'Проверьте название и обновите список периодов.' })
+    const key = `${ASSESSMENT_KEY}-p-${randomUUID().slice(0, 8)}`
+    const changed = await rotatePeriod(period.key, key, name)
+    if (!changed) return res.status(409).json({ error: 'Нельзя закрыть период: студенты ещё выполняют работу или другой администратор уже сменил период.' })
+    return res.status(200).json({ ok: true, key })
+  }
+  if (body.action === 'waivePenalty') {
+    if (!isAdmin(user) || !req.headers.authorization?.startsWith('Bearer ')) return res.status(403).json({ error: 'Отменять штрафы может только администратор с подтверждённой сессией.' })
+    const reason = normalizePart(body.reason, 300)
+    if (typeof body.attemptId !== 'string' || reason.length < 5) return res.status(400).json({ error: 'Укажите попытку и причину отмены (не менее 5 символов).' })
+    const [target] = await db.select().from(schema.assessmentAttempts).where(eq(schema.assessmentAttempts.id, body.attemptId)).limit(1)
+    if (!target) return res.status(404).json({ error: 'Попытка не найдена.' })
+    const variant = target.variantData as MechanicsVariant
+    if (variant.penaltyPolicy?.version !== 1) return res.status(409).json({ error: 'В этой попытке штрафы не применяются.' })
+    // Only the waiver key is updated, leaving the event log and raw score intact.
+    const waiver = JSON.stringify({ reason, at: new Date().toISOString(), actor: user!.userId })
+    await db.update(schema.assessmentAttempts).set({ variantData: sql`jsonb_set(${schema.assessmentAttempts.variantData}, '{penaltyPolicy,waiver}', ${waiver}::jsonb)` }).where(eq(schema.assessmentAttempts.id, target.id))
+    return res.status(200).json({ ok: true })
+  }
   const language = languageOf(body.language)
   const student = studentFrom(body.student)
   const participantId = student ? studentUserId(student) : user?.userId
+  const period = await currentPeriod()
 
   if (body.action === 'resume') {
     if (!student || !participantId) {
@@ -293,7 +341,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
         error: language === 'kk' ? 'Тегіңізді, атыңызды және тобыңызды енгізіңіз.' : 'Введите фамилию, имя и группу.',
       })
     }
-    const attempt = await findAttempt(participantId)
+    const attempt = await findAttempt(participantId, period.key)
     return res.status(200).json(attempt ? responseFor(attempt, language, hasPremiumAccess(user)) : { status: 'ready' })
   }
 
@@ -303,7 +351,8 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
         error: language === 'kk' ? 'Тегіңізді, атыңызды және тобыңызды тексеріңіз.' : 'Проверьте фамилию, имя и группу.',
       })
     }
-    const attempt = await startAttempt(participantId, student)
+    const attempt = await startAttempt(participantId, student, period)
+    if (!attempt) return res.status(409).json({ error: 'Учебный период сменился. Обновите страницу перед началом работы.' })
     return res.status(200).json(responseFor(attempt, language, hasPremiumAccess(user)))
   }
 
@@ -318,14 +367,14 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
         error: language === 'kk' ? 'Студент деректерін қайта енгізіңіз.' : 'Укажите данные студента заново.',
       })
     }
-    const attempt = await findAttempt(participantId)
+    const attempt = await findAttempt(participantId, period.key)
     if (!attempt) return res.status(200).json({ status: 'ready' })
     if (!attempt.submittedAt) {
       return res.status(409).json({
         error: language === 'kk' ? 'Алдымен ағымдағы жұмысты аяқтаңыз.' : 'Сначала завершите текущую попытку.',
       })
     }
-    const archiveKey = `${ASSESSMENT_KEY}-archive-${Date.now().toString(36)}-${attempt.variantCode}`
+    const archiveKey = `${period.key}-archive-${Date.now().toString(36)}-${attempt.variantCode}`
     await db
       .update(schema.assessmentAttempts)
       .set({ assessmentKey: archiveKey })
@@ -336,7 +385,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   if (!participantId) return res.status(401).json({
     error: language === 'kk' ? 'Студент деректерін қайта енгізіңіз.' : 'Укажите данные студента заново.',
   })
-  const attempt = await findAttempt(participantId)
+  const attempt = await findAttempt(participantId, period.key)
   if (!attempt) return res.status(409).json({
     error: language === 'kk' ? 'Алдымен бақылау жұмысын бастаңыз.' : 'Сначала начните контрольный срез.',
   })
@@ -345,13 +394,18 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   if (body.action === 'event') {
     const eventType = typeof body.eventType === 'string' ? body.eventType : ''
     if (!allowedEvents.has(eventType)) return res.status(400).json({ error: 'Unknown event' })
-    const current = Array.isArray(attempt.violations) ? (attempt.violations as Violation[]) : []
-    const violations = [...current.slice(-99), { type: eventType, at: new Date().toISOString() }]
-    await db
+    const event = JSON.stringify([{ type: eventType, at: new Date().toISOString() }])
+    // Atomic append prevents simultaneous visibility/fullscreen signals from
+    // overwriting each other. Retain earlier warnings for stable scoring.
+    const [updated] = await db
       .update(schema.assessmentAttempts)
-      .set({ violations })
-      .where(eq(schema.assessmentAttempts.id, attempt.id))
-    return res.status(200).json({ ok: true, violationsCount: violations.length })
+      .set({ violations: sql`coalesce(${schema.assessmentAttempts.violations}, '[]'::jsonb) || ${event}::jsonb` })
+      .where(and(eq(schema.assessmentAttempts.id, attempt.id), isNull(schema.assessmentAttempts.submittedAt), gt(schema.assessmentAttempts.expiresAt, new Date())))
+      .returning()
+    const saved = updated ?? await findAttempt(participantId, period.key)
+    const violations = Array.isArray(saved?.violations) ? saved.violations as Violation[] : []
+    const policy = (saved?.variantData as MechanicsVariant | undefined)?.penaltyPolicy
+    return res.status(200).json({ ok: true, violationsCount: violations.length, ...assessmentPenalty(policy, violations, null) })
   }
 
   if (body.action === 'progress') {
@@ -377,7 +431,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
       .set({ answers, score: result.score, submittedAt })
       .where(and(eq(schema.assessmentAttempts.id, attempt.id), isNull(schema.assessmentAttempts.submittedAt)))
       .returning()
-    const saved = updated ?? await findAttempt(participantId)
+    const saved = updated ?? await findAttempt(participantId, period.key)
     if (!saved) throw new Error('Attempt disappeared during submission')
     return res.status(200).json(responseFor(saved, language, hasPremiumAccess(user)))
   }

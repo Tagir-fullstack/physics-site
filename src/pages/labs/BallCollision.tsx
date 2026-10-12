@@ -246,7 +246,7 @@ export default function BallCollision() {
     <motion.main className="collision-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="collision-container">
         <header className="collision-header">
-          <div className="collision-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ №3</div>
+          <div className="collision-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ №2</div>
           <h1>Упругое и неупругое столкновения шаров</h1>
         </header>
 

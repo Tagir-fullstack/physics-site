@@ -1,0 +1,67 @@
+.oberbeck-page { --ob-line: #363a40; --ob-inset: #202225; --ob-muted: #a9b0ba; }
+.oberbeck-page .atwood-card-title { margin-top: 0; }
+.ob-work-links { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; }
+.ob-work-links a { text-decoration: none; }
+.oberbeck-page .ob-scene { min-height: 300px; flex: 1; }
+.ob-mobile-run-controls { display: none; }
+@media(max-width: 800px) {
+  .ob-mobile-run-controls { display: block; }
+  .ob-desktop-run-controls { display: none; }
+  .oberbeck-page .ob-scene { min-height: 220px; flex: none; }
+}
+.oberbeck-page fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.oberbeck-page fieldset:disabled { opacity: .6; }
+.ob-control-caption { margin: 0 0 .5rem; font-size: .9rem; color: var(--ob-muted); }
+.ob-pulleys { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: 1rem; }
+.ob-pulleys button { display: grid; grid-template-columns: 22px 1fr; gap: .2rem .4rem; align-items: center; padding: .55rem; color: var(--text-secondary); background: var(--ob-inset); border: 1px solid var(--ob-line); border-radius: 8px; cursor: pointer; text-align: left; font: inherit; }
+.ob-pulleys button strong { font-size: .85rem; font-weight: 400; white-space: nowrap; }
+.ob-pulleys button small { grid-column: 2; font-size: .85rem; }
+.ob-pulleys button.selected { border-color: #fc6255; background: rgba(252,98,85,.12); }
+.ob-pulleys button.selected:nth-child(2) { border-color: #4a90e2; background: rgba(74,144,226,.13); }
+.ob-pulley-icon { width: 14px; height: 14px; border: 1px solid currentColor; border-radius: 50%; grid-row: span 2; justify-self: center; }
+.ob-pulley-1 { width: 21px; height: 21px; }
+.ob-base, .ob-total { display: flex; justify-content: space-between; gap: .5rem; font-size: .92rem; padding: .5rem .65rem; }
+.ob-total { border-top: 1px solid var(--ob-line); margin-bottom: .8rem; }
+.oberbeck-page .ob-weight { display: flex; flex-direction: row; align-items: center; gap: .5rem; margin-bottom: .35rem; border: 1px solid var(--ob-line); border-radius: 8px; padding: .5rem .65rem; font-size: .9rem; cursor: pointer; }
+.ob-weight strong { margin-left: auto; }
+.oberbeck-page .ob-weight input { width: 17px; height: 17px; accent-color: var(--weight-color); }
+.ob-weight-small { --weight-color: #4a90c9; }
+.ob-weight-large { --weight-color: #fc6255; }
+.ob-weight-small:has(input:checked) { border-color: var(--weight-color); background: rgba(74,144,201,.08); }
+.ob-weight-large:has(input:checked) { border-color: var(--weight-color); background: rgba(252,98,85,.08); }
+.oberbeck-page .ob-distance { margin: .5rem 0 0; font-size: .9rem; }
+.oberbeck-page .ob-distance label { margin-bottom: .3rem; font-size: .9rem; }
+.ob-stepper { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.ob-stepper button { display: grid; place-items: center; width: 38px; height: 32px; padding: 0; line-height: 1; border: 1px solid var(--ob-line); border-radius: 8px; background: var(--ob-inset); color: var(--text-primary); font: 22px Arial, sans-serif; cursor: pointer; }
+.oberbeck-page input[type=range] { padding: .1rem 0; accent-color: #fc6255; }
+.oberbeck-page button:disabled { cursor: not-allowed; opacity: .4; }
+.ob-notice { border-left: 3px solid #4a90e2; padding: .8rem 1rem; background: rgba(74,144,226,.08); margin: 1.2rem 0; color: var(--text-secondary); font-size: .95rem; }
+.ob-task { margin-bottom: 1rem; scroll-margin-top: 85px; }
+.ob-task-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.ob-task-heading h2 { margin: .2rem 0; font: 1.4rem 'CCUltimatum', sans-serif; }
+.ob-task-heading > span { white-space: nowrap; font-size: .85rem; color: var(--ob-muted); }
+.ob-task > p, .ob-model p { color: var(--text-secondary); font-size: .95rem; }
+.ob-table-meta { display: flex; flex-wrap: wrap; gap: .5rem 2rem; padding: .65rem .8rem; border-radius: 8px; background: var(--ob-inset); font-size: .9rem; }
+.ob-table th, .ob-table td { border: 1px solid var(--ob-line); }
+.ob-table .ob-radius-cell { text-align: center; font-weight: 700; background: var(--ob-inset); }
+.ob-table input { width: 100%; min-width: 105px; max-width: 170px; padding: .5rem; border: 1px solid var(--ob-line); border-radius: 6px; background: var(--ob-inset); color: var(--text-primary); font: inherit; }
+.ob-table button { padding: .35rem .5rem; margin-right: .2rem; font: inherit; color: var(--text-primary); background: var(--ob-inset); border: 1px solid var(--ob-line); border-radius: 6px; cursor: pointer; }
+.ob-analysis { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+.ob-analysis details { margin-bottom: .75rem; }
+.ob-uncertainty { margin-top: 1rem; font-size: .9rem; }
+.ob-uncertainty p { color: var(--text-secondary); }
+.ob-analysis details p { color: var(--text-secondary); font-size: .9rem; }
+.ob-conclusion { display: grid; gap: .5rem; font-size: .9rem; margin-top: .9rem; }
+.ob-conclusion textarea { width: 100%; resize: vertical; border: 1px solid var(--ob-line); border-radius: 8px; padding: .7rem; background: var(--ob-inset); color: var(--text-primary); font: inherit; }
+.ob-fit-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; margin-top: .85rem; }
+.ob-fit-fields label { display: grid; gap: .35rem; font-size: .9rem; }
+.ob-fit-fields input { min-width: 0; width: 100%; padding: .6rem; border: 1px solid var(--ob-line); border-radius: 8px; background: var(--ob-inset); color: var(--text-primary); font: inherit; }
+.ob-feedback { font-size: .9rem; color: var(--text-secondary); border-left: 2px solid #4a90e2; padding-left: .7rem; }
+.ob-graph svg { width: 100%; color: var(--ob-muted); font: 11px Arial, sans-serif; }
+.ob-graph text { fill: currentColor; }
+.ob-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .7rem; margin: 1rem 0; color: var(--ob-muted); font-size: .85rem; }
+.ob-model { color: var(--ob-muted); font-size: .9rem; }
+.oberbeck-page summary { cursor: pointer; }
+.a11y-light-theme .oberbeck-page { --ob-line: #d2d8df; --ob-inset: #f2f5f8; --ob-muted: #566171; }
+@media(max-width: 800px) { .oberbeck-page .atwood-grid, .ob-analysis { grid-template-columns: 1fr; } .ob-task-heading { align-items: start; } }
+@media(max-width: 450px) { .oberbeck-page .atwood-card { padding: .85rem; } .atwood-scene-heading { flex-wrap: wrap; gap: 0; } }

@@ -14,9 +14,10 @@ type Task = {
 };
 type Answers = Record<string, Record<string, string>>;
 type StudentIdentity = { lastName: string; firstName: string; group: string };
+type PenaltyInfo = { policyVersion?: number | null; penaltyPoints?: number; finalPercent?: number | null; waiverReason?: string | null };
 type AssessmentLanguage = 'ru' | 'kk';
 type ReadyResponse = { status: 'ready' };
-type ActiveResponse = {
+type ActiveResponse = PenaltyInfo & {
   status: 'active';
   attemptId: string;
   variantCode: string;
@@ -28,7 +29,7 @@ type ActiveResponse = {
   violationsCount: number;
   student?: StudentIdentity;
 };
-type SubmittedResponse = {
+type SubmittedResponse = PenaltyInfo & {
   status: 'submitted';
   attemptId: string;
   variantCode: string;
@@ -54,11 +55,15 @@ const COPY = {
     late: 'Время истекло до отправки: результат не засчитан.', saved: 'Ответы проверены и результат сохранён.',
     group: 'группа', task: 'Задача', correct: 'Верно', incorrect: 'Неверно', variant: 'Вариант',
     eventsRecorded: 'Зафиксировано событий', sources: 'Источники заданий после сдачи',
-    kicker: 'Контрольный срез по механике', introTitle: 'Три задачи. Один индивидуальный вариант.',
-    introLead: 'Регистрация не требуется. Укажите свои данные, получите индивидуальный вариант и решите три задачи за 30 минут.',
-    lastName: 'Фамилия', firstName: 'Имя', groupLabel: 'Группа', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'ФИЗ-101',
-    rules: ['Подготовьте бумагу, ручку и калькулятор.', 'Не покидайте вкладку и полноэкранный режим.', 'Копирование, вставка и печать блокируются и фиксируются.', 'Введите только числа, единицы уже указаны рядом.'],
+    kicker: 'Контрольный срез', introTitle: 'Механика', introMeta: '3 задачи · 30 минут', formTitle: 'Данные участника',
+    introLead: 'У каждого участника — свой вариант. Укажите имя, фамилию и группу, чтобы начать. Регистрация не требуется.',
+    lastName: 'Фамилия', firstName: 'Имя', groupLabel: 'Группа', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'В062',
+    rules: ['Подготовьте бумагу и ручку. Калькулятор встроен в работу.', 'Не покидайте вкладку и полноэкранный режим.', 'Копирование, вставка и печать блокируются и фиксируются.', 'Введите только числа, единицы уже указаны рядом.', 'Отключите автоблокировку и переход экрана в сон на время работы. Таймер продолжает идти, даже если экран заблокирован.'],
     start: 'Начать срез', consent: 'Нажимая кнопку, вы подтверждаете самостоятельное выполнение.',
+    penaltyRules: 'Штрафы: первый эпизод в каждой категории — предупреждение. Повторное скрытие страницы или выход из полного экрана: −1 п. п.; копирование, вырезание, вставка или печать: −2 п. п. Связанные события в пределах 10 секунд считаются одним эпизодом. Общий предел — 10 п. п. Выделение текста и скриншоты не штрафуются автоматически.',
+    legacyRules: 'Эта попытка начата до введения штрафов. События фиксируются, но оценка не снижается.',
+    eventWarning: 'Событие зафиксировано. Соблюдайте правила работы; повторные эпизоды могут снизить оценку.',
+    deduction: 'Снижение', finalGrade: 'Итоговая оценка', penaltyWaived: 'Штрафы отменены преподавателем',
     remaining: 'Осталось', filled: 'Заполнено', events: 'События', fullscreen: 'На весь экран',
     heading: 'Решите задачи и запишите числовые ответы', headingLead: 'Промежуточные вычисления выполняйте на бумаге. Десятичную дробь можно вводить через точку или запятую.',
     check: 'Проверьте ответы', cannotChange: 'После отправки изменить их нельзя.', finish: 'Завершить работу',
@@ -77,11 +82,15 @@ const COPY = {
     late: 'Жіберу уақыты өтіп кетті: нәтиже есептелмеді.', saved: 'Жауаптар тексеріліп, нәтиже сақталды.',
     group: 'тобы', task: 'Есеп', correct: 'Дұрыс', incorrect: 'Қате', variant: 'Нұсқа',
     eventsRecorded: 'Тіркелген оқиғалар', sources: 'Тапсырғаннан кейінгі есептердің дереккөздері',
-    kicker: 'Механика бойынша бақылау жұмысы', introTitle: 'Үш есеп. Бір жеке нұсқа.',
-    introLead: 'Тіркелу қажет емес. Деректеріңізді енгізіп, жеке нұсқаңызды алыңыз және үш есепті 30 минут ішінде шығарыңыз.',
-    lastName: 'Тегі', firstName: 'Аты', groupLabel: 'Тобы', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'ФИЗ-101',
-    rules: ['Қағаз, қалам және калькулятор дайындаңыз.', 'Қойындыдан және толық экран режимінен шықпаңыз.', 'Көшіру, қою және басып шығару бұғатталып, тіркеледі.', 'Тек сандарды енгізіңіз, өлшем бірліктері жанында көрсетілген.'],
+    kicker: 'Бақылау жұмысы', introTitle: 'Механика', introMeta: '3 есеп · 30 минут', formTitle: 'Қатысушы деректері',
+    introLead: 'Әр қатысушыға жеке нұсқа беріледі. Бастау үшін атыңызды, тегіңізді және тобыңызды енгізіңіз. Тіркелу қажет емес.',
+    lastName: 'Тегі', firstName: 'Аты', groupLabel: 'Тобы', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'В062',
+    rules: ['Қағаз бен қалам дайындаңыз. Калькулятор жұмысқа кіріктірілген.', 'Қойындыдан және толық экран режимінен шықпаңыз.', 'Көшіру, қою және басып шығару бұғатталып, тіркеледі.', 'Тек сандарды енгізіңіз, өлшем бірліктері жанында көрсетілген.', 'Жұмыс кезінде экранның автоматты құлыпталуын және ұйқы режимін өшіріңіз. Экран құлыпталса да, уақыт санағы жалғасады.'],
     start: 'Бақылауды бастау', consent: 'Түймені басу арқылы жұмысты өз бетіңізше орындайтыныңызды растайсыз.',
+    penaltyRules: 'Айыптар: әр санаттағы бірінші эпизод — ескерту. Бетті қайта жасыру немесе толық экраннан шығу: −1 пайыздық тармақ; көшіру, қиып алу, қою немесе басып шығару: −2 пайыздық тармақ. 10 секунд ішіндегі байланысты оқиғалар бір эпизод саналады. Жалпы шек — 10 пайыздық тармақ. Мәтінді белгілеу мен скриншот үшін автоматты айып жоқ.',
+    legacyRules: 'Бұл әрекет айыптар енгізілгенге дейін басталған. Оқиғалар тіркеледі, бірақ баға төмендемейді.',
+    eventWarning: 'Оқиға тіркелді. Жұмыс ережелерін сақтаңыз; қайталанған эпизодтар бағаны төмендетуі мүмкін.',
+    deduction: 'Төмендеу', finalGrade: 'Қорытынды баға', penaltyWaived: 'Айыптарды оқытушы алып тастады',
     remaining: 'Қалды', filled: 'Толтырылды', events: 'Оқиғалар', fullscreen: 'Толық экран',
     heading: 'Есептерді шығарып, сандық жауаптарды жазыңыз', headingLead: 'Аралық есептеулерді қағазда орындаңыз. Ондық бөлшекті нүкте немесе үтір арқылы енгізуге болады.',
     check: 'Жауаптарды тексеріңіз', cannotChange: 'Жібергеннен кейін оларды өзгертуге болмайды.', finish: 'Жұмысты аяқтау',
@@ -287,6 +296,8 @@ export default function MechanicsAssessment() {
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
   const [violations, setViolations] = useState(0);
+  const [penaltyPoints, setPenaltyPoints] = useState(0);
+  const [eventWarning, setEventWarning] = useState(false);
   const autoSubmitted = useRef(false);
   const fullscreenWasUsed = useRef(false);
   const lastEvent = useRef<Record<string, number>>({});
@@ -346,6 +357,7 @@ export default function MechanicsAssessment() {
           }
           if (json.status === 'active') {
             setViolations(json.violationsCount || 0);
+            setPenaltyPoints(json.penaltyPoints ?? 0);
             setAnswers(json.answers ?? {});
             answersRef.current = json.answers ?? {};
             deadline.current = Date.now() + new Date(json.expiresAt).getTime() - new Date(json.serverNow).getTime();
@@ -390,6 +402,8 @@ export default function MechanicsAssessment() {
       }
       localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(student));
       setViolations('violationsCount' in json ? json.violationsCount : 0);
+      setPenaltyPoints('penaltyPoints' in json ? json.penaltyPoints ?? 0 : 0);
+      setEventWarning(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : copy.startError);
       if (document.fullscreenElement) void document.exitFullscreen();
@@ -405,11 +419,16 @@ export default function MechanicsAssessment() {
       if (now - (lastEvent.current[eventType] || 0) < 1200) return;
       lastEvent.current[eventType] = now;
       setViolations((count) => count + 1);
+      setEventWarning(true);
       void authFetch('/api/mechanics-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'event', eventType, student: studentRef.current, language }),
         keepalive: true,
+      }).then(async response => {
+        if (!response.ok) return;
+        const payload = await response.json() as PenaltyInfo & { violationsCount?: number };
+        if (typeof payload.penaltyPoints === 'number') setPenaltyPoints(payload.penaltyPoints);
       }).catch(() => { /* The assessment must remain usable during a connection interruption. */ });
     },
     [active, authFetch, language]
@@ -554,10 +573,14 @@ export default function MechanicsAssessment() {
         <section className="assessment-result">
           <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
           <span className="assessment-kicker">{copy.completed}</span>
-          <h1>{submitted.score} {copy.scoreJoin} {submitted.maxScore}</h1>
+          <h1>{submitted.policyVersion === 1 ? `${submitted.finalPercent ?? 0}%` : `${submitted.score} ${copy.scoreJoin} ${submitted.maxScore}`}</h1>
+          {submitted.policyVersion === 1 && <p>{submitted.score} {copy.scoreJoin} {submitted.maxScore} · {copy.task.toLocaleLowerCase()}</p>}
           <p className="assessment-result-lead">
             {submitted.late ? copy.late : copy.saved}
           </p>
+          <div className="assessment-policy-note">
+            {submitted.policyVersion === 1 ? <><p>{copy.finalGrade}: <b>{submitted.finalPercent ?? 0}%</b> · {copy.deduction}: {submitted.penaltyPoints ?? 0} п. п.</p>{submitted.waiverReason && <p>{copy.penaltyWaived}: {submitted.waiverReason}</p>}<p>{copy.penaltyRules}</p></> : <p>{copy.legacyRules}</p>}
+          </div>
           {submitted.student && (
             <p className="assessment-student-summary">
               {submitted.student.lastName} {submitted.student.firstName} · {copy.group} {submitted.student.group}
@@ -589,11 +612,21 @@ export default function MechanicsAssessment() {
   if (!active) {
     return (
       <main className="assessment-shell">
-        <section className="assessment-intro">
+        <section className="assessment-intro assessment-entry">
           <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
+          <div className="assessment-entry-grid">
+          <div className="assessment-entry-description">
           <span className="assessment-kicker">{copy.kicker}</span>
           <h1>{copy.introTitle}</h1>
+          <p className="assessment-entry-meta">{copy.introMeta}</p>
           <p className="assessment-intro-lead">{copy.introLead}</p>
+          <div className="assessment-rules">
+            {copy.rules.map((rule, index) => <div key={rule}><strong>{String(index + 1).padStart(2, '0')}</strong><span>{index === 2 ? <b>{rule}</b> : rule}</span></div>)}
+          </div>
+          <p className="assessment-policy-note">{copy.penaltyRules}</p>
+          </div>
+          <div className="assessment-entry-form">
+          <h2>{copy.formTitle}</h2>
           <div className="assessment-student-form">
             <label>
               <span>{copy.lastName}</span>
@@ -626,12 +659,11 @@ export default function MechanicsAssessment() {
               />
             </label>
           </div>
-          <div className="assessment-rules">
-            {copy.rules.map((rule, index) => <div key={rule}><strong>{String(index + 1).padStart(2, '0')}</strong><span>{rule}</span></div>)}
-          </div>
           {error && <p className="assessment-error">{error}</p>}
           <button className="assessment-primary" onClick={start} disabled={loading || !completeStudent(student)}>{copy.start}</button>
           <small>{copy.consent}</small>
+          </div>
+          </div>
         </section>
       </main>
     );
@@ -662,6 +694,11 @@ export default function MechanicsAssessment() {
       </header>
 
       <section className="assessment-tasks">
+        <div className="assessment-policy-note" role={eventWarning ? 'status' : undefined}>
+          {eventWarning && <p><b>{active.policyVersion === 1 ? copy.eventWarning : copy.legacyRules}</b></p>}
+          <p>{active.policyVersion === 1 ? copy.penaltyRules : copy.legacyRules}</p>
+          {active.policyVersion === 1 && <p>{copy.deduction}: <b>{penaltyPoints} п. п.</b></p>}
+        </div>
         {active.tasks.map((task) => (
           <article className="assessment-task" key={task.id}>
             <div className="assessment-task-number">{String(task.order).padStart(2, '0')}</div>
@@ -710,6 +747,7 @@ export default function MechanicsAssessment() {
             <span className="assessment-kicker">{copy.confirmation}</span>
             <h2 id="submit-title">{copy.sendQuestion}</h2>
             <p>{answeredFields < totalFields ? copy.filledFields(answeredFields, totalFields) : copy.allFilled} {copy.cannotReturn}</p>
+            <p>{active.policyVersion === 1 ? `${copy.deduction}: ${penaltyPoints} п. п. (макс. 10).` : copy.legacyRules}</p>
             <div className="assessment-modal-actions">
               <button onClick={() => setConfirmSubmit(false)} disabled={submitting}>{copy.continue}</button>
               <button className="assessment-primary" onClick={() => void submit(false)} disabled={submitting}>{submitting ? copy.sending : copy.send}</button>

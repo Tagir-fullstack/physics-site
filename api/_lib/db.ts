@@ -18,4 +18,4 @@ export const hasDatabaseConfig = Boolean(connectionString)
 const sql = neon(connectionString || 'postgresql://missing:missing@127.0.0.1:5432/missing')
 
 export const db = drizzle(sql, { schema })
-export { schema }
+export { schema, sql as databaseSql }

@@ -990,3 +990,68 @@
     height: 32px;
   }
 }
+/* Clerk may replace parent classes when validating; select by the added field. */
+:is(.signup-password-row, :has(> .signup-password-confirmation)) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 1rem !important;
+  width: 100% !important;
+}
+:has(> .signup-password-confirmation) > * {
+  flex: none !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  grid-column: 1 / -1 !important;
+}
+:has(> .signup-password-confirmation) .cl-formFieldInput,
+.signup-password-confirmation input {
+  height: 44px !important;
+  min-height: 44px !important;
+  font-size: .875rem !important;
+  line-height: 1.4 !important;
+}
+:has(> .signup-password-confirmation) .cl-formFieldHintText {
+  max-width: none !important;
+  font-size: .8rem !important;
+  line-height: 1.5 !important;
+}
+.signup-password-confirmation { display: grid; gap: .4rem; }
+.signup-password-confirmation label { display: block; width: 100%; text-align: left !important; justify-self: start; color: #fff; font-size: .875rem; font-weight: 500; line-height: 1.4; }
+.signup-password-confirmation input { box-sizing: border-box; width: 100%; height: 44px; padding: .65rem .9rem; border: 1px solid #383838; border-radius: 12px; background: #1a1a1a; color: #fff; font: inherit; font-size: .875rem; }
+.signup-password-confirmation input:focus { border-color: #686868; }
+.cl-modalContent input:focus,
+.cl-signUp-root input:focus,
+.signup-password-confirmation input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.cl-modalContent input:focus-visible,
+.cl-signUp-root input:focus-visible,
+.signup-password-confirmation input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.signup-password-confirmation p { margin: 0; min-height: 1em; font-size: .8rem; color: #ff8075; }
+.a11y-light-theme .signup-password-confirmation label { color: #1a1a1a; }
+.a11y-light-theme .signup-password-confirmation input { background: #f4f5f7; border-color: #cbd0d7; color: #1a1a1a; }
+.a11y-light-theme .signup-password-confirmation p { color: #b8352b; }
+
+.cl-signUp-root .cl-card { padding: 1.75rem !important; gap: 1.25rem !important; }
+.cl-signUp-root .cl-header { gap: .4rem !important; }
+.cl-signUp-root .cl-headerTitle { font-size: 1.4rem !important; line-height: 1.2 !important; }
+.cl-signUp-root .cl-headerSubtitle { font-size: .875rem !important; line-height: 1.4 !important; }
+.cl-signUp-root .cl-form { gap: 1rem !important; }
+.cl-signUp-root .cl-formFieldLabel,
+.cl-signUp-root .cl-formFieldLabelRow { font-size: .875rem !important; line-height: 1.4 !important; }
+.cl-signUp-root .cl-formFieldInput { box-sizing: border-box; min-height: 44px !important; font-size: .875rem !important; }
+.cl-signUp-root .cl-formButtonPrimary { min-height: 44px !important; margin-top: .25rem !important; }
+.cl-signUp-root .cl-socialButtonsBlockButton { min-height: 44px !important; }
+.cl-signUp-root .cl-dividerRow { margin: .25rem 0 !important; }
+.cl-signUp-root .cl-formFieldSuccessText,
+.cl-signUp-root .cl-formFieldErrorText { font-size: .8rem !important; line-height: 1.4 !important; }
+@media (max-width: 480px) {
+  .cl-signUp-root .cl-card { padding: 1.25rem !important; }
+  .cl-signUp-root .cl-formFieldRow { flex-wrap: wrap; }
+}

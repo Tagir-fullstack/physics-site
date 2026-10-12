@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   pgTable,
   pgEnum,
@@ -177,6 +178,15 @@ export const ktpLessons = pgTable(
     orderIdx: uniqueIndex('ktp_lessons_ktp_order_idx').on(t.ktpId, t.orderNo),
   })
 )
+
+export const assessmentPeriods = pgTable('assessment_periods', {
+  key: varchar('key', { length: 64 }).primaryKey(),
+  testId: varchar('test_id', { length: 64 }).notNull(),
+  name: varchar('name', { length: 120 }).notNull(),
+  active: boolean('active').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
+}, t => ({ activeTestIdx: uniqueIndex('assessment_periods_active_test_idx').on(t.testId).where(sql`${t.active} = true`) }))
 
 export const assessmentAttempts = pgTable(
   'assessment_attempts',

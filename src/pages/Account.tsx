@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
 import type { UserRole } from '../types/auth';
 import '../styles/account.css';
 import AccountAccess, { type AccountAccessState } from '../components/AccountAccess';
+import { useApiClient } from '../lib/apiClient';
 
 interface QuizHistoryItem {
   id: string;
@@ -53,14 +54,19 @@ const getExperienceLabel = (experience: number) =>
   EXPERIENCE_OPTIONS.find(option => Number(option.value) === experience)?.label || `${experience} лет`;
 
 export default function Account() {
-  const { user, profile, isPremium, isLoading, signOut, updateProfile } = useAuth();
+  const { user, profile, isLoading, signOut, updateProfile } = useAuth();
   const { user: clerkUser } = useUser();
+  const { authFetch } = useApiClient();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [accountAccess, setAccountAccess] = useState<AccountAccessState | null>(null);
+  const [accessError, setAccessError] = useState<{ userId: string; attempt: number; message: string } | null>(null);
+  const [accessAttempt, setAccessAttempt] = useState(0);
+  const userId = user?.id;
+  const [copiedId, setCopiedId] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Quiz history state (пока не подключено к БД после миграции на Clerk/Neon)
@@ -86,6 +92,22 @@ export default function Account() {
   }, [user, isLoading, navigate]);
 
   useEffect(() => {
+    if (isLoading || !userId) return;
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    void authFetch('/api/account', { signal: controller.signal }).then(async response => {
+      const body = await response.json() as AccountAccessState & { error?: string };
+      if (!response.ok) throw new Error(body.error || 'Не удалось проверить права доступа.');
+      if (body.userId !== userId) throw new Error('Сессия изменилась. Повторите загрузку.');
+      if (!cancelled) setAccountAccess(body);
+    }).catch(reason => {
+      if (!cancelled) setAccessError({ userId, attempt: accessAttempt, message: controller.signal.aborted ? 'Загрузка заняла слишком много времени. Попробуйте ещё раз.' : reason instanceof Error ? reason.message : 'Не удалось загрузить кабинет.' });
+    }).finally(() => window.clearTimeout(timeout));
+    return () => { cancelled = true; controller.abort(); window.clearTimeout(timeout); };
+  }, [authFetch, isLoading, userId, accessAttempt]);
+
+  useEffect(() => {
     if (profile) {
       setFormData({
         full_name: profile.full_name || '',
@@ -100,8 +122,17 @@ export default function Account() {
     }
   }, [profile]);
 
-  if (!user) {
-    return null;
+  if (isLoading || !user || accountAccess?.userId !== user.id) {
+    const error = accessError && accessError.userId === userId && accessError.attempt === accessAttempt ? accessError.message : '';
+    return <main className="account-page account-loading-page" aria-busy={!error}>
+      <div className="account-loading-card">
+        <div className={`account-loading-orbit${error ? ' stopped' : ''}`} aria-hidden="true"><span>✦</span></div>
+        <span className="account-loading-eyebrow">PHYSEZ</span>
+        <h1>{error ? 'Не удалось открыть кабинет' : 'Готовим ваш кабинет'}</h1>
+        <p role={error ? 'alert' : 'status'}>{error || 'Загружаем профиль и ваши инструменты…'}</p>
+        {error && <button className="account-btn account-btn-secondary" onClick={() => setAccessAttempt(value => value + 1)}>Попробовать снова</button>}
+      </div>
+    </main>;
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -221,9 +252,9 @@ export default function Account() {
     }
   };
 
-  const isAdmin = accountAccess?.role === 'owner' || accountAccess?.role === 'admin';
-  const isPro = accountAccess?.isPremium ?? isPremium;
-
+  const accessRoleLabel = accountAccess?.role === 'owner'
+    ? 'Главный администратор'
+    : accountAccess?.role === 'admin' ? 'Администратор' : 'Пользователь';
   const getRoleLabel = (role: UserRole) => {
     return ROLES.find(r => r.value === role)?.label || role;
   };
@@ -465,7 +496,7 @@ export default function Account() {
 
   return (
     <motion.div
-      className="account-page"
+      className={`account-page ${accountAccess ? accountAccess.isPremium ? 'account-tier-pro' : 'account-tier-basic' : ''}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -482,7 +513,10 @@ export default function Account() {
         <div className="account-grid">
           {/* Profile Section - Top Left */}
           <section className="account-section account-profile-section">
-            <h2 className="account-section-title">Профиль</h2>
+            <div className="account-section-heading">
+              <div><span>Учетная запись</span><h2 className="account-section-title">Профиль</h2></div>
+              {!isEditing && <button className="account-edit-trigger" onClick={() => setIsEditing(true)}>Редактировать</button>}
+            </div>
 
             <div className="account-profile-header">
               <div className="account-avatar-wrapper" onClick={handleAvatarClick}>
@@ -512,15 +546,15 @@ export default function Account() {
                 />
               </div>
               <div>
+                {accountAccess && <span className="account-membership-badge">{accountAccess.isPremium ? '✦ PHYSEZ PRO' : 'БАЗОВЫЙ ДОСТУП'}</span>}
                 <div className="account-profile-name-row">
                   <div className="account-profile-name">{profile?.full_name || 'Не указано'}</div>
-                  {isAdmin && <span className="account-admin-badge">Администратор</span>}
                 </div>
                 <div className="account-profile-email">{user.email}</div>
               </div>
             </div>
 
-            <div className="account-profile-info">
+            <div className={`account-profile-info ${isEditing ? 'editing' : 'readonly'}`}>
               {isEditing ? (
                 <>
                   <div className="account-field">
@@ -563,8 +597,42 @@ export default function Account() {
               )}
             </div>
 
+            <div className="account-profile-access">
+              <div>
+                <span>Доступ к платформе</span>
+                <strong>{accountAccess ? accessRoleLabel : 'Проверяем права…'}</strong>
+                <small>
+                  {accountAccess?.role === 'owner'
+                    ? 'Управление платформой, администраторами и всеми инструментами.'
+                    : accountAccess?.role === 'admin'
+                      ? 'Мониторинг контрольных и инструменты преподавателя.'
+                      : accountAccess?.isPremium
+                        ? 'Инструменты преподавателя и возможности PRO.'
+                        : 'Бесплатные материалы платформы.'}
+                </small>
+              </div>
+              {accountAccess && <em className={accountAccess.isPremium ? 'pro' : ''}>{accountAccess.isPremium ? 'PRO' : 'FREE'}</em>}
+            </div>
+
+            {accountAccess && (
+              <details className="account-technical-details account-profile-details">
+                <summary>Данные аккаунта</summary>
+                <button type="button" className="account-access-id" onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(accountAccess.userId);
+                    setCopiedId(true);
+                    window.setTimeout(() => setCopiedId(false), 1600);
+                  } catch {
+                    setMessage({ type: 'error', text: 'Не удалось скопировать ID. Выделите его вручную.' });
+                  }
+                }}>
+                  <span>Clerk ID</span><code>{accountAccess.userId}</code><em>{copiedId ? 'Скопировано' : 'Копировать'}</em>
+                </button>
+              </details>
+            )}
+
             {/* Stats */}
-            <div className="account-stats">
+            {quizHistory.length > 0 && <div className="account-stats">
               <div className="account-stat">
                 <div className="account-stat-value">{totalTests}</div>
                 <div className="account-stat-label">Тестов пройдено</div>
@@ -577,7 +645,7 @@ export default function Account() {
                 <div className="account-stat-value">{excellentTests}</div>
                 <div className="account-stat-label">Отличных</div>
               </div>
-            </div>
+            </div>}
 
             {/* Profile completeness */}
             {profileCompleteness < 100 && (
@@ -612,37 +680,18 @@ export default function Account() {
                     Отмена
                   </button>
                 </>
-              ) : (
-                <button
-                  className="account-btn account-btn-secondary"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Редактировать
-                </button>
-              )}
+              ) : null}
             </div>
           </section>
 
           {/* Subscription */}
           <section className="account-section account-subscription">
-            <h2 className="account-section-title">Подписка</h2>
-            <AccountAccess onChange={setAccountAccess} />
-
-            {isPro && profile?.role && isEducatorRole(profile.role) && (
-              <div className="account-upgrade">
-                <p className="account-upgrade-text">
-                  Ваша подписка открывает доступ к кабинету учителя.
-                </p>
-                <Link to="/teacher" className="account-btn account-btn-teacher">
-                  Кабинет учителя →
-                </Link>
-              </div>
-            )}
+            <AccountAccess access={accountAccess} />
           </section>
 
           {/* Quiz History */}
-          <section className="account-section account-history-section">
-            <h2 className="account-section-title">История тестов</h2>
+          <section className="account-section account-history-section" hidden={!isLoadingHistory && quizHistory.length === 0}>
+            <div className="account-section-heading"><div><span>Активность</span><h2 className="account-section-title">История тестов</h2></div></div>
 
             {isLoadingHistory ? (
               <div className="account-history-loading">Загрузка...</div>

@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react'
 import './i18n'
 import './index.css'
 import App from './App.tsx'
+import PasswordConfirmation from './components/auth/PasswordConfirmation'
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -61,6 +62,7 @@ createRoot(document.getElementById('root')!).render(
       }}
     >
       <App />
+      <PasswordConfirmation />
       <Analytics />
     </ClerkProvider>
   </StrictMode>,

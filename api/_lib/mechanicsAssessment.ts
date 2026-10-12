@@ -1,4 +1,5 @@
 import { randomBytes, randomInt } from 'node:crypto'
+import type { AssessmentPolicy } from '../../src/lib/assessmentPolicy.js'
 
 export const ASSESSMENT_KEY = 'mechanics-cut-v2'
 export const ASSESSMENT_DURATION_MS = 30 * 60 * 1000
@@ -11,6 +12,7 @@ export type StudentIdentity = {
 }
 
 export type MechanicsVariant = {
+  penaltyPolicy?: AssessmentPolicy
   student?: StudentIdentity
   relativeMotion: {
     v1: number

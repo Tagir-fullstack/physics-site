@@ -213,7 +213,7 @@ export default function AtwoodMachine() {
     <motion.main className="atwood-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="atwood-container">
         <header className="atwood-header">
-          <div className="atwood-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ</div>
+          <div className="atwood-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ №1</div>
           <h1>Машина Атвуда</h1>
         </header>
 
