@@ -1048,6 +1048,9 @@
 .cl-signUp-root .cl-formFieldInput { box-sizing: border-box; min-height: 44px !important; font-size: .875rem !important; }
 .cl-signUp-root .cl-formButtonPrimary { min-height: 44px !important; margin-top: .25rem !important; }
 .cl-signUp-root .cl-socialButtonsBlockButton { min-height: 44px !important; }
+.cl-signIn-root .cl-socialButtonsBlockButton { min-height: 44px !important; border-radius: 12px !important; }
+.cl-socialButtonsBlockButtonText { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.4 !important; }
+.cl-lastAuthenticationStrategyBadge { font-size: .65rem !important; line-height: 1.3 !important; }
 .cl-signUp-root .cl-dividerRow { margin: .25rem 0 !important; }
 .cl-signUp-root .cl-formFieldSuccessText,
 .cl-signUp-root .cl-formFieldErrorText { font-size: .8rem !important; line-height: 1.4 !important; }

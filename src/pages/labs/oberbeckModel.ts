@@ -17,10 +17,10 @@ const j10 = inertiaFromTime(BASE, RADII[0], 18.5)
 const j12 = inertiaFromTime(TOTAL, RADII[1], 6.7)
 export const CYLINDER_MASS = (j12 - j10) / (4 * (0.12 ** 2 - 0.1 ** 2))
 export const CROSS_INERTIA = j10 - 4 * CYLINDER_MASS * 0.1 ** 2
-export function experiment(mass: number, radius: number, length: number, timeFactor = 1) {
+export function experiment(mass: number, radius: number, length: number, timeFactor = 1, height = HEIGHT) {
   const inertia = CROSS_INERTIA + 4 * CYLINDER_MASS * length ** 2
   const acceleration = mass * G / (mass + inertia / radius ** 2)
-  const duration = Math.sqrt(2 * HEIGHT / acceleration) * timeFactor
-  return { acceleration: 2 * HEIGHT / duration ** 2, duration }
+  const duration = Math.sqrt(2 * height / acceleration) * timeFactor
+  return { acceleration: 2 * height / duration ** 2, duration }
 }
 export const numberFrom = (value: string) => value.trim() === '' ? NaN : Number(value.replace(',', '.'))

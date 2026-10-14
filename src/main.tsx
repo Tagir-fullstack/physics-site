@@ -18,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ClerkProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
-      localization={ruRU}
+      localization={{ ...ruRU, socialButtonsBlockButton: 'Продолжить с {{provider|titleize}}' }}
       appearance={{
         variables: {
           colorPrimary: '#FC6255',

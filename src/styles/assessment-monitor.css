@@ -72,6 +72,8 @@
 .monitor-detail header button { width: 42px; height: 42px; border: 1px solid #3b3b3b; border-radius: 50%; background: #181818; color: #eee; font-size: 1.8rem; }
 .monitor-detail header .monitor-detail-close { display: grid; place-items: center; padding: 0; flex: 0 0 42px; align-self: flex-start; line-height: 1; cursor: pointer; }
 .monitor-detail-close svg { display: block; }
+.ob-expected-detail .monitor-table { min-width: 650px; }
+.ob-expected-detail .monitor-table td:first-child { min-width: 0; max-width: none; }
 .monitor-policy-note { padding: 1rem; margin: 1rem 0; border: 1px solid #363a40; border-radius: 8px; color: #a9b0ba; font-size: .9rem; }
 .monitor-policy-note label { display: grid; gap: .4rem; }
 .monitor-policy-note input { width: 100%; min-width: 0; box-sizing: border-box; padding: .7rem; color: inherit; background: transparent; border: 1px solid #777; border-radius: 6px; font: inherit; }

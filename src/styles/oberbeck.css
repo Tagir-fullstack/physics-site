@@ -2,7 +2,10 @@
 .oberbeck-page .atwood-card-title { margin-top: 0; }
 .ob-work-links { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; }
 .ob-work-links a { text-decoration: none; }
-.oberbeck-page .ob-scene { min-height: 300px; flex: 1; }
+.oberbeck-page .ob-scene { --ob-scene-bg: #0a0a0a; min-height: 300px; flex: 1; }
+.ob-pulley-groove { stroke-opacity: .45; }
+.ob-pulley-groove.active { stroke-opacity: 1; }
+.a11y-light-theme .oberbeck-page .ob-scene { --ob-scene-bg: #f7f7f7; }
 .ob-mobile-run-controls { display: none; }
 @media(max-width: 800px) {
   .ob-mobile-run-controls { display: block; }

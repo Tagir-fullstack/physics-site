@@ -3,6 +3,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import LoadingScreen from './components/LoadingScreen';
+import CookieNotice from './components/CookieNotice';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -35,6 +36,11 @@ import './styles/auth.css';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
+const GoogleAuthCallback = lazy(() => import('./pages/GoogleAuth').then(m => ({ default: m.GoogleAuthCallback })));
+const GoogleAuthRequirements = lazy(() => import('./pages/GoogleAuth').then(m => ({ default: m.GoogleAuthRequirements })));
+const StudentProfile = lazy(() => import('./pages/StudentProfile'));
+const OberbeckEntry = lazy(() => import('./pages/labs/OberbeckEntry'));
+const OberbeckVariants = lazy(() => import('./pages/OberbeckVariants'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Changelog = lazy(() => import('./pages/Changelog'));
@@ -49,7 +55,6 @@ const StudentTests = lazy(() => import('./pages/StudentTests'));
 const StudentTestRunner = lazy(() => import('./pages/StudentTestRunner'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
-const OberbeckPendulum = lazy(() => import('./pages/labs/OberbeckPendulum'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
 const MechanicsAssessment = lazy(() => import('./pages/MechanicsAssessment'));
 const AssessmentMonitor = lazy(() => import('./pages/AssessmentMonitor'));
@@ -116,6 +121,10 @@ function App() {
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/changelog" element={<Changelog />} />
                   <Route path="/account" element={<Account />} />
+                  <Route path="/student/profile" element={<StudentProfile />} />
+                  <Route path="/auth/sso-callback" element={<GoogleAuthCallback />} />
+                  <Route path="/labs/oberbeck/sign-in/*" element={<GoogleAuthRequirements />} />
+                  <Route path="/labs/oberbeck/sign-up/*" element={<GoogleAuthRequirements signup />} />
                   <Route path="/teacher" element={<Teacher />} />
                   <Route path="/teacher/ktp" element={<KtpList />} />
                   <Route path="/teacher/ktp/new" element={<KtpNew />} />
@@ -126,7 +135,8 @@ function App() {
                   <Route path="/student/test/:attemptId" element={<StudentTestRunner />} />
                   <Route path="/thesis" element={<Thesis />} />
                   <Route path="/labs/atwood" element={<AtwoodMachine />} />
-                  <Route path="/labs/oberbeck" element={<OberbeckPendulum />} />
+                  <Route path="/labs/oberbeck" element={<OberbeckEntry />} />
+                  <Route path="/admin/oberbeck-variants" element={<OberbeckVariants />} />
                   <Route path="/labs/ball-collision" element={<BallCollision />} />
                   <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />
                   <Route path="/admin/assessment-monitor" element={<AssessmentMonitorIndex />} />
@@ -160,6 +170,7 @@ function App() {
             </Suspense>
           </div>
           <Footer />
+          <CookieNotice />
         </div>
       </Router>
       </QuizModeProvider>

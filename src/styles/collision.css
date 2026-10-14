@@ -14,10 +14,11 @@
 .collision-state { color: #aaa; font-size: .8rem; text-align: right; }
 .collision-scene { display: block; width: 100%; min-height: 0; height: auto; aspect-ratio: 500 / 410; flex: 1 1 auto; color: var(--collision-scene-fg); background: var(--collision-scene-bg); border-radius: 10px; }
 .collision-scene-labels { font: 14px 'Radiant', Arial, sans-serif; }
-.collision-angle-scale { opacity: .72; stroke-width: 1; }
-.collision-angle-scale .collision-center-mark { stroke-width: 1.5; opacity: .85; }
+.collision-angle-scale { opacity: .72; stroke-width: .6; }
+.collision-angle-scale .collision-center-mark { stroke-width: .8; opacity: .85; }
 .collision-angle-scale text { stroke: none; font: 9px 'Radiant', Arial, sans-serif; text-anchor: middle; dominant-baseline: middle; }
-.collision-beta-marker { fill: #4a90e2; stroke: var(--collision-scene-bg); stroke-width: 2; }
+.collision-beta-marker { fill: #4a90e2; stroke: var(--collision-scene-bg); stroke-width: .4; }
+.collision-beta-hit-area { fill: transparent; stroke: none; pointer-events: all; }
 .collision-scene-caption { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; margin-top: 1rem; color: #ccc; font-size: .75rem; }
 .collision-controls .collision-scene-caption { padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.08); }
 .collision-controls { padding-block: 1.35rem; }

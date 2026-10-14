@@ -255,16 +255,16 @@ export default function BallCollision() {
             <div className="collision-scene-heading"><div className="collision-card-title"><span>1</span> Схема установки</div></div>
             <svg className="collision-scene" viewBox="100 0 500 410" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Схема установки для исследования столкновения подвешенных шаров">
               <g transform="translate(350 30) scale(1.18) translate(-350 -30)">
-              <g fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d={`M${PIVOT_2_X} 30 V48 M${PIVOT_1_X} 30 V48 M322 16 H378 V30 H322 Z`} strokeWidth="3" />
-                <circle cx={PIVOT_1_X} cy={PIVOT_Y} r="4" fill="var(--collision-scene-bg)" strokeWidth="2" />
-                <circle cx={PIVOT_2_X} cy={PIVOT_Y} r="4" fill="var(--collision-scene-bg)" strokeWidth="2" />
-                <path d={`M${PIVOT_1_X} ${PIVOT_Y} L${ball1X} ${ball1Y} M${PIVOT_2_X} ${PIVOT_Y} L${ball2X} ${ball2Y}`} strokeWidth="2" />
+              <g fill="none" stroke="currentColor" strokeWidth=".8">
+                <path d={`M${PIVOT_2_X} 30 V48 M${PIVOT_1_X} 30 V48 M322 16 H378 V30 H322 Z`} strokeWidth="1" />
+                <circle cx={PIVOT_1_X} cy={PIVOT_Y} r="4" fill="var(--collision-scene-bg)" strokeWidth="1" />
+                <circle cx={PIVOT_2_X} cy={PIVOT_Y} r="4" fill="var(--collision-scene-bg)" strokeWidth="1" />
+                <path d={`M${PIVOT_1_X} ${PIVOT_Y} L${ball1X} ${ball1Y} M${PIVOT_2_X} ${PIVOT_Y} L${ball2X} ${ball2Y}`} strokeWidth="1" />
                 <path d={SCALE_LEFT_PATH} opacity=".7" />
                 <path d={SCALE_RIGHT_PATH} opacity=".7" />
                 <path d={`M${PIVOT_2_X} ${PIVOT_Y + SCALE_RADIUS} V302 H${PIVOT_1_X} V${PIVOT_Y + SCALE_RADIUS}`} opacity=".35" />
                 <path d={`M${SCALE_LEFT_END.x} ${SCALE_LEFT_END.y} V302 M${SCALE_RIGHT_END.x} ${SCALE_RIGHT_END.y} V302`} opacity=".25" />
-                <path d="M248 330 H452 M232 345 H468" strokeWidth="2" opacity=".5" />
+                <path d="M248 330 H452 M232 345 H468" strokeWidth="1" opacity=".5" />
                 <path d={`M${PIVOT_1_X} ${PIVOT_Y} L${PIVOT_1_X + LENGTH_PX * Math.sin(config.angle * Math.PI / 180)} ${PIVOT_Y + LENGTH_PX * Math.cos(config.angle * Math.PI / 180)}`} strokeDasharray="4 5" opacity=".35" />
               </g>
               <g className="collision-angle-scale" fill="currentColor" stroke="currentColor">
@@ -279,26 +279,29 @@ export default function BallCollision() {
                   return <text key={`label-${side}-${degrees}`} x={label.x} y={label.y}>{degrees}°</text>
                 }))}
               </g>
-              {isPro && betaMarker && <circle className="collision-beta-marker" cx={betaMarker.x} cy={betaMarker.y} r="4"><title>Максимальное отклонение: {format(displayedPeak ?? 0, 1)}°</title></circle>}
               <g className="collision-scene-labels" fill="currentColor">
                 <text x={ball1X + 19} y={ball1Y + 5}>m₁</text>
                 <text x={ball2X - 29} y={ball2Y + 5}>m₂</text>
               </g>
               <g className={collision ? 'collision-impact collision-impact--visible' : 'collision-impact'}>
-                <circle cx={(ball1X + ball2X) / 2} cy={(ball1Y + ball2Y) / 2} r="20" fill="none" stroke="#f5a623" strokeWidth="2" strokeDasharray="4 4" />
+                <circle cx={(ball1X + ball2X) / 2} cy={(ball1Y + ball2Y) / 2} r="20" fill="none" stroke="#f5a623" strokeWidth="1" strokeDasharray="4 4" />
                 <path d={`M${(ball1X + ball2X) / 2 - 26} ${(ball1Y + ball2Y) / 2} H${(ball1X + ball2X) / 2 + 26}`} stroke="#f5a623" />
               </g>
-              {activeState.stuck && <line x1={ball1X} y1={ball1Y} x2={ball2X} y2={ball2Y} stroke="#ff7166" strokeWidth="3" opacity=".8" />}
-              <g className="collision-angle-pointers" fill="var(--collision-scene-fg)" stroke="var(--collision-scene-fg)" strokeWidth="1.2">
+              {activeState.stuck && <line x1={ball1X} y1={ball1Y} x2={ball2X} y2={ball2Y} stroke="#ff7166" strokeWidth="1" opacity=".8" />}
+              <g className="collision-angle-pointers" fill="var(--collision-scene-fg)" stroke="var(--collision-scene-fg)" strokeWidth=".6">
                 {mode === 'elastic' ? <>
                   <path d={pointerPath(PIVOT_1_X, angle1)} />
                   <path d={pointerPath(PIVOT_2_X, angle2)} />
                 </> : activeState.stuck && <line x1={contactX} y1={contactY} x2={contactGuideEnd.x} y2={contactGuideEnd.y} />}
               </g>
-              <circle cx={ball1X} cy={ball1Y} r={BALL_RADIUS} fill="#c84d4a" stroke="#ff7166" strokeWidth="2" />
-              <circle cx={ball2X} cy={ball2Y} r={BALL_RADIUS} fill={mode === 'inelastic' ? '#4b4a47' : '#8796a8'} stroke={mode === 'inelastic' ? '#77736c' : '#c3ced8'} strokeWidth="2"><title>{mode === 'inelastic' ? 'Матовый шар с неупругим покрытием' : 'Упругий металлический шар'}</title></circle>
+              <circle cx={ball1X} cy={ball1Y} r={BALL_RADIUS} fill="#c84d4a" stroke="#ff7166" strokeWidth="1" />
+              <circle cx={ball2X} cy={ball2Y} r={BALL_RADIUS} fill={mode === 'inelastic' ? '#4b4a47' : '#8796a8'} stroke={mode === 'inelastic' ? '#77736c' : '#c3ced8'} strokeWidth="1"><title>{mode === 'inelastic' ? 'Матовый шар с неупругим покрытием' : 'Упругий металлический шар'}</title></circle>
               <circle cx={ball1X - 4} cy={ball1Y - 4} r="2.5" fill="#fff" opacity=".35" />
               {mode === 'elastic' && <circle cx={ball2X - 4} cy={ball2Y - 4} r="2.5" fill="#fff" opacity=".35" />}
+              {isPro && betaMarker && <g>
+                <circle className="collision-beta-hit-area" cx={betaMarker.x} cy={betaMarker.y} r="8"><title>Максимальное отклонение: {format(displayedPeak ?? 0, 1)}°</title></circle>
+                <circle className="collision-beta-marker" cx={betaMarker.x} cy={betaMarker.y} r="1.2" pointerEvents="none" />
+              </g>}
               </g>
             </svg>
             {isPro && <>

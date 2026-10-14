@@ -24,7 +24,11 @@ function vercelApiDevPlugin(): Plugin {
         let modulePath: string | null = null
         const query: Record<string, string> = Object.fromEntries(url.searchParams)
 
-        if (pathname === '/api/account') {
+        if (pathname === '/api/student-profile') {
+          modulePath = '/api/student-profile.ts'
+        } else if (pathname === '/api/oberbeck') {
+          modulePath = '/api/oberbeck.ts'
+        } else if (pathname === '/api/account') {
           modulePath = '/api/account.ts'
         } else if (pathname === '/api/mechanics-assessment') {
           modulePath = '/api/mechanics-assessment.ts'

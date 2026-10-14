@@ -202,8 +202,8 @@ export default function Header() {
                   className={`nav-section-trigger${activeMenuPanel === 'nuclear' ? ' active' : ''}`}
                   type="button"
                   aria-expanded={activeMenuPanel === 'nuclear'}
-                  onMouseEnter={() => setActiveMenuPanel('nuclear')}
-                  onClick={() => setActiveMenuPanel('nuclear')}
+                  onPointerEnter={(event) => { if (event.pointerType === 'mouse' && window.matchMedia('(hover: hover)').matches) setActiveMenuPanel('nuclear'); }}
+                  onClick={() => setActiveMenuPanel(current => current === 'nuclear' ? null : 'nuclear')}
                 >
                   <span>Физика атомного ядра</span><span aria-hidden="true">‹</span>
                 </button>
@@ -235,8 +235,8 @@ export default function Header() {
                   className={`nav-section-trigger nav-section-trigger--labs${activeMenuPanel === 'labs' ? ' active' : ''}`}
                   type="button"
                   aria-expanded={activeMenuPanel === 'labs'}
-                  onMouseEnter={() => setActiveMenuPanel('labs')}
-                  onClick={() => setActiveMenuPanel('labs')}
+                  onPointerEnter={(event) => { if (event.pointerType === 'mouse' && window.matchMedia('(hover: hover)').matches) setActiveMenuPanel('labs'); }}
+                  onClick={() => setActiveMenuPanel(current => current === 'labs' ? null : 'labs')}
                 >
                   <span>Лаборатории</span><span aria-hidden="true">‹</span>
                 </button>
@@ -257,8 +257,8 @@ export default function Header() {
                   className={`nav-section-trigger${activeMenuPanel === 'assessments' ? ' active' : ''}`}
                   type="button"
                   aria-expanded={activeMenuPanel === 'assessments'}
-                  onMouseEnter={() => setActiveMenuPanel('assessments')}
-                  onClick={() => setActiveMenuPanel('assessments')}
+                  onPointerEnter={(event) => { if (event.pointerType === 'mouse' && window.matchMedia('(hover: hover)').matches) setActiveMenuPanel('assessments'); }}
+                  onClick={() => setActiveMenuPanel(current => current === 'assessments' ? null : 'assessments')}
                 >
                   <span>Контрольные срезы</span><span aria-hidden="true">‹</span>
                 </button>
@@ -300,8 +300,8 @@ export default function Header() {
                   setIsMenuOpen(!isMenuOpen);
                 }
               }}
-              onMouseEnter={() => {
-                if (!isQuizActive) {
+              onPointerEnter={(event) => {
+                if (!isQuizActive && event.pointerType === 'mouse' && window.matchMedia('(hover: hover)').matches) {
                   openMenu();
                 }
               }}

@@ -29,6 +29,26 @@ export const commentStatusEnum = pgEnum('comment_status', [
   'rejected',
 ])
 
+export const studentProfiles = pgTable('student_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clerkId: varchar('clerk_id', { length: 64 }).unique(),
+  lastName: varchar('last_name', { length: 60 }).notNull(),
+  firstName: varchar('first_name', { length: 60 }).notNull(),
+  group: varchar('student_group', { length: 60 }).notNull(),
+  identityKey: varchar('identity_key', { length: 64 }).notNull().unique(),
+  recoveryHash: varchar('recovery_hash', { length: 64 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+export const oberbeckVariants = pgTable('oberbeck_variants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  studentId: uuid('student_id').notNull().unique().references(() => studentProfiles.id),
+  code: varchar('code', { length: 16 }).notNull().unique(),
+  fingerprint: varchar('fingerprint', { length: 160 }).notNull().unique(),
+  parameters: jsonb('parameters').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const users = pgTable(
   'users',
   {

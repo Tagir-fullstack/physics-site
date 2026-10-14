@@ -688,6 +688,28 @@ html.a11y-font-xlarge .header .burger span {
   border-left-color: #FC6255 !important;
 }
 
+.a11y-light-theme .nav-section-trigger--labs:hover,
+.a11y-light-theme .nav-section-trigger--labs.active {
+  background-color: rgba(74, 144, 226, 0.1) !important;
+}
+
+.a11y-light-theme .nav-section-trigger--labs > span:last-child,
+.a11y-light-theme .nav-flyout--labs .nav-title {
+  color: #2866b0 !important;
+}
+
+.a11y-light-theme .nav-flyout--labs .dropdown-item:hover,
+.a11y-light-theme .nav-flyout--labs .dropdown-item:active {
+  background-color: rgba(74, 144, 226, 0.1) !important;
+  border-left-color: #4a90e2 !important;
+}
+
+.a11y-light-theme .nav-new-badge {
+  color: #245b9b !important;
+  background-color: #eaf3ff !important;
+  border-color: #c4dcf8 !important;
+}
+
 
 /* --- Inputs --- */
 .a11y-light-theme input,
@@ -732,10 +754,38 @@ html.a11y-font-xlarge .header .burger span {
 }
 
 .a11y-light-theme .cl-formFieldInput {
-  background: #ffffff !important;
+  background: #f8f9fa !important;
   color: #1a1a1a !important;
-  border-color: rgba(0, 0, 0, 0.24) !important;
+  border: 1px solid #d3d7dd !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
 }
+
+.a11y-light-theme .cl-formFieldInput::placeholder { color: #777 !important; opacity: 1; }
+.a11y-light-theme .cl-socialButtonsBlockButton {
+  background: #fff !important;
+  border: 1px solid #d3d7dd !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 1px 3px #0000000d !important;
+}
+.a11y-light-theme .cl-socialButtonsBlockButton:hover { background: #f8f9fa !important; }
+.a11y-light-theme .cl-socialButtonsBlockButtonText { color: #1a1a1a !important; }
+.a11y-light-theme .cl-lastAuthenticationStrategyBadge {
+  background: #eef4fb !important;
+  color: #245fa3 !important;
+  border: 1px solid #cad9ed !important;
+  box-shadow: none !important;
+}
+.a11y-light-theme .cl-lastAuthenticationStrategyBadge * { color: #245fa3 !important; }
+.a11y-light-theme .cl-tooltipContent {
+  background: #fff !important;
+  color: #333 !important;
+  border: 1px solid #d3d7dd !important;
+}
+.a11y-light-theme .cl-tooltipContent *, .a11y-light-theme .cl-tooltipText { color: #333 !important; }
+.a11y-light-theme .cl-modalCloseButton, .a11y-light-theme .cl-formFieldInputShowPasswordButton { color: #595959 !important; }
+.a11y-light-theme .cl-footerActionLink { color: #2169b5 !important; }
+.a11y-light-theme .cl-footer :is(div, section) { background-image: none !important; }
 
 .a11y-light-theme .cl-formButtonPrimary {
   color: #1a1a1a !important;
