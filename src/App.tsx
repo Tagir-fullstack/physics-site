@@ -39,6 +39,7 @@ const Home = lazy(() => import('./pages/Home'));
 const GoogleAuthCallback = lazy(() => import('./pages/GoogleAuth').then(m => ({ default: m.GoogleAuthCallback })));
 const GoogleAuthRequirements = lazy(() => import('./pages/GoogleAuth').then(m => ({ default: m.GoogleAuthRequirements })));
 const StudentProfile = lazy(() => import('./pages/StudentProfile'));
+const StudentRecovery = lazy(() => import('./pages/StudentRecovery'));
 const OberbeckEntry = lazy(() => import('./pages/labs/OberbeckEntry'));
 const OberbeckVariants = lazy(() => import('./pages/OberbeckVariants'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -57,6 +58,7 @@ const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
 const MechanicsAssessment = lazy(() => import('./pages/MechanicsAssessment'));
+const AssessmentIndex = lazy(() => import('./pages/AssessmentIndex'));
 const AssessmentMonitor = lazy(() => import('./pages/AssessmentMonitor'));
 const AssessmentMonitorIndex = lazy(() => import('./pages/AssessmentMonitorIndex'));
 
@@ -122,6 +124,7 @@ function App() {
                   <Route path="/changelog" element={<Changelog />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/student/profile" element={<StudentProfile />} />
+                  <Route path="/student/recover" element={<StudentRecovery />} />
                   <Route path="/auth/sso-callback" element={<GoogleAuthCallback />} />
                   <Route path="/labs/oberbeck/sign-in/*" element={<GoogleAuthRequirements />} />
                   <Route path="/labs/oberbeck/sign-up/*" element={<GoogleAuthRequirements signup />} />
@@ -139,6 +142,8 @@ function App() {
                   <Route path="/admin/oberbeck-variants" element={<OberbeckVariants />} />
                   <Route path="/labs/ball-collision" element={<BallCollision />} />
                   <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />
+                  <Route path="/assessment" element={<AssessmentIndex />} />
+                  <Route path="/assessment/midterm" element={<MechanicsAssessment key="midterm" assessment="midterm" />} />
                   <Route path="/admin/assessment-monitor" element={<AssessmentMonitorIndex />} />
                   <Route path="/admin/assessment-monitor/:testId" element={<AssessmentMonitor />} />
 

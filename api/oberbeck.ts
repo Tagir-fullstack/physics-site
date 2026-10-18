@@ -5,9 +5,22 @@ import { db, schema } from './_lib/db.js'
 import { getClerkUser, isAdmin } from './_lib/auth.js'
 import { bodyOf, currentStudent, publicProfile, sameOrigin } from './_lib/studentProfile.js'
 import { createOberbeckVariant, expectedOberbeckTables, variantFingerprint, type OberbeckVariant } from '../src/lib/oberbeckVariant.js'
+import { issueStudentRecovery } from './_lib/studentRecovery.js'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('Referrer-Policy', 'no-referrer')
   try {
+    const body = req.method === 'POST' ? await bodyOf(req) : null
+    if (body?.action === 'issueRecovery') {
+      const user = await getClerkUser(req)
+      if (!isAdmin(user) || !req.headers.authorization?.startsWith('Bearer ')) return res.status(403).json({ error: 'Восстанавливать доступ может только администратор с подтверждённой сессией.' })
+      if (!sameOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
+      if (typeof body.variantId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(body.variantId)) return res.status(400).json({ error: 'Выберите вариант студента.' })
+      const [variant] = await db.select().from(schema.oberbeckVariants).where(eq(schema.oberbeckVariants.id, body.variantId)).limit(1)
+      if (!variant) return res.status(404).json({ error: 'Вариант не найден.' })
+      const recovery = await issueStudentRecovery(variant.studentId, user!.userId)
+      return res.status(201).json({ ...recovery, variantId: variant.id, variantCode: variant.code })
+    }
     if (req.method === 'GET' && ['list', 'expected'].includes(String(req.query.view))) {
       if (!isAdmin(await getClerkUser(req))) return res.status(403).json({ error: 'Доступ к вариантам разрешён только администратору.' })
       const query = db.select({ variant: schema.oberbeckVariants, student: schema.studentProfiles }).from(schema.oberbeckVariants).innerJoin(schema.studentProfiles, eq(schema.oberbeckVariants.studentId, schema.studentProfiles.id))
@@ -27,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let variant = await find()
     if (req.method === 'POST') {
       if (!sameOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
-      if ((await bodyOf(req)).action !== 'start') return res.status(400).json({ error: 'Неизвестное действие.' })
+      if (body?.action !== 'start') return res.status(400).json({ error: 'Неизвестное действие.' })
       for (let i = 0; !variant && i < 12; i++) {
         const parameters = createOberbeckVariant(() => randomInt(0, 1_000_000) / 1_000_000)
         await db.insert(schema.oberbeckVariants).values({ studentId: profile.id, code: `OB-${randomBytes(5).toString('hex').toUpperCase()}`, parameters, fingerprint: variantFingerprint(parameters) }).onConflictDoNothing()

@@ -7,6 +7,22 @@ import type { UserRole } from '../types/auth';
 import '../styles/account.css';
 import AccountAccess, { type AccountAccessState } from '../components/AccountAccess';
 import { useApiClient } from '../lib/apiClient';
+import AccountStudentIdentity from '../components/AccountStudentIdentity';
+import '../styles/account-dashboard.css';
+
+const ACCOUNT_THEMES = [
+  { id: 'simple', name: 'Простая' },
+  { id: 'aurora', name: 'Аврора' },
+  { id: 'cosmos', name: 'Космос' },
+  { id: 'sunset', name: 'Закат' },
+] as const;
+type AccountTheme = typeof ACCOUNT_THEMES[number]['id'];
+function storedTheme(userId: string): AccountTheme {
+  try {
+    const saved = localStorage.getItem(`physez-account-theme:${userId}`);
+    return ACCOUNT_THEMES.find(theme => theme.id === saved)?.id ?? 'aurora';
+  } catch { return 'aurora'; }
+}
 
 interface QuizHistoryItem {
   id: string;
@@ -68,6 +84,7 @@ export default function Account() {
   const userId = user?.id;
   const [copiedId, setCopiedId] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [themes, setThemes] = useState<Record<string, AccountTheme>>({});
 
   // Quiz history state (пока не подключено к БД после миграции на Clerk/Neon)
   const [quizHistory] = useState<QuizHistoryItem[]>([]);
@@ -493,16 +510,30 @@ export default function Account() {
   };
 
   const profileCompleteness = getProfileCompleteness();
+  const accountTheme = accountAccess.isPremium ? themes[user.id] ?? storedTheme(user.id) : 'neutral';
+  const chooseTheme = (theme: AccountTheme) => {
+    if (!accountAccess.isPremium && theme !== 'simple') return;
+    setThemes(current => ({ ...current, [user.id]: theme }));
+    try { localStorage.setItem(`physez-account-theme:${user.id}`, theme); }
+    catch { /* The theme remains usable when browser storage is unavailable. */ }
+  };
 
   return (
     <motion.div
-      className={`account-page ${accountAccess ? accountAccess.isPremium ? 'account-tier-pro' : 'account-tier-basic' : ''}`}
+      className={`account-page account-dashboard ${accountAccess.isPremium ? 'account-tier-pro' : 'account-tier-basic'}`}
+      data-account-theme={accountTheme}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <div className="account-container">
-        <h1 className="account-title">Личный кабинет</h1>
+        <header className="account-dashboard-heading">
+          <div><span className="account-dashboard-eyebrow">ВАШЕ ПРОСТРАНСТВО</span><h1 className="account-title">Личный кабинет</h1></div>
+          <div className="account-theme-picker" role="group" aria-label="Цветовая тема кабинета">
+            <span>{accountAccess.isPremium ? 'Цвет настроения' : 'Цветные темы · PRO'}</span>
+            <div>{ACCOUNT_THEMES.map(theme => { const selected = accountTheme === theme.id || (!accountAccess.isPremium && theme.id === 'simple'); return <button key={theme.id} type="button" className={`account-theme-choice account-theme-choice--${theme.id}`} disabled={!accountAccess.isPremium && theme.id !== 'simple'} aria-pressed={selected} title={accountAccess.isPremium || theme.id === 'simple' ? theme.name : `${theme.name} — доступно с PRO`} onClick={() => chooseTheme(theme.id)}><i aria-hidden="true"/>{theme.name}<b aria-hidden="true">✓</b></button>; })}</div>
+          </div>
+        </header>
 
         {message && (
           <div className={`account-message ${message.type}`}>
@@ -519,7 +550,7 @@ export default function Account() {
             </div>
 
             <div className="account-profile-header">
-              <div className="account-avatar-wrapper" onClick={handleAvatarClick}>
+              <div className="account-avatar-wrapper" role="button" tabIndex={0} aria-label="Изменить фотографию профиля" onClick={handleAvatarClick} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleAvatarClick(); } }}>
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="account-avatar" />
                 ) : (
@@ -596,6 +627,8 @@ export default function Account() {
                 </>
               )}
             </div>
+
+            {accountAccess.role === 'user' && (profile?.role === 'student' || profile?.role === 'pupil' || !profile?.role) && <AccountStudentIdentity />}
 
             <div className="account-profile-access">
               <div>

@@ -144,19 +144,48 @@
   text-align: center;
 }
 
-/* Narrow viewports: shrink the 400×400 atom so it doesn't dominate the screen */
+/* Scale only the illustration, not its captions. Reserve its visible size so
+   nested transforms don't make both the atom and the text tiny on phones. */
 @media (max-width: 768px) {
   .atom-stage .atom-model-wrapper {
-    transform: scale(0.75);
-    transform-origin: top center;
-    margin: -50px 0 -80px;
+    --mobile-atom-scale: .8;
+    --mobile-atom-size: 320px;
+    width: 100%;
+    transform: none;
+    margin: 0;
+    gap: 1rem;
   }
+  .atom-stage-inner { width: 100%; }
+  .atom-stage .atom-model-wrapper > div:first-child {
+    width: var(--mobile-atom-size);
+    height: var(--mobile-atom-size);
+    flex-shrink: 0;
+  }
+  .atom-stage .atom-model-container {
+    transform: scale(var(--mobile-atom-scale));
+    transform-origin: top left;
+  }
+  .atom-stage .dalton-sphere { width: 160px; height: 160px; }
+  .atom-stage .thomson-pudding { width: 190px; height: 190px; }
+  .atom-stage .atom-model-info { width: 100%; max-width: 360px; }
+  .atom-stage .atom-model-name { font-size: 1.1rem; }
+  .atom-stage .atom-model-nickname { font-size: .85rem; }
+  .atom-stage .atom-model-year { font-size: .82rem; }
+  .atom-stage .atom-model-status { font-size: .75rem; }
+  .atom-stage .atom-model-dot { width: 8px; height: 8px; }
 }
 
 @media (max-width: 480px) {
   .atom-stage .atom-model-wrapper {
-    transform: scale(0.6);
-    margin: -80px 0 -120px;
+    --mobile-atom-scale: .72;
+    --mobile-atom-size: 288px;
+  }
+}
+
+@media (max-width: 360px) {
+  .atom-stage .atom-model-wrapper {
+    --mobile-atom-scale: .62;
+    --mobile-atom-size: 248px;
   }
 }
 

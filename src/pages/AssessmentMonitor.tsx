@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ASSESSMENT_CATALOG } from '../lib/assessmentCatalog';
 import type { MonitorCatalog } from './AssessmentMonitorIndex';
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useApiClient } from '../lib/apiClient';
 import '../styles/assessment-monitor.css';
 import type { PenaltySummary } from '../lib/assessmentPolicy';
+import AssessmentSessionManager from '../components/AssessmentSessionManager';
+import { DEFAULT_MONITOR_GROUPS, monitorGrade, normalizeMonitorGroup } from '../lib/monitorGrading';
 
 type AttemptStatus = 'active' | 'submitted' | 'expired';
 const EVENT_LABELS: Record<string, string> = {
@@ -39,7 +41,7 @@ type MonitorResponse = { serverNow: string; attempts: Attempt[]; error?: string 
 type Filter = 'all' | AttemptStatus;
 type ReviewField = {
   taskId: string; taskTitle: string; fieldId: string; label: string; unit: string;
-  submitted: string | number | null; expected: number; tolerance: string; correct: boolean;
+  submitted: string | number | null; expected: number | string; tolerance: string; correct: boolean; points?: number;
 };
 type ReviewTask = { id: string; order: number; title: string; text: string };
 type AttemptDetail = Partial<PenaltySummary> & {
@@ -94,6 +96,11 @@ export default function AssessmentMonitor() {
   const [detailError, setDetailError] = useState('');
   const [waiverReason, setWaiverReason] = useState('');
   const [waiving, setWaiving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; period: string; student: Student } | null>(null);
+  const [savingStudent, setSavingStudent] = useState(false);
+  const [savingPoints, setSavingPoints] = useState(false);
+  const [editError, setEditError] = useState('');
   const detailRequest = useRef(0);
   const listRequest = useRef(0);
   const [catalog, setCatalog] = useState<MonitorCatalog | null>(null);
@@ -101,6 +108,13 @@ export default function AssessmentMonitor() {
   const [periodName, setPeriodName] = useState('');
   const [creatingPeriod, setCreatingPeriod] = useState(false);
   const period = selectedKey ? catalog?.periods.find(p => p.key === selectedKey && p.testId === testId) : catalog?.periods.find(p => p.testId === testId && p.active);
+  const maxPoints = (period?.maxPointsTenths ?? (testId === 'midterm' ? 80 : 20)) / 10;
+  const gradeFor = (attempt: Attempt) => monitorGrade(attempt.score, attempt.maxScore, maxPoints, attempt.finalPercent);
+  const focusEditor = useCallback((node: HTMLFormElement | null) => {
+    if (!node) return;
+    node.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    node.querySelector('input')?.focus({ preventScroll: true });
+  }, []);
 
   useEffect(() => {
     try { localStorage.setItem('assessment-monitor-auto-refresh', autoRefresh ? 'on' : 'off'); }
@@ -179,18 +193,30 @@ export default function AssessmentMonitor() {
     const normalized = query.trim().toLocaleLowerCase('ru-RU');
     return attempts.filter((attempt) => {
       if (filter !== 'all' && attempt.status !== filter) return false;
-      if (groupFilter && attempt.student?.group !== groupFilter) return false;
+      if (groupFilter && (normalizeMonitorGroup(attempt.student?.group ?? '') ?? attempt.student?.group) !== groupFilter) return false;
       if (!normalized) return true;
       const student = attempt.student;
       return [student?.lastName, student?.firstName, student?.group, attempt.variantCode]
         .filter(Boolean)
         .some((value) => String(value).toLocaleLowerCase('ru-RU').includes(normalized));
-    }).sort((a, b) => sort === 'name' ? `${a.student?.lastName ?? ''} ${a.student?.firstName ?? ''}`.localeCompare(`${b.student?.lastName ?? ''} ${b.student?.firstName ?? ''}`, 'ru') : sort === 'score' ? (b.finalPercent ?? (b.score ?? -1) / 3 * 100) - (a.finalPercent ?? (a.score ?? -1) / 3 * 100) : sort === 'events' ? b.violationsCount - a.violationsCount : Date.parse(b.startedAt) - Date.parse(a.startedAt));
+    }).sort((a, b) => sort === 'name' ? `${a.student?.lastName ?? ''} ${a.student?.firstName ?? ''}`.localeCompare(`${b.student?.lastName ?? ''} ${b.student?.firstName ?? ''}`, 'ru') : sort === 'score' ? (b.finalPercent ?? (b.score ?? -1) / b.maxScore * 100) - (a.finalPercent ?? (a.score ?? -1) / a.maxScore * 100) : sort === 'events' ? b.violationsCount - a.violationsCount : Date.parse(b.startedAt) - Date.parse(a.startedAt));
   }, [attempts, filter, query, groupFilter, sort]);
-  const groups = [...new Set(attempts.map(a => a.student?.group).filter((g): g is string => !!g))].sort((a, b) => a.localeCompare(b, 'ru'));
+  const groups = [...new Set(attempts.map(a => a.student?.group ? normalizeMonitorGroup(a.student.group) ?? a.student.group : null).filter((g): g is string => !!g))].sort((a, b) => a.localeCompare(b, 'ru'));
+  const editableGroups = [...new Set([...DEFAULT_MONITOR_GROUPS, ...groups.map(normalizeMonitorGroup).filter((g): g is string => !!g)])].sort();
   const pageCount = Math.max(1, Math.ceil(visibleAttempts.length / 50));
   const currentPage = Math.min(page, pageCount);
   const pageAttempts = visibleAttempts.slice((currentPage - 1) * 50, currentPage * 50);
+  const changePage = (nextPage: number) => {
+    setEditing(null);
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  };
+  const renderPagination = (position: 'top' | 'bottom') => (
+    <nav className={`monitor-pagination monitor-pagination--${position}`} aria-label={`Страницы работ ${position === 'top' ? 'над таблицей' : 'под таблицей'}`}>
+      <span>Страница {currentPage} из {pageCount} · {pageAttempts.length ? `работы ${(currentPage - 1) * 50 + 1}–${(currentPage - 1) * 50 + pageAttempts.length} из ${visibleAttempts.length}` : 'нет работ'}</span>
+      <div><button type="button" aria-label="Предыдущая страница" disabled={currentPage <= 1} onClick={() => changePage(currentPage - 1)}>←</button><button type="button" aria-label="Следующая страница" disabled={currentPage >= pageCount} onClick={() => changePage(currentPage + 1)}>→</button></div>
+    </nav>
+  );
 
   const exportCsv = () => {
     const rows = visibleAttempts.map((attempt) => [
@@ -199,8 +225,9 @@ export default function AssessmentMonitor() {
       attempt.answeredFields, attempt.totalFields, attempt.violationsCount,
       formatDate(attempt.startedAt), formatDate(attempt.submittedAt),
       attempt.finalPercent ?? (attempt.score === null ? '' : Math.round(attempt.score / attempt.maxScore * 10000) / 100), attempt.penaltyPoints ?? 0, attempt.waiverReason ?? '',
+      gradeFor(attempt).points ?? '', maxPoints,
     ]);
-    const header = ['Фамилия', 'Имя', 'Группа', 'Вариант', 'Статус', 'Балл за задачи', 'Максимум', 'Заполнено', 'Полей', 'События', 'Начало', 'Сдано', 'Итог, %', 'Снижение, п. п.', 'Причина отмены штрафов'];
+    const header = ['Фамилия', 'Имя', 'Группа', 'Вариант', 'Статус', 'Верных задач', 'Всего задач', 'Заполнено', 'Полей', 'События', 'Начало', 'Сдано', 'Итог, %', 'Снижение, п. п.', 'Причина отмены штрафов', 'Оценка за работу', 'Максимальный балл'];
     const csv = [header, ...rows]
       .map((row) => row.map((cell) => {
         const value = String(cell);
@@ -242,6 +269,25 @@ export default function AssessmentMonitor() {
     setDetailLoading(false);
   };
 
+  const deleteAttempt = async (attempt: Attempt) => {
+    if (deletingId || !period) return;
+    const name = attempt.student ? `${attempt.student.lastName} ${attempt.student.firstName}` : 'Без имени';
+    if (!window.confirm(`Удалить работу?\n\n${name}\nГруппа: ${attempt.student?.group || 'не указана'}\nВариант: ${attempt.variantCode}\nПериод: ${period.name}\n\nОтветы, результат и журнал событий будут удалены безвозвратно. Профиль студента и другие работы сохранятся. После удаления студент сможет начать новую попытку в текущем периоде. При необходимости сначала сохраните результаты через «Экспорт CSV».`)) return;
+    setDeletingId(attempt.id);
+    try {
+      const response = await authFetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deleteAttempt', attemptId: attempt.id, period: period.key }) });
+      const payload = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(payload.error || 'Не удалось удалить работу.');
+      // Invalidate an in-flight poll so it cannot restore the deleted row.
+      listRequest.current++;
+      setAttempts(current => current.filter(item => item.id !== attempt.id));
+      if (detail?.id === attempt.id) closeDetail();
+      await Promise.all([load(true), loadCatalog()]);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось удалить работу.');
+    } finally { setDeletingId(null); }
+  };
+
   const waivePenalty = async () => {
     if (!detail || waiverReason.trim().length < 5) return;
     setWaiving(true);
@@ -273,12 +319,40 @@ export default function AssessmentMonitor() {
     finally { setCreatingPeriod(false); }
   };
 
+  const saveStudent = async () => {
+    if (!editing || savingStudent) return;
+    setSavingStudent(true);
+    setEditError('');
+    try {
+      const response = await authFetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'updateStudent', attemptId: editing.id, period: editing.period, student: editing.student }) });
+      const payload = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(payload.error || 'Не удалось сохранить данные.');
+      setEditing(null);
+      await load(true);
+      if (detail?.id === editing.id) await openDetail(editing.id);
+    } catch (reason) { setEditError(reason instanceof Error ? reason.message : 'Не удалось сохранить данные.'); }
+    finally { setSavingStudent(false); }
+  };
+
+  const saveMaxPoints = async (value: string) => {
+    if (!period || savingPoints) return;
+    setSavingPoints(true);
+    try {
+      const response = await authFetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setMaxPoints', period: period.key, maxPoints: Number(value.replace(',', '.')) }) });
+      const payload = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(payload.error || 'Не удалось сохранить максимальный балл.');
+      await loadCatalog();
+      setError('');
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось сохранить максимальный балл.'); }
+    finally { setSavingPoints(false); }
+  };
+
   if (authLoading || (loading && !attempts.length)) {
     return <main className="monitor-page"><div className="monitor-loading">Загружаем мониторинг…</div></main>;
   }
 
   return (
-    <main className="monitor-page">
+    <main className="monitor-page monitor-page--compact">
       <div className="monitor-container">
         <header className="monitor-header">
           <div>
@@ -300,12 +374,14 @@ export default function AssessmentMonitor() {
         <section className="monitor-stats" aria-label="Сводка">
           <article className="active"><span>Выполняют</span><strong>{stats.active}</strong></article>
           <article><span>Завершили</span><strong>{stats.submitted}</strong></article>
-          <article><span>Средний балл</span><strong>{stats.average.toFixed(1)}<em>/3</em></strong></article>
+          <article><span>Средняя оценка</span><strong>{(() => { const grades = attempts.map(gradeFor).filter(g => g.points !== null); return grades.length ? (grades.reduce((sum, g) => sum + g.points!, 0) / grades.length).toFixed(1) : '—'; })()}<em>/{maxPoints}</em></strong></article>
           <article><span>Время истекло</span><strong>{stats.expired}</strong></article>
         </section>
 
-        <div className="monitor-period-tools"><label>Период<select value={period?.key ?? ''} onChange={e => { setAttempts([]); setSearchParams({ period: e.target.value }); }}>{catalog?.periods.filter(p => p.testId === testId).map(p => <option key={p.key} value={p.key}>{p.name}{p.active ? ' · текущий' : ' · архив'}</option>)}</select></label><button className="monitor-export" type="button" disabled={!catalog?.periodsAvailable || !period?.active || stats.active > 0} onClick={() => setNewPeriodOpen(true)}>Начать новый период</button><span>{stats.active > 0 ? 'Сначала дождитесь завершения активных работ.' : `${attempts.length} работ сохранено`}</span></div>
+        <div className="monitor-period-tools"><label>Период<select disabled={savingStudent || savingPoints} value={period?.key ?? ''} onChange={e => { setEditing(null); setAttempts([]); setSearchParams({ period: e.target.value }); }}>{catalog?.periods.filter(p => p.testId === testId).map(p => <option key={p.key} value={p.key}>{p.name}{p.active ? ' · текущий' : ' · архив'}</option>)}</select></label><button className="monitor-export" type="button" disabled={!catalog?.periodsAvailable || !period?.active || stats.active > 0} onClick={() => setNewPeriodOpen(true)}>Начать новый период</button><form className="monitor-grade-settings" onSubmit={e => { e.preventDefault(); void saveMaxPoints(String(new FormData(e.currentTarget).get('maxPoints'))); }}><label>Макс. балл<input key={`${period?.key}:${maxPoints}`} name="maxPoints" type="number" min="0.1" max="1000" step="0.1" required defaultValue={maxPoints} /></label><button type="submit" disabled={savingPoints || !period || !catalog?.periodsAvailable}>{savingPoints ? 'Сохраняем…' : 'Сохранить'}</button></form><span>{`${attempts.length} работ`}</span></div>
         {newPeriodOpen && <section className="monitor-new-period"><h2>Начать с чистого листа</h2><p>Период «{period?.name}» останется в архиве со всеми результатами, ответами и событиями. Новые участники будут проходить работу в новом периоде.</p><label>Название нового периода<input maxLength={120} value={periodName} onChange={e => setPeriodName(e.target.value)} placeholder="Например: 2027–2028"/></label><div><button className="monitor-export" disabled={creatingPeriod || periodName.trim().length < 2} onClick={() => void createPeriod()}>{creatingPeriod ? 'Создаём…' : 'Сохранить прежний период и открыть новый'}</button><button className="monitor-export" disabled={creatingPeriod} onClick={() => setNewPeriodOpen(false)}>Отмена</button></div></section>}
+
+        {period && <AssessmentSessionManager key={period.key} endpoint={endpoint} period={period.key} testId={testId ?? 'mechanics'} active={period.active} />}
 
         <section className="monitor-panel">
           <div className="monitor-toolbar">
@@ -324,22 +400,42 @@ export default function AssessmentMonitor() {
             <button type="button" className="monitor-export" onClick={exportCsv} disabled={!visibleAttempts.length}>Экспорт CSV</button>
           </div>
 
-          <div className="monitor-table-scroll"><table className="monitor-table"><thead><tr>{['Студент', 'Группа', 'Статус', 'Ответы', 'Балл / итог', 'Штраф', 'События', 'Сдано / осталось', 'Вариант', ''].map((label, i) => <th key={i}>{label}</th>)}</tr></thead><tbody>
-            {pageAttempts.map(attempt => <tr key={attempt.id}>
+          {renderPagination('top')}
+          <div className="monitor-table-scroll"><table className="monitor-table"><thead><tr>{['Студент', 'Группа', 'Статус', testId === 'midterm' ? 'Задания' : 'Задачи', 'Оценка', 'Штраф', 'События', 'Сдано / осталось', 'Вариант', ''].map((label, i) => <th key={i}>{label}</th>)}</tr></thead><tbody>
+            {pageAttempts.map(attempt => <Fragment key={attempt.id}><tr>
               <td><button className="monitor-student-link" onClick={() => void openDetail(attempt.id)}>{attempt.student ? `${attempt.student.lastName} ${attempt.student.firstName}` : 'Без имени'}</button>{attempt.archived && <small className="monitor-retry-note">Архив</small>}</td>
-              <td>{attempt.student?.group ?? '—'}</td>
-              <td><span className={`monitor-status ${attempt.status}`}>{statusText[attempt.status]}</span></td>
-              <td>{attempt.answeredFields}/{attempt.totalFields}</td>
-              <td>{attempt.score === null ? '—' : <><strong>{attempt.score}/{attempt.maxScore}</strong><small>{attempt.finalPercent ?? Math.round((attempt.score / attempt.maxScore * 100) * 100) / 100}%</small></>}</td>
-              <td>{attempt.policyVersion === 1 ? `−${attempt.penaltyPoints ?? 0} п. п.` : '—'}</td>
+              <td>{normalizeMonitorGroup(attempt.student?.group ?? '') ?? attempt.student?.group ?? '—'}</td>
+              <td><span className={`monitor-status-dot ${attempt.status}`} role="img" aria-label={statusText[attempt.status]} title={statusText[attempt.status]} tabIndex={0}/></td>
+              <td title={`Заполнено полей: ${attempt.answeredFields}/${attempt.totalFields}`}>{attempt.correctness ? `${attempt.correctness.filter(Boolean).length}/${attempt.correctness.length}` : '—'}</td>
+              <td>{attempt.score === null ? '—' : <><strong>{gradeFor(attempt).points?.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}<small className="monitor-grade-max"> / {maxPoints}</small></strong><small>{gradeFor(attempt).percent?.toLocaleString('ru-RU')}%</small></>}</td>
+              <td>{attempt.penaltyPoints ? `−${attempt.penaltyPoints}` : '—'}</td>
               <td className={attempt.violationsCount ? 'monitor-event-warning' : ''}>{attempt.violationsCount}</td>
               <td>{attempt.status === 'active' ? formatRemaining(attempt.expiresAt, now) : formatDate(attempt.submittedAt)}</td>
               <td className="monitor-variant-cell">{attempt.variantCode}</td>
-              <td><button className="monitor-row-open" onClick={() => void openDetail(attempt.id)} aria-label={`Разобрать работу ${attempt.student?.lastName ?? attempt.variantCode}`}>Разбор →</button></td>
-            </tr>)}
+              <td><div className="monitor-row-actions">
+                <button type="button" className="monitor-row-open" title="Разбор работы" onClick={() => void openDetail(attempt.id)} aria-label={`Разобрать работу ${attempt.student?.lastName ?? attempt.variantCode}`}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l4 4v3M13 3v5h5M7 8h3M7 12h3M7 16h2"/><circle cx="16" cy="16" r="4"/><path d="m19 19 3 3"/></svg>
+                </button>
+                <button type="button" className="monitor-row-edit" title="Изменить ФИО и группу" disabled={savingStudent || !period} onClick={() => { setEditError(''); setEditing({ id: attempt.id, period: period!.key, student: { lastName: attempt.student?.lastName ?? '', firstName: attempt.student?.firstName ?? '', group: normalizeMonitorGroup(attempt.student?.group ?? '') ?? '' } }); }} aria-label={`Изменить данные ${attempt.student?.lastName ?? attempt.variantCode}`}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5L8 21H3v-5L16 3ZM13 6l5 5"/></svg>
+                </button>
+                <button type="button" className="monitor-row-delete" title="Удалить работу" disabled={deletingId !== null || !period} aria-busy={deletingId === attempt.id} onClick={() => void deleteAttempt(attempt)} aria-label={`Удалить работу ${attempt.student ? `${attempt.student.lastName} ${attempt.student.firstName}` : attempt.variantCode}`}>
+                  {deletingId === attempt.id ? '…' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>}
+                </button>
+              </div></td>
+            </tr>
+              {editing?.id === attempt.id && <tr className="monitor-student-editor-row"><td colSpan={10}>
+                <form ref={focusEditor} className="monitor-student-editor" onSubmit={e => { e.preventDefault(); void saveStudent(); }} aria-label={`Редактирование данных ${attempt.student?.lastName ?? 'студента'}`}>
+                  {(['lastName', 'firstName'] as const).map(key => <label key={key}>{key === 'lastName' ? 'Фамилия' : 'Имя'}<input disabled={savingStudent} required minLength={2} maxLength={60} value={editing.student[key]} onChange={e => setEditing({ ...editing, student: { ...editing.student, [key]: e.target.value } })}/></label>)}
+                  <label className="monitor-editor-group">Группа<select disabled={savingStudent} required value={editing.student.group} onChange={e => setEditing({ ...editing, student: { ...editing.student, group: e.target.value } })}><option value="" disabled>Выберите группу</option>{editableGroups.map(group => <option key={group}>{group}</option>)}</select></label>
+                  <button type="submit" disabled={savingStudent}>{savingStudent ? 'Сохраняем…' : 'Сохранить'}</button><button type="button" disabled={savingStudent} onClick={() => setEditing(null)}>Отмена</button>
+                  {editError && <p role="alert">{editError}</p>}
+                </form>
+              </td></tr>}
+            </Fragment>)}
             {!pageAttempts.length && <tr><td colSpan={10} className="monitor-empty">По выбранному фильтру работ нет.</td></tr>}
           </tbody></table></div>
-          <div className="monitor-pagination"><span>Страница {currentPage} из {pageCount} · {pageAttempts.length ? `работы ${(currentPage - 1) * 50 + 1}–${(currentPage - 1) * 50 + pageAttempts.length} из ${visibleAttempts.length}` : 'нет работ'}</span><div><button aria-label="Предыдущая страница" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>←</button><button aria-label="Следующая страница" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>→</button></div></div>
+          {renderPagination('bottom')}
         </section>
       </div>
 
@@ -374,7 +470,7 @@ export default function AssessmentMonitor() {
                 <div className="monitor-review-tasks">
                   {detail.tasks.map((task) => (
                     <article key={task.id}>
-                      <span>Задача {task.order}</span>
+                      <span>{task.order > 5 && testId === 'midterm' ? `Теория ${task.order - 5}` : `Задача ${task.order}`}</span>
                       <h3>{task.title}</h3>
                       <p>{task.text}</p>
                       <div className="monitor-review-fields">
@@ -383,6 +479,7 @@ export default function AssessmentMonitor() {
                             <span>{field.label}</span>
                             <strong>Студент: {field.submitted === null || field.submitted === '' ? 'нет ответа' : `${field.submitted}${field.unit ? ` ${field.unit}` : ''}`}</strong>
                             <small>Правильный: {field.expected}{field.unit ? ` ${field.unit}` : ''} · допуск {field.tolerance}</small>
+                            {field.points !== undefined && <small>Баллы: {field.correct ? field.points : 0} / {field.points}</small>}
                           </div>
                         ))}
                       </div>

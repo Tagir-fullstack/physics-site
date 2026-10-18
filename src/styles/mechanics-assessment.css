@@ -193,7 +193,9 @@
 }
 
 .assessment-shell--active {
-  padding-top: 9rem;
+  padding-top: calc(var(--dropdown-top, 62px) + 1rem);
+  /* Clip the watermark without creating a scroll container for the sticky bar. */
+  overflow: clip;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -226,15 +228,16 @@
 }
 
 .assessment-topbar {
-  position: fixed;
+  position: sticky;
   z-index: 120;
-  top: 5.6rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(var(--dropdown-top, 62px) + .75rem);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: clamp(1.25rem, 4vw, 3.5rem);
-  width: min(1040px, calc(100% - 2rem));
+  width: min(1040px, 100%);
+  box-sizing: border-box;
+  margin: 0 auto;
   padding: 0.8rem 1.2rem;
   border: 1px solid #393939;
   border-radius: 16px;
@@ -442,17 +445,19 @@
 
 .assessment-result-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
   margin: 2.5rem 0;
 }
 
 .result-task {
+  position: relative;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   padding: 1.25rem;
-  border: 1px solid #333;
+  border: 2px solid #333;
   border-radius: 14px;
   background: #171717;
 }
@@ -463,6 +468,15 @@
 
 .result-task.correct strong { color: #65c98c; }
 .result-task.incorrect strong { color: #fc6255; }
+.result-task.correct { border-color: #65c98c; background: #192a24; }
+.result-task.incorrect { border-color: #e8756b; background: #291f24; }
+.result-task .assessment-result-number { font-family: 'CCUltimatum', Arial, sans-serif; font-size: 2rem; line-height: 1; }
+.result-task.correct .assessment-result-number { color: #92dab2; }
+.result-task.incorrect .assessment-result-number { color: #f2a49d; }
+.result-task .assessment-result-caption { font-size: .9rem; font-weight: 600; line-height: 1.2; }
+.result-task.correct .assessment-result-caption { color: #92dab2; }
+.result-task.incorrect .assessment-result-caption { color: #f2a49d; }
+.assessment-result-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .assessment-result-meta {
   display: flex;
@@ -479,6 +493,48 @@
 .assessment-restart {
   margin-top: 1.5rem;
 }
+
+.assessment-answer-review { margin: 2rem 0; padding: 0; text-align: left; color: #e4e8ef; }
+.assessment-answer-review h2 { margin: 0 0 1rem; font-size: clamp(1.5rem, 3vw, 1.9rem); }
+.assessment-answer-review article { margin: 0 0 1rem; padding: 1.1rem; border: 1px solid #343c48; border-radius: 12px; background: #171b22; }
+.assessment-answer-review h3 { margin: 0 0 .75rem; font-size: 1.25rem; }
+.assessment-answer-review p { margin: .75rem 0; color: #b9c1cf; font-size: 1rem; line-height: 1.5; }
+.assessment-answer-review dl { display: grid; gap: .75rem; margin: 1rem 0 0; }
+.assessment-answer-review dl > div { padding: .8rem 1rem; border-left: 3px solid #c96b63; border-radius: 0 8px 8px 0; background: #291f24; overflow-wrap: anywhere; }
+.assessment-answer-review dl > .answer-correct { border-left-color: #529e75; background: #192a24; }
+.assessment-answer-review dt { font-size: .95rem; font-weight: 600; margin-bottom: .5rem; }
+.assessment-answer-review dd { margin: .4rem 0 0; font-size: 1rem; font-weight: 400; line-height: 1.5; color: #d2d9e3; }
+.assessment-answer-review dd > span { display: block; margin-bottom: .2rem; font-size: .9rem; font-weight: 600; }
+.assessment-answer-review .assessment-answer-expected { margin-top: .8rem; font-weight: 400; color: #92dab2; }
+
+.a11y-light-theme .assessment-answer-review {
+  background: #fff !important;
+  color: #252a32;
+  padding: 0;
+}
+.a11y-light-theme .assessment-answer-review h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+}
+.a11y-light-theme .assessment-answer-review article {
+  margin: 0 0 1rem;
+  padding: 1.1rem;
+  border: 1px solid #dce2e9;
+  border-radius: 12px;
+  background: #fff;
+}
+.a11y-light-theme .assessment-answer-review h3 { font-size: 1.25rem; }
+.a11y-light-theme .assessment-answer-review p { margin: .75rem 0; color: #4b5563; font-size: 1rem; }
+.a11y-light-theme .assessment-answer-review dl > div {
+  background: #fff7f6;
+  border-left-color: #cb5148;
+  border-radius: 0 8px 8px 0;
+}
+.a11y-light-theme .assessment-answer-review dl > .answer-correct { background: #f3faf5; border-left-color: #348256; }
+.a11y-light-theme .assessment-answer-review dt { font-size: .95rem; font-weight: 600; }
+.a11y-light-theme .assessment-answer-review dd { font-size: 1rem; font-weight: 400; color: #343b46; }
+.a11y-light-theme .assessment-answer-review dd > span { display: block; margin-bottom: .2rem; font-size: .9rem; font-weight: 600; }
+.a11y-light-theme .assessment-answer-review .assessment-answer-expected { margin-top: .8rem; color: #226542; }
 
 .assessment-modal {
   position: fixed;
@@ -768,6 +824,12 @@
 .a11y-light-theme .result-task span {
   color: #5d6269 !important;
 }
+.a11y-light-theme .assessment-result-grid .result-task.correct { border-color: #348256 !important; background: #f3faf5 !important; }
+.a11y-light-theme .assessment-result-grid .result-task.incorrect { border-color: #cf554c !important; background: #fff7f6 !important; }
+.a11y-light-theme .result-task.correct .assessment-result-number { color: #267a45 !important; }
+.a11y-light-theme .result-task.incorrect .assessment-result-number { color: #bd423a !important; }
+.a11y-light-theme .result-task.correct .assessment-result-caption { color: #267a45 !important; }
+.a11y-light-theme .result-task.incorrect .assessment-result-caption { color: #bd423a !important; }
 
 .a11y-light-theme .result-task.correct strong {
   color: #267a45 !important;
@@ -851,10 +913,6 @@
     padding: calc(var(--dropdown-top, 62px) + .75rem) 1rem 3rem;
   }
 
-  .assessment-shell--active {
-    padding-top: 10.5rem;
-  }
-
   .assessment-intro,
   .assessment-result {
     padding: 1.5rem;
@@ -862,17 +920,37 @@
   }
 
   .assessment-rules,
-  .assessment-result-grid,
   .assessment-student-form {
     grid-template-columns: 1fr;
   }
+
+  .assessment-result-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .4rem;
+    margin: 1rem 0;
+  }
+
+  .assessment-result-grid .result-task {
+    min-width: 0;
+    padding: .35rem .2rem;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    justify-content: center;
+    gap: .2rem;
+    border-radius: 8px;
+    line-height: 1.2;
+  }
+
+  .assessment-result-grid .result-task .assessment-result-number { font-size: clamp(1.3rem, 5vw, 1.8rem); }
+  .assessment-result-grid .result-task .assessment-result-caption { font-size: .65rem; }
+  .assessment-result-grid .result-task strong { font-size: .8rem; }
+  .assessment-result-grid .result-task small { font-size: .75rem; }
 
   .assessment-student-form label:last-child {
     grid-column: auto;
   }
 
   .assessment-topbar {
-    top: 5rem;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.4rem;
@@ -945,6 +1023,10 @@
   }
 }
 
+@media (max-width: 720px), (hover: none) and (pointer: coarse) {
+  .assessment-fullscreen-button { display: none; }
+}
+
 .assessment-policy-note { padding: .8rem 1rem; border-left: 2px solid #4a90e2; background: rgba(74,144,226,.05); color: #aaa; font-size: .85rem; line-height: 1.5; }
 .assessment-policy-note p { margin: .4rem 0; }
 .assessment-entry .assessment-policy-note { margin: 1rem 0 0; }
@@ -992,3 +1074,11 @@
 @media print {
   .assessment-shell--active { display: none !important; }
 }
+.assessment-options { border: 0; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; }
+.assessment-options legend { margin-bottom: 12px; font-size: 16px; }
+.assessment-options label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-color, #737c8c); border-radius: 8px; cursor: pointer; }
+.assessment-options input[type="checkbox"] { flex: 0 0 auto; width: 20px; height: 20px; margin: 2px 0 0; accent-color: #4285df; }
+.assessment-options label:has(input:checked) { border-color: #4285df; background: rgb(66 133 223 / 10%); }
+.assessment-molecule { display: block; width: min(100%, 340px); height: auto; margin: 12px 0 20px; color: inherit; }
+.assessment-molecule .molecule-atoms { fill: #18202c; }
+.a11y-light-theme .assessment-molecule .molecule-atoms { fill: #edf2f7; }

@@ -49,6 +49,17 @@ export const oberbeckVariants = pgTable('oberbeck_variants', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+export const studentRecoveryLinks = pgTable('student_recovery_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  studentId: uuid('student_id').notNull().references(() => studentProfiles.id, { onDelete: 'cascade' }),
+  tokenHash: varchar('token_hash', { length: 64 }).notNull(),
+  issuedBy: varchar('issued_by', { length: 64 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  redeemedAt: timestamp('redeemed_at', { withTimezone: true }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+}, t => ({ studentIdx: index('student_recovery_links_student_idx').on(t.studentId) }))
+
 export const users = pgTable(
   'users',
   {
@@ -203,10 +214,30 @@ export const assessmentPeriods = pgTable('assessment_periods', {
   key: varchar('key', { length: 64 }).primaryKey(),
   testId: varchar('test_id', { length: 64 }).notNull(),
   name: varchar('name', { length: 120 }).notNull(),
+  maxPointsTenths: integer('max_points_tenths').notNull().default(20),
   active: boolean('active').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   archivedAt: timestamp('archived_at', { withTimezone: true }),
 }, t => ({ activeTestIdx: uniqueIndex('assessment_periods_active_test_idx').on(t.testId).where(sql`${t.active} = true`) }))
+
+export const assessmentAccessSettings = pgTable('assessment_access_settings', {
+  periodKey: varchar('period_key', { length: 64 }).primaryKey().references(() => assessmentPeriods.key),
+  sessionsRequired: boolean('sessions_required').notNull().default(true),
+  revealAt: timestamp('reveal_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+export const assessmentSessions = pgTable('assessment_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(), periodKey: varchar('period_key', { length: 64 }).notNull().references(() => assessmentPeriods.key),
+  testId: varchar('test_id', { length: 64 }).notNull(), name: varchar('name', { length: 120 }).notNull(), code: varchar('code', { length: 12 }).notNull().unique(),
+  opensAt: timestamp('opens_at', { withTimezone: true }).notNull(), startsAt: timestamp('starts_at', { withTimezone: true }).notNull(), endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
+  durationMinutes: integer('duration_minutes').notNull(), endedAt: timestamp('ended_at', { withTimezone: true }), createdBy: varchar('created_by', { length: 64 }).notNull(), createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+export const assessmentParticipants = pgTable('assessment_participants', {
+  id: uuid('id').primaryKey().defaultRandom(), sessionId: uuid('session_id').notNull().references(() => assessmentSessions.id, { onDelete: 'cascade' }),
+  student: jsonb('student').notNull(), identityHash: varchar('identity_hash', { length: 64 }).notNull(), clerkUserId: varchar('clerk_user_id', { length: 64 }), tokenHash: varchar('token_hash', { length: 64 }).notNull(),
+  status: varchar('status', { length: 16 }).notNull(), joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(), decidedAt: timestamp('decided_at', { withTimezone: true }), decidedBy: varchar('decided_by', { length: 64 }),
+  extraSeconds: integer('extra_seconds').notNull().default(0), extensionReason: varchar('extension_reason', { length: 300 }),
+}, t => ({ identityIdx: uniqueIndex('assessment_participants_identity_idx').on(t.sessionId, t.identityHash), accountIdx: uniqueIndex('assessment_participants_account_idx').on(t.sessionId, t.clerkUserId).where(sql`${t.clerkUserId} is not null`) }))
 
 export const assessmentAttempts = pgTable(
   'assessment_attempts',

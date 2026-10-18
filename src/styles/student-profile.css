@@ -18,6 +18,11 @@
 .student-recovery { margin: 1rem 0; padding-top: 1rem; border-top: 1px solid #333; }
 .student-recovery summary { cursor: pointer; color: #7faee4; margin-bottom: .6rem; }
 .student-secret { display: block; overflow-wrap: anywhere; user-select: all; padding: .8rem; border: 1px solid #444; border-radius: 6px; margin-top: .7rem; font-size: .8rem; }
+.student-recovery-person { display: grid; gap: .4rem; padding: 1rem; margin: 1rem 0; border: 1px solid #405c7c; border-radius: 8px; background: rgba(74, 144, 226, .07); }
+.student-recovery-person strong { font-size: 1.2rem; }
+.student-recovery-person span { color: #a3b4c7; }
+.student-recovery-panel > .atwood-primary { width: 100%; margin-top: .5rem; }
+.a11y-light-theme .student-recovery-person { border-color: #bdd2e9; }
 .student-panel a { display: inline-block; text-decoration: none; margin-top: .5rem; }
 .ob-student-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin-bottom: .75rem; color: #999; font-size: .8rem; }
 .ob-student-heading a { margin-left: auto; color: #7faee4; }

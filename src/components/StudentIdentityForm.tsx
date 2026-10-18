@@ -17,6 +17,10 @@ export default function StudentIdentityForm({ profile, onComplete, start = false
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const submit = async (recover = false) => {
+    if (recover && /^OB-/i.test(code.trim())) {
+      setError('Это номер варианта, а не личный код. Откройте ссылку восстановления от преподавателя или войдите через ранее связанный аккаунт Google.')
+      return
+    }
     setBusy(true); setError('')
     try {
       const result = await studentRequest<{ profile: StudentProfile }>('/api/student-profile', recover ? { action: 'recover', code: code.trim() } : { action: profile ? 'update' : 'create', student: { lastName, firstName, group } }, authFetch)
@@ -32,6 +36,6 @@ export default function StudentIdentityForm({ profile, onComplete, start = false
       <button className="atwood-primary" disabled={busy || !isLoaded}>{busy ? 'Сохраняем…' : profile ? 'Сохранить данные' : start ? 'Получить свой вариант' : 'Сохранить профиль'}</button>
     </form>
     {error && <p className="student-error" role="alert">{error}</p>}
-    {!profile && <details className="student-recovery"><summary>Уже были здесь? Восстановить профиль</summary><form onSubmit={e => { e.preventDefault(); void submit(true) }}><label>Личный код<input autoComplete="off" required value={code} onChange={e => setCode(e.target.value)} /></label><button className="atwood-secondary" disabled={busy}>Восстановить</button></form><p>Код хранится в вашем профиле. Не передавайте его другим: он даёт доступ к вашим данным.</p></details>}
+    {!profile && <details className="student-recovery"><summary>Уже были здесь? Восстановить профиль</summary><p>Номер варианта OB-… нужен для проверки работы и не подходит для входа. Здесь нужен личный секретный код из профиля.</p><form onSubmit={e => { e.preventDefault(); void submit(true) }}><label>Личный код восстановления<input autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="Не номер варианта OB-…" required value={code} onChange={e => setCode(e.target.value)} /></label><button className="atwood-secondary" disabled={busy}>Восстановить</button></form><p>Если код утерян, попросите преподавателя прислать личную ссылку восстановления и откройте её. Если профиль уже был связан с Google, войдите через тот же аккаунт. Не передавайте личный код другим.</p></details>}
   </div>
 }

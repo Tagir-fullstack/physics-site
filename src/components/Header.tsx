@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { sections } from '../data/topics';
+import { ASSESSMENT_CATALOG } from '../lib/assessmentCatalog';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useQuizMode } from '../context/QuizModeContext';
 import AccessibilityPanel from './AccessibilityPanel';
@@ -263,7 +264,13 @@ export default function Header() {
                   <span>Контрольные срезы</span><span aria-hidden="true">‹</span>
                 </button>
                 <div className={`nav-flyout${activeMenuPanel === 'assessments' ? ' open' : ''}`}>
-                  <div className="nav-item"><span className="nav-title">Контрольные работы</span><div className="dropdown"><button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/assessment/mechanics')}><span className="nav-lab-number">01</span><span>Механика</span></button></div></div>
+                  <div className="nav-item">
+                    <span className="nav-title">Контрольные работы</span>
+                    <div className="dropdown">
+                      {ASSESSMENT_CATALOG.map((assessment, index) => <button key={assessment.id} type="button" className="dropdown-item nav-lab-item" onClick={() => handleLinkClick(assessment.route)}><span className="nav-lab-number">{String(index + 1).padStart(2, '0')}</span><span>{assessment.name}</span></button>)}
+                      <button type="button" className="dropdown-item" onClick={() => handleLinkClick('/assessment')}>Все контрольные срезы →</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

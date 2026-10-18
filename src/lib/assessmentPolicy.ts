@@ -13,7 +13,7 @@ export type PenaltySummary = {
 
 // Separate categories have one free warning each. Related signals within
 // ten seconds of the first signal count as one episode (not a sliding window).
-export function assessmentPenalty(policy: AssessmentPolicy | undefined, events: AssessmentEvent[], score: number | null): PenaltySummary {
+export function assessmentPenalty(policy: AssessmentPolicy | undefined, events: AssessmentEvent[], score: number | null, maxScore = 3): PenaltySummary {
   const groups = new Map<string, { at: number; count: number }>()
   let points = 0
   if (policy?.version === 1) {
@@ -35,7 +35,7 @@ export function assessmentPenalty(policy: AssessmentPolicy | undefined, events: 
     policyVersion: policy?.version ?? null,
     penaltyPoints,
     calculatedPenaltyPoints,
-    finalPercent: score === null ? null : Math.round(Math.max(0, score / 3 * 100 - penaltyPoints) * 100) / 100,
+    finalPercent: score === null ? null : Math.round(Math.max(0, score / maxScore * 100 - penaltyPoints) * 100) / 100,
     waiverReason: policy?.waiver?.reason ?? null,
   }
 }

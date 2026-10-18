@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useQuizMode } from '../context/QuizModeContext';
 import { useApiClient } from '../lib/apiClient';
 import '../styles/mechanics-assessment.css';
+import AssessmentSessionGate, { type SessionRunnerProps } from '../components/AssessmentSessionGate';
+import MoleculeDiagram from '../components/MoleculeDiagram';
 
 type Field = { id: string; label: string; unit: string; step: string };
 type Task = {
@@ -11,6 +13,8 @@ type Task = {
   title: string;
   text: string;
   fields: Field[];
+  kind?: 'numeric' | 'multiple'; points?: number; diagram?: 'molecule';
+  options?: Array<{ id: string; text: string }>;
 };
 type Answers = Record<string, Record<string, string>>;
 type StudentIdentity = { lastName: string; firstName: string; group: string };
@@ -36,6 +40,13 @@ type SubmittedResponse = PenaltyInfo & {
   score: number;
   maxScore: number;
   correctness: boolean[];
+  taskScores?: number[];
+  taskMaxScores?: number[];
+  taskLabels?: string[];
+  review?: Array<{
+    id: string; title: string; text: string;
+    fields: Array<{ id: string; label: string; unit: string; submitted: string | number | null; expected: string | number; correct: boolean }>;
+  }>;
   submittedAt: string;
   violationsCount: number;
   sources: string[];
@@ -43,7 +54,8 @@ type SubmittedResponse = PenaltyInfo & {
   canRestart: boolean;
   student?: StudentIdentity;
 };
-type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse;
+type SealedResponse = { status: 'sealed'; attemptId: string; student?: StudentIdentity; submittedAt: string; revealAt: string | null };
+type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse | SealedResponse | { status: 'locked' };
 
 const STUDENT_STORAGE_KEY = 'mechanics-assessment-student';
 const LANGUAGE_STORAGE_KEY = 'mechanics-assessment-language';
@@ -60,7 +72,7 @@ const COPY = {
     lastName: 'Фамилия', firstName: 'Имя', groupLabel: 'Группа', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'В062',
     rules: ['Подготовьте бумагу и ручку. Калькулятор встроен в работу.', 'Не покидайте вкладку и полноэкранный режим.', 'Копирование, вставка и печать блокируются и фиксируются.', 'Введите только числа, единицы уже указаны рядом.', 'Отключите автоблокировку и переход экрана в сон на время работы. Таймер продолжает идти, даже если экран заблокирован.'],
     start: 'Начать срез', consent: 'Нажимая кнопку, вы подтверждаете самостоятельное выполнение.',
-    penaltyRules: 'Штрафы: первый эпизод в каждой категории — предупреждение. Повторное скрытие страницы или выход из полного экрана: −1 п. п.; копирование, вырезание, вставка или печать: −2 п. п. Связанные события в пределах 10 секунд считаются одним эпизодом. Общий предел — 10 п. п. Выделение текста и скриншоты не штрафуются автоматически.',
+    penaltyRules: 'Штрафы: первый эпизод в каждой категории — предупреждение. Повторное скрытие страницы или выход из полного экрана: −1 п. п.; копирование, вырезание, вставка или печать: −2 п. п.',
     legacyRules: 'Эта попытка начата до введения штрафов. События фиксируются, но оценка не снижается.',
     eventWarning: 'Событие зафиксировано. Соблюдайте правила работы; повторные эпизоды могут снизить оценку.',
     deduction: 'Снижение', finalGrade: 'Итоговая оценка', penaltyWaived: 'Штрафы отменены преподавателем',
@@ -87,7 +99,7 @@ const COPY = {
     lastName: 'Тегі', firstName: 'Аты', groupLabel: 'Тобы', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'В062',
     rules: ['Қағаз бен қалам дайындаңыз. Калькулятор жұмысқа кіріктірілген.', 'Қойындыдан және толық экран режимінен шықпаңыз.', 'Көшіру, қою және басып шығару бұғатталып, тіркеледі.', 'Тек сандарды енгізіңіз, өлшем бірліктері жанында көрсетілген.', 'Жұмыс кезінде экранның автоматты құлыпталуын және ұйқы режимін өшіріңіз. Экран құлыпталса да, уақыт санағы жалғасады.'],
     start: 'Бақылауды бастау', consent: 'Түймені басу арқылы жұмысты өз бетіңізше орындайтыныңызды растайсыз.',
-    penaltyRules: 'Айыптар: әр санаттағы бірінші эпизод — ескерту. Бетті қайта жасыру немесе толық экраннан шығу: −1 пайыздық тармақ; көшіру, қиып алу, қою немесе басып шығару: −2 пайыздық тармақ. 10 секунд ішіндегі байланысты оқиғалар бір эпизод саналады. Жалпы шек — 10 пайыздық тармақ. Мәтінді белгілеу мен скриншот үшін автоматты айып жоқ.',
+    penaltyRules: 'Айыптар: әр санаттағы бірінші эпизод — ескерту. Бетті қайта жасыру немесе толық экраннан шығу: −1 пайыздық тармақ; көшіру, қиып алу, қою немесе басып шығару: −2 пайыздық тармақ.',
     legacyRules: 'Бұл әрекет айыптар енгізілгенге дейін басталған. Оқиғалар тіркеледі, бірақ баға төмендемейді.',
     eventWarning: 'Оқиға тіркелді. Жұмыс ережелерін сақтаңыз; қайталанған эпизодтар бағаны төмендетуі мүмкін.',
     deduction: 'Төмендеу', finalGrade: 'Қорытынды баға', penaltyWaived: 'Айыптарды оқытушы алып тастады',
@@ -123,6 +135,9 @@ function savedStudent(): StudentIdentity {
 
 const completeStudent = (student: StudentIdentity) =>
   student.lastName.trim().length >= 2 && student.firstName.trim().length >= 2 && student.group.trim().length >= 1;
+
+const canUseFullscreen = () => Boolean(document.fullscreenEnabled) &&
+  !window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)').matches;
 
 async function readAssessmentResponse(response: Response, language: AssessmentLanguage): Promise<AssessmentResponse> {
   const copy = COPY[language];
@@ -277,18 +292,33 @@ function AssessmentLanguageSwitch({
   );
 }
 
-export default function MechanicsAssessment() {
+export default function MechanicsAssessment({ assessment = 'mechanics' }: { assessment?: 'mechanics' | 'midterm' }) {
+  return <AssessmentSessionGate endpoint={assessment === 'midterm' ? '/api/midterm-assessment' : '/api/mechanics-assessment'}>{props => <AssessmentRunner key={assessment} assessment={assessment} {...props} />}</AssessmentSessionGate>;
+}
+function AssessmentRunner({ assessment = 'mechanics', practice = false, participantStudent, sessionDeadline }: { assessment?: 'mechanics' | 'midterm' } & SessionRunnerProps) {
+  const midterm = assessment === 'midterm';
+  const endpoint = midterm ? '/api/midterm-assessment' : '/api/mechanics-assessment';
   const { user, isLoading: authLoading } = useAuth();
-  const { authFetch } = useApiClient();
+  const { authFetch: baseFetch } = useApiClient();
+  const authFetch = useCallback((input: string, init: RequestInit = {}) => {
+    if (!practice) return baseFetch(input, init);
+    if (typeof init.body === 'string') return baseFetch(input, { ...init, body: JSON.stringify({ ...JSON.parse(init.body), practice: true }) });
+    return baseFetch(`${input}${input.includes('?') ? '&' : '?'}practice=1`, init);
+  }, [baseFetch, practice]);
   const { setQuizActive } = useQuizMode();
   const [language, setLanguage] = useState<AssessmentLanguage>(savedLanguage);
-  const copy = COPY[language];
+  const copy = midterm ? { ...COPY[language],
+    introTitle: language === 'kk' ? 'Аралық бақылау' : 'Рубежный срез',
+    introMeta: language === 'kk' ? '4 есеп + 3 теория · 50 минут · 8 балл' : '4 задачи + 3 теории · 50 минут · 8 баллов',
+    heading: language === 'kk' ? '4 есеп және 3 теориялық сұрақ' : '4 задачи и 3 вопроса теории',
+    headingLead: language === 'kk' ? 'Есептерге сандық жауап жазыңыз. Теорияда барлық дұрыс жауаптарды белгілеңіз. Есептің әр дұрыс өрісіне ішінара балл беріледі; теорияда тек толық дұрыс жиын есептеледі. Барлығы — 8 балл. Сандарды жүздікке дейін дөңгелектеңіз.' : 'В задачах введите числа, в теории отметьте все верные ответы. За верные поля задач начисляются частичные баллы; в теории засчитывается только точный набор. Всего — 8 баллов. Числа округляйте до сотых.',
+  } : COPY[language];
   const [data, setData] = useState<AssessmentResponse | null>(null);
-  const [student, setStudent] = useState<StudentIdentity>(savedStudent);
+  const [student, setStudent] = useState<StudentIdentity>(() => participantStudent ?? savedStudent());
   const studentRef = useRef<StudentIdentity>(student);
   const [answers, setAnswers] = useState<Answers>({});
   const answersRef = useRef<Answers>({});
-  const [remaining, setRemaining] = useState(30 * 60);
+  const [remaining, setRemaining] = useState((midterm ? 50 : 30) * 60);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [restarting, setRestarting] = useState(false);
@@ -307,7 +337,20 @@ export default function MechanicsAssessment() {
   const submitted = data?.status === 'submitted' ? data : null;
   const canRestart = Boolean(submitted?.canRestart);
 
-  const changeLanguage = (nextLanguage: AssessmentLanguage) => {
+  const changeLanguage = async (nextLanguage: AssessmentLanguage) => {
+    if (nextLanguage === language) return;
+    if (active) {
+      try {
+        const response = await authFetch(endpoint, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'progress', answers, student: studentRef.current, language }),
+        });
+        if (!response.ok) throw new Error();
+      } catch {
+        setError(language === 'kk' ? 'Жауаптарды сақтау мүмкін болмады. Тілді ауыстырмас бұрын байланысты тексеріңіз.' : 'Не удалось сохранить ответы. Проверьте связь перед сменой языка.');
+        return;
+      }
+    }
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
     setLanguage(nextLanguage);
     setError('');
@@ -318,16 +361,20 @@ export default function MechanicsAssessment() {
   }, [answers]);
 
   useEffect(() => {
+    if (sessionDeadline) deadline.current = Date.now() + Date.parse(sessionDeadline.expiresAt) - Date.parse(sessionDeadline.serverNow);
+  }, [sessionDeadline]);
+
+  useEffect(() => {
     if (!active || loading || submitting) return;
     const timer = window.setTimeout(() => {
-      void authFetch('/api/mechanics-assessment', {
+      void authFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'progress', answers, student: studentRef.current, language }),
       }).catch(() => setError(language === 'kk' ? 'Жауаптарды сақтау мүмкін болмады. Байланысты тексеріңіз.' : 'Не удалось сохранить ответы. Проверьте соединение.'));
     }, 800);
     return () => window.clearTimeout(timer);
-  }, [active, answers, authFetch, language, loading, submitting]);
+  }, [active, answers, authFetch, endpoint, language, loading, submitting]);
 
   useEffect(() => {
     studentRef.current = student;
@@ -337,20 +384,20 @@ export default function MechanicsAssessment() {
     if (authLoading) return;
     let cancelled = false;
     setLoading(true);
-    const stored = savedStudent();
+    const stored = participantStudent ?? savedStudent();
     const request = completeStudent(stored)
-      ? authFetch('/api/mechanics-assessment', {
+      ? authFetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'resume', student: stored, language }),
         })
-      : authFetch(`/api/mechanics-assessment?lang=${language}`);
+      : authFetch(`${endpoint}?lang=${language}`);
     request
       .then(async (response) => {
         const json = await readAssessmentResponse(response, language);
         if (!cancelled) {
           setData(json);
-          if (json.status !== 'ready' && json.student) {
+          if ('student' in json && json.student) {
             setStudent(json.student);
             studentRef.current = json.student;
             localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(json.student));
@@ -369,7 +416,7 @@ export default function MechanicsAssessment() {
     return () => {
       cancelled = true;
     };
-  }, [authFetch, authLoading, user, language]);
+  }, [authFetch, authLoading, endpoint, user, language, participantStudent]);
 
   useEffect(() => {
     setQuizActive(Boolean(active));
@@ -380,7 +427,7 @@ export default function MechanicsAssessment() {
     setError('');
     setLoading(true);
     try {
-      if (document.documentElement.requestFullscreen) {
+      if (canUseFullscreen() && document.documentElement.requestFullscreen) {
         await document.documentElement.requestFullscreen();
         fullscreenWasUsed.current = true;
       }
@@ -388,7 +435,7 @@ export default function MechanicsAssessment() {
       // Some mobile browsers do not expose fullscreen; the attempt can still start.
     }
     try {
-      const response = await authFetch('/api/mechanics-assessment', {
+      const response = await authFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'start', student, language }),
@@ -420,7 +467,7 @@ export default function MechanicsAssessment() {
       lastEvent.current[eventType] = now;
       setViolations((count) => count + 1);
       setEventWarning(true);
-      void authFetch('/api/mechanics-assessment', {
+      void authFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'event', eventType, student: studentRef.current, language }),
@@ -431,7 +478,7 @@ export default function MechanicsAssessment() {
         if (typeof payload.penaltyPoints === 'number') setPenaltyPoints(payload.penaltyPoints);
       }).catch(() => { /* The assessment must remain usable during a connection interruption. */ });
     },
-    [active, authFetch, language]
+    [active, authFetch, endpoint, language]
   );
 
   const submit = useCallback(
@@ -441,7 +488,7 @@ export default function MechanicsAssessment() {
       setSubmitting(true);
       setError('');
       try {
-        const response = await authFetch('/api/mechanics-assessment', {
+        const response = await authFetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'submit', answers: answersRef.current, student: studentRef.current, language }),
@@ -457,7 +504,7 @@ export default function MechanicsAssessment() {
         setSubmitting(false);
       }
     },
-    [active, authFetch, submitting, language, copy.submitError]
+    [active, authFetch, endpoint, submitting, language, copy.submitError]
   );
 
   useEffect(() => {
@@ -532,6 +579,7 @@ export default function MechanicsAssessment() {
   const totalFields = active?.tasks.reduce((sum, task) => sum + task.fields.length, 0) ?? 0;
 
   const enterFullscreen = async () => {
+    if (!canUseFullscreen()) return;
     try {
       await document.documentElement.requestFullscreen();
       fullscreenWasUsed.current = true;
@@ -545,7 +593,7 @@ export default function MechanicsAssessment() {
     setRestarting(true);
     setError('');
     try {
-      const response = await authFetch('/api/mechanics-assessment', {
+      const response = await authFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'restart', student: submitted.student, language }),
@@ -567,6 +615,16 @@ export default function MechanicsAssessment() {
     return <main className="assessment-shell"><div className="assessment-loading">{copy.loading}</div></main>;
   }
 
+  if (data?.status === 'sealed' || data?.status === 'locked') {
+    return <main className="exam-entry-page"><section className="exam-entry-card">
+      <h1>{data.status === 'sealed' ? (language === 'kk' ? 'Жұмыс қабылданды' : 'Работа принята') : (language === 'kk' ? 'Кіру жабық' : 'Доступ закрыт')}</h1>
+      <p>{language === 'kk' ? 'Тапсырмалар, бағалар және дұрыс жауаптар барлық ағындар үшін ортақ күнге дейін жабық.' : 'Задания, баллы и правильные ответы закрыты до общей даты для всех потоков.'}</p>
+      {data.status === 'sealed' && data.student && <p>{data.student.lastName} {data.student.firstName} · {data.student.group}</p>}
+      {data.status === 'sealed' && data.revealAt && <p>{language === 'kk' ? 'Ашылатын уақыт' : 'Откроются'}: {new Date(data.revealAt).toLocaleString(language === 'kk' ? 'kk-KZ' : 'ru-RU')}</p>}
+      {data.status === 'sealed' && !data.revealAt && <p>{language === 'kk' ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Преподаватель назначит дату открытия позже.'}</p>}
+    </section></main>;
+  }
+
   if (submitted) {
     return (
       <main className="assessment-shell">
@@ -574,7 +632,8 @@ export default function MechanicsAssessment() {
           <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
           <span className="assessment-kicker">{copy.completed}</span>
           <h1>{submitted.policyVersion === 1 ? `${submitted.finalPercent ?? 0}%` : `${submitted.score} ${copy.scoreJoin} ${submitted.maxScore}`}</h1>
-          {submitted.policyVersion === 1 && <p>{submitted.score} {copy.scoreJoin} {submitted.maxScore} · {copy.task.toLocaleLowerCase()}</p>}
+          {midterm && <p>{copy.finalGrade}: <strong>{Math.round((submitted.finalPercent ?? submitted.score / 8 * 100) * .8) / 10} / 8</strong></p>}
+          {submitted.policyVersion === 1 && <p>{submitted.score} {copy.scoreJoin} {submitted.maxScore} · {midterm ? (language === 'kk' ? 'балл' : 'баллов') : copy.task.toLocaleLowerCase()}</p>}
           <p className="assessment-result-lead">
             {submitted.late ? copy.late : copy.saved}
           </p>
@@ -589,15 +648,31 @@ export default function MechanicsAssessment() {
           <div className="assessment-result-grid">
             {submitted.correctness.map((correct, index) => (
               <div className={correct ? 'result-task correct' : 'result-task incorrect'} key={index}>
-                <span>{copy.task} {index + 1}</span><strong>{correct ? copy.correct : copy.incorrect}</strong>
+                <span className="assessment-result-number" aria-hidden="true">{index + 1}</span><strong className="assessment-result-status">{submitted.taskLabels?.[index] ?? `${copy.task} ${index + 1}`}: {correct ? copy.correct : (submitted.taskScores?.[index] ?? 0) > 0 ? (language === 'kk' ? 'Ішінара' : 'Частично') : copy.incorrect}</strong>
+                <span className="assessment-result-caption" aria-hidden="true">{correct ? copy.correct : (submitted.taskScores?.[index] ?? 0) > 0 ? (language === 'kk' ? 'Ішінара' : 'Частично') : copy.incorrect}</span>
+                {submitted.taskScores && <small>{submitted.taskScores[index]} / {submitted.taskMaxScores?.[index]}</small>}
               </div>
             ))}
           </div>
+          {submitted.review && <section className="assessment-answer-review" aria-labelledby="answer-review-title">
+            <h2 id="answer-review-title">{language === 'kk' ? 'Дұрыс жауаптар' : 'Правильные ответы'}</h2>
+            {submitted.review.map(task => <article key={task.id}>
+              <h3>{task.title}</h3>
+              <p>{task.text}</p>
+              <dl>{task.fields.map(field => <div key={field.id} className={field.correct ? 'answer-correct' : 'answer-incorrect'}>
+                <dt>{field.label}</dt>
+                <dd><span>{language === 'kk' ? 'Сіздің жауабыңыз' : 'Ваш ответ'}: </span>{field.submitted === null || String(field.submitted).trim() === '' ? (language === 'kk' ? 'Жауап жоқ' : 'Нет ответа') : `${field.submitted}${field.unit ? ` ${field.unit}` : ''}`}</dd>
+                <dd className="assessment-answer-expected">{field.id === 'selection' && field.correct
+                  ? (language === 'kk' ? 'Сіздің жауабыңыз дұрыс' : 'Ваш ответ правильный')
+                  : <><span>{language === 'kk' ? 'Дұрыс жауап' : 'Правильный ответ'}: </span>{typeof field.expected === 'number' ? field.expected.toLocaleString(language === 'kk' ? 'kk-KZ' : 'ru-RU', { maximumFractionDigits: 6 }) : field.expected}{field.unit && ` ${field.unit}`}</>}</dd>
+              </div>)}</dl>
+            </article>)}
+          </section>}
           <div className="assessment-result-meta">
             <span>{copy.variant}: <strong>{submitted.variantCode}</strong></span>
             <span>{copy.eventsRecorded}: <strong>{submitted.violationsCount}</strong></span>
           </div>
-          <p className="assessment-source">{copy.sources}: Чертов А. Г., Воробьёв А. А. — {submitted.sources.join(', ')}.</p>
+          <p className="assessment-source">{copy.sources}: Чертов А. Г., Воробьёв А. А. — {submitted.sources.join(', ')}.{midterm && (language === 'kk' ? ' Теориялық сұрақтар берілген RU/ҚАЗ дәрістері негізінде құрастырылған.' : ' Теоретические вопросы составлены по предоставленным лекциям RU/ҚАЗ.')}</p>
           {error && <p className="assessment-error">{error}</p>}
           {canRestart && submitted.student && (
             <button className="assessment-primary assessment-restart" type="button" onClick={restart} disabled={restarting}>
@@ -684,7 +759,7 @@ export default function MechanicsAssessment() {
         <div><span>{copy.filled}</span><strong>{answeredFields}/{totalFields}</strong></div>
         <div><span>{copy.events}</span><strong>{violations}</strong></div>
         <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
-        {!fullscreen && <button onClick={enterFullscreen}>{copy.fullscreen}</button>}
+        {!fullscreen && document.fullscreenEnabled && <button className="assessment-fullscreen-button" onClick={enterFullscreen}>{copy.fullscreen}</button>}
       </section>
 
       <header className="assessment-heading">
@@ -701,12 +776,24 @@ export default function MechanicsAssessment() {
         </div>
         {active.tasks.map((task) => (
           <article className="assessment-task" key={task.id}>
-            <div className="assessment-task-number">{String(task.order).padStart(2, '0')}</div>
+            <div className="assessment-task-number">{String(task.kind === 'multiple' ? task.order - 5 : task.order).padStart(2, '0')}</div>
             <div className="assessment-task-content">
-              <span className="assessment-task-level">{copy.task} {task.order}</span>
+              <span className="assessment-task-level">{task.kind === 'multiple' ? (language === 'kk' ? 'Теория' : 'Теория') : copy.task} {task.kind === 'multiple' ? task.order - 5 : task.order}{task.points !== undefined && ` · ${task.points} ${language === 'kk' || task.points === 1 ? 'балл' : 'балла'}`}</span>
               <h2>{task.title}</h2>
               <p>{task.text}</p>
-              <div className="assessment-fields">
+              {task.diagram === 'molecule' && <MoleculeDiagram />}
+              {task.kind === 'multiple' ? <fieldset className="assessment-options">
+                <legend>{language === 'kk' ? 'Барлық дұрыс жауаптарды таңдаңыз' : 'Выберите все верные ответы'}</legend>
+                {task.options?.map(option => <label key={option.id}>
+                  <input type="checkbox" checked={(answers[task.id]?.selection ?? '').split(',').includes(option.id)}
+                    onChange={e => setAnswers(current => {
+                      const selected = new Set((current[task.id]?.selection ?? '').split(',').filter(Boolean));
+                      if (e.target.checked) selected.add(option.id); else selected.delete(option.id);
+                      return { ...current, [task.id]: { selection: [...selected].sort().join(',') } };
+                    })} />
+                  <span>{option.text}</span>
+                </label>)}
+              </fieldset> : <div className="assessment-fields">
                 {task.fields.map((field) => (
                   <label key={field.id}>
                     <span>{field.label}</span>
@@ -727,7 +814,7 @@ export default function MechanicsAssessment() {
                     </div>
                   </label>
                 ))}
-              </div>
+              </div>}
             </div>
           </article>
         ))}
