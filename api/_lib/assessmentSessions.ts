@@ -6,6 +6,7 @@ import { isAdmin, type ClerkUser } from './auth.js'
 import { sameOrigin } from './studentProfile.js'
 import { currentPeriod, selectedPeriod } from './assessmentPeriods.js'
 import type { AssessmentLanguage, StudentIdentity } from './mechanicsAssessment.js'
+import { isAssessmentGroup } from '../../src/lib/monitorGrading.js'
 
 type TestId = 'mechanics' | 'midterm'
 type Session = typeof schema.assessmentSessions.$inferSelect
@@ -171,6 +172,18 @@ async function adminAction(body: Record<string, unknown>, testId: TestId, user: 
     return res.status(200).json({ ok: true, changed: rows.length > 0 })
   }
   if (!uuid(body.participantId)) return res.status(400).json({ error: 'Укажите студента.' })
+  if (body.action === 'restoreParticipant') {
+    if (!period.active) return res.status(409).json({ error: 'Нельзя вернуть допуск в архивном периоде.' })
+    const [, rows] = await sql.transaction([
+      sql`select id from assessment_sessions where id=${s.id}::uuid for update`,
+      sql`update assessment_participants p set status='admitted',decided_at=now(),decided_by=${user.userId}
+        from assessment_sessions s where p.id=${body.participantId}::uuid and p.session_id=s.id and s.id=${s.id}::uuid
+        and p.status='rejected' and s.ended_at is null and s.ends_at+p.extra_seconds*interval '1 second'>now()
+        and not exists(select 1 from assessment_attempts a where a.assessment_key=${sessionKey(s)} and a.clerk_user_id='session_'||p.id::text and a.submitted_at is not null)
+        returning p.id`,
+    ], { isolationLevel: 'ReadCommitted' })
+    return rows.length ? res.status(200).json({ ok: true }) : res.status(409).json({ error: 'Допуск уже изменён, работа сдана или время участия истекло. Завершённый сеанс нельзя открыть заново.' })
+  }
   if (body.action === 'revokeParticipant') {
     const [, rows] = await sql.transaction([
       sql`select id from assessment_sessions where id=${s.id}::uuid for update`,
@@ -210,7 +223,7 @@ async function adminAction(body: Record<string, unknown>, testId: TestId, user: 
   return res.status(400).json({ error: 'Неизвестное действие сеанса.' })
 }
 
-const adminActions = new Set(['createSession', 'saveReveal', 'updateEntryTime', 'shortenSessionCode', 'startSession', 'endSession', 'decideParticipant', 'revokeParticipant', 'extendParticipant'])
+const adminActions = new Set(['createSession', 'saveReveal', 'updateEntryTime', 'shortenSessionCode', 'startSession', 'endSession', 'decideParticipant', 'revokeParticipant', 'restoreParticipant', 'extendParticipant'])
 export async function handleSessionRequest(req: VercelRequest, res: VercelResponse, body: Record<string, unknown>, testId: TestId, user: ClerkUser | null, engine: Engine): Promise<boolean> {
   if (req.method !== 'GET' && req.method !== 'POST') return false
   const language: AssessmentLanguage = body.language === 'kk' || req.query.lang === 'kk' ? 'kk' : 'ru'
@@ -239,6 +252,7 @@ export async function handleSessionRequest(req: VercelRequest, res: VercelRespon
   if (req.method === 'POST' && body.action === 'joinSession') {
     const code = clean(body.code, 20).replace(/\s/g, '').toUpperCase(), student = engine.student(body.student)
     if (!student || !/^(?:\d{6}|[A-F0-9]{12})$/.test(code)) { res.status(400).json({ error: kk ? 'Деректер мен сеанс кодын тексеріңіз.' : 'Проверьте ФИО, группу и код сеанса (6 цифр; прежние 12-значные коды тоже работают).' }); return true }
+    if (!isAssessmentGroup(student.group)) { res.status(400).json({ error: kk ? 'Тізімнен ОП таңдаңыз: B062, B063, B064, B076 немесе B057.' : 'Выберите ОП из списка: B062, B063, B064, B076 или B057.' }); return true }
     const [s] = await db.select().from(schema.assessmentSessions).where(and(eq(schema.assessmentSessions.code, code), eq(schema.assessmentSessions.testId, testId), eq(schema.assessmentSessions.periodKey, current.key))).limit(1)
     if (!s) { res.status(404).json({ error: kk ? 'Сеанс табылмады.' : 'Сеанс с таким кодом не найден.' }); return true }
     const secret = randomBytes(24).toString('base64url'), id = randomUUID()

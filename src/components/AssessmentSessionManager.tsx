@@ -41,6 +41,7 @@ export default function AssessmentSessionManager({ endpoint, period, testId, act
       if (body.action === 'createSession') { setSelected(payload.id ?? ''); setCreating(false) }
       if (body.action === 'updateEntryTime') { setEditingEntry(''); setNotice('Время открытия входа сохранено. Старт и длительность работы не изменились.') }
       if (body.action === 'revokeParticipant') setNotice('Допуск отозван. Студент больше не может открывать задания или отправлять ответы. Запись и сохранённые ответы не удалены.')
+      if (body.action === 'restoreParticipant') setNotice('Допуск возвращён. Студент автоматически увидит зал ожидания или продолжит прежнюю работу на оставшееся время. Вариант, ответы и срок окончания сохранены.')
       if (body.action === 'shortenSessionCode') setNotice('Код заменён на 6 цифр. Старый код больше не работает. Уже зарегистрированные участники сохраняют допуск.')
       await load(); return true
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось сохранить.'); return false }
@@ -85,7 +86,9 @@ export default function AssessmentSessionManager({ endpoint, period, testId, act
         void action({ action: 'extendParticipant', sessionId: session.id, participantId: p.id, minutes: Number(minutes), reason })
       }}>Добавить время</button>}{p.status === 'admitted' && !p.submittedAt && !session.endedAt && Date.parse(p.expiresAt) > now && <button className="monitor-export exam-revoke-button" disabled={busy} onClick={() => {
         if (window.confirm(`Отозвать допуск у ${p.student.lastName} ${p.student.firstName}? Студент потеряет доступ к заданиям и отправке ответов. Запись и сохранённая работа останутся в мониторинге.`)) void action({ action: 'revokeParticipant', sessionId: session.id, participantId: p.id })
-      }}>Отозвать допуск</button>}</td></tr>)}{!participants.length && <tr><td colSpan={5}>В зале пока нет участников.</td></tr>}</tbody></table></div>
+      }}>Отозвать допуск</button>}{p.status === 'rejected' && !p.submittedAt && active && !session.endedAt && Date.parse(p.expiresAt) > now && <button className="monitor-export exam-restore-button" disabled={busy} onClick={() => {
+        if (window.confirm(`Вернуть допуск студенту ${p.student.lastName} ${p.student.firstName}? До старта откроется зал ожидания, после старта — прежняя работа только на оставшееся время. Таймер не сбросится.`)) void action({ action: 'restoreParticipant', sessionId: session.id, participantId: p.id })
+      }}>Вернуть допуск</button>}</td></tr>)}{!participants.length && <tr><td colSpan={5}>В зале пока нет участников.</td></tr>}</tbody></table></div>
     </>}
   </section>
 }

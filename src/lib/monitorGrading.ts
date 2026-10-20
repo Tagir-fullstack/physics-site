@@ -9,4 +9,10 @@ export function normalizeMonitorGroup(value: string) {
   return match ? `В${match[1]}` : null;
 }
 
-export const DEFAULT_MONITOR_GROUPS = ['В062', 'В063', 'В064', 'В076'];
+export const ASSESSMENT_GROUPS = ['B062', 'B063', 'B064', 'B076', 'B057'] as const;
+export const DEFAULT_MONITOR_GROUPS = ASSESSMENT_GROUPS.map(group => group.replace('B', 'В'));
+
+export function isAssessmentGroup(value: string) {
+  const normalized = normalizeMonitorGroup(value);
+  return normalized !== null && DEFAULT_MONITOR_GROUPS.includes(normalized);
+}

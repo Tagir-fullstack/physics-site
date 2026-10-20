@@ -44,7 +44,7 @@ export default function OberbeckVariants() {
       const response = await authFetch('/api/oberbeck', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'issueRecovery', variantId: variant.id }) })
       const result = await response.json() as { token: string; expiresAt: string; error?: string }
       if (!response.ok) throw new Error(result.error || 'Не удалось выдать ссылку.')
-      const url = new URL('/student/recover', window.location.origin)
+      const url = new URL('/student/recover', 'https://physez.com')
       url.hash = new URLSearchParams({ token: result.token }).toString()
       setRecovery({ student: variant.student, code: variant.code, url: url.toString(), expiresAt: result.expiresAt })
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось выдать ссылку.') }
