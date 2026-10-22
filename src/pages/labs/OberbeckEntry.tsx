@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import OberbeckPendulum from './OberbeckPendulum'
 import StudentIdentityForm from '../../components/StudentIdentityForm'
 import GoogleRegistration from '../../components/auth/GoogleRegistration'
@@ -9,6 +10,7 @@ import '../../styles/atwood.css'
 import '../../styles/student-profile.css'
 type Assignment = { id: string; code: string; parameters: OberbeckVariant }
 export default function OberbeckEntry() {
+  const { user } = useAuth()
   const { profile, loading, error: profileError, setProfile, refresh, authFetch } = useStudentProfile()
   const [assignment, setAssignment] = useState<Assignment | null>(null)
   const [loadedFor, setLoadedFor] = useState('')
@@ -29,9 +31,9 @@ export default function OberbeckEntry() {
   }
   if (loading || id && loadedFor !== id) return <main className="student-page"><section className="student-panel"><p role="status">Загружаем ваш профиль и вариант…</p></section></main>
   if (assignment && profile && loadedFor === profile.id) return <OberbeckPendulum key={assignment.id} variant={assignment.parameters} variantCode={assignment.code} student={profile} />
-  return <main className="student-page"><section className="student-panel ob-variant-intro"><div><span className="atwood-eyebrow">ЛАБОРАТОРНАЯ РАБОТА №3</span><h1>Маятник Обербека</h1><p>Одна установка · два исследования</p><p>У каждого студента — свой набор высоты, радиусов и масс.</p><p>Вариант сохраняется в базе и не меняется при повторном входе. Сохраните код восстановления в профиле для другого устройства.</p><Link to="/student/profile">Ваш профиль →</Link></div><div>
+  return <main className="student-page"><section className="student-panel ob-variant-intro"><div><span className="atwood-eyebrow">ЛАБОРАТОРНАЯ РАБОТА №3</span><h1>Маятник Обербека</h1><p>Одна установка · два исследования</p><p>У каждого студента — свой набор высоты, радиусов и масс.</p><p>Вариант сохраняется в базе и не меняется при повторном входе. Сохраните код восстановления в профиле для другого устройства.</p><Link to={user ? '/account' : '/student/profile'}>Ваш профиль →</Link></div><div>
     {(profileError || error) && <p className="student-error" role="alert">{profileError || error}</p>}
     <GoogleRegistration profile={profile} onLinked={setProfile} />
-    {profileError ? <button onClick={() => void refresh()}>Повторить загрузку профиля</button> : profile ? <><h2>{profile.lastName} {profile.firstName}</h2><p>Группа {profile.group}</p><button className="atwood-primary" disabled={starting} onClick={() => void start(profile)}>{starting ? 'Выдаём вариант…' : 'Получить свой вариант'}</button>{error && <button className="atwood-secondary" onClick={() => void load().catch(e => setError(e.message))}>Проверить сохранённый вариант</button>}</> : <StudentIdentityForm start onComplete={start} />}
+    {profileError ? <button onClick={() => void refresh()}>Повторить загрузку профиля</button> : profile ? <><h2>{profile.lastName} {profile.firstName}</h2><p>Группа {profile.group}</p><div className="ob-entry-actions"><button className="atwood-primary" disabled={starting} onClick={() => void start(profile)}>{starting ? 'Выдаём вариант…' : 'Получить свой вариант'}</button>{error && <button className="atwood-secondary" onClick={() => void load().catch(e => setError(e.message))}>Проверить сохранённый вариант</button>}</div></> : <StudentIdentityForm start onComplete={start} />}
   </div></section></main>
 }

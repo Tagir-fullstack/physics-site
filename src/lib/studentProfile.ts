@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 import { useApiClient } from './apiClient'
-export type StudentProfile = { id: string; lastName: string; firstName: string; group: string; accountLinked?: boolean }
+export type StudentProfile = { id: string; lastName: string; firstName: string; group: string; variantNumber?: number; accountLinked?: boolean }
 export async function studentRequest<T>(path: string, body?: unknown, transport: (input: string, init: RequestInit) => Promise<Response> = fetch): Promise<T> {
   const response = await transport(path, { credentials: 'include', ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) })
   const data = await response.json()

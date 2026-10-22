@@ -8,6 +8,7 @@ import { db, hasDatabaseConfig, schema, databaseSql } from './_lib/db.js'
 import { getClerkUser, isAdmin } from './_lib/auth.js'
 import { handleSessionRequest, attemptRelease, finalizeExpiredSessionAttempts } from './_lib/assessmentSessions.js'
 import { canRestartAssessment } from './_lib/assessmentAccess.js'
+import { studentForWork, STUDENT_RECOVERY_REQUIRED } from './_lib/studentWorkIdentity.js'
 import {
   ASSESSMENT_DURATION_MS as MECHANICS_DURATION,
   ASSESSMENT_KEY as MECHANICS_KEY,
@@ -375,7 +376,7 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
     if (!group || !groups.has(group)) return res.status(400).json({ error: 'Выберите группу из списка.' })
     const value = JSON.stringify({ ...student, group })
     // Correct only the displayed identity: retain the guest access key, answers and original variant.
-    const [updated] = await db.update(schema.assessmentAttempts).set({ variantData: sql`jsonb_set(${schema.assessmentAttempts.variantData}, '{student}', ${value}::jsonb)` }).where(and(eq(schema.assessmentAttempts.id, body.attemptId), periodCondition(period.key))).returning({ id: schema.assessmentAttempts.id })
+    const [updated] = await db.update(schema.assessmentAttempts).set({ variantData: sql`jsonb_set(${schema.assessmentAttempts.variantData}, '{student}', coalesce(${schema.assessmentAttempts.variantData}->'student', '{}'::jsonb) || ${value}::jsonb)` }).where(and(eq(schema.assessmentAttempts.id, body.attemptId), periodCondition(period.key))).returning({ id: schema.assessmentAttempts.id })
     if (!updated) return res.status(404).json({ error: 'Работа не найдена в выбранном периоде.' })
     return res.status(200).json({ ok: true, student: { ...student, group } })
   }
@@ -433,7 +434,11 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
         error: language === 'kk' ? 'Тегіңізді, атыңызды және тобыңызды тексеріңіз.' : 'Проверьте фамилию, имя и группу.',
       })
     }
-    const attempt = await startAttempt(participantId, student, period)
+    const saved = await findAttempt(participantId, period.key)
+    if (saved) return res.status(200).json(await responseFor(saved, language, canRestartAssessment(testId, user), isAdmin(user)))
+    const workStudent = await studentForWork(req, res, user, student)
+    if (!workStudent) return res.status(409).json({ error: STUDENT_RECOVERY_REQUIRED })
+    const attempt = await startAttempt(participantId, workStudent, period)
     if (!attempt) return res.status(409).json({ error: 'Учебный период сменился. Обновите страницу перед началом работы.' })
     return res.status(200).json(await responseFor(attempt, language, canRestartAssessment(testId, user), isAdmin(user)))
   }

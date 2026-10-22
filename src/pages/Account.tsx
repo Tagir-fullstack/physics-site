@@ -7,7 +7,8 @@ import type { UserRole } from '../types/auth';
 import '../styles/account.css';
 import AccountAccess, { type AccountAccessState } from '../components/AccountAccess';
 import { useApiClient } from '../lib/apiClient';
-import AccountStudentIdentity from '../components/AccountStudentIdentity';
+import AccountStudentIdentity, { type ProfileIdentity } from '../components/AccountStudentIdentity';
+import { studentRequest, useStudentProfile } from '../lib/studentProfile';
 import '../styles/account-dashboard.css';
 
 const ACCOUNT_THEMES = [
@@ -73,6 +74,8 @@ export default function Account() {
   const { user, profile, isLoading, signOut, updateProfile } = useAuth();
   const { user: clerkUser } = useUser();
   const { authFetch } = useApiClient();
+  const { profile: workProfile, loading: identityLoading, error: identityError, refresh: refreshIdentity, setProfile: setWorkProfile } = useStudentProfile();
+  const [identityDraft, setIdentityDraft] = useState<ProfileIdentity>({ lastName: '', firstName: '', group: '' });
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -82,6 +85,7 @@ export default function Account() {
   const [accessError, setAccessError] = useState<{ userId: string; attempt: number; message: string } | null>(null);
   const [accessAttempt, setAccessAttempt] = useState(0);
   const userId = user?.id;
+  const identity: ProfileIdentity = { lastName: workProfile?.lastName ?? profile?.last_name ?? clerkUser?.lastName ?? '', firstName: workProfile?.firstName ?? profile?.first_name ?? clerkUser?.firstName ?? '', group: workProfile?.group ?? '' };
   const [copiedId, setCopiedId] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [themes, setThemes] = useState<Record<string, AccountTheme>>({});
@@ -170,12 +174,20 @@ export default function Account() {
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+    if (identityLoading || identityError) { setMessage({ type: 'error', text: 'Сначала дождитесь загрузки данных профиля или повторите её.' }); return; }
+    const clean = { lastName: identityDraft.lastName.trim(), firstName: identityDraft.firstName.trim(), group: identityDraft.group.trim() };
+    const namePattern = /^[\p{L}\p{M} '’.-]+$/u;
+    if (![clean.lastName, clean.firstName].every(name => name.length >= 2 && name.length <= 60 && namePattern.test(name))) { setMessage({ type: 'error', text: 'Укажите корректные фамилию и имя (от 2 до 60 символов).' }); return; }
+    if (workProfile && !clean.group) { setMessage({ type: 'error', text: 'Укажите ОП для своего варианта.' }); return; }
     setIsSaving(true);
     setMessage(null);
-
+    let identitySaved = false;
     try {
       const updateData: Record<string, unknown> = {
-        full_name: formData.full_name,
+        full_name: `${clean.firstName} ${clean.lastName}`,
+        first_name: clean.firstName,
+        last_name: clean.lastName,
         role: formData.role,
       };
 
@@ -202,12 +214,21 @@ export default function Account() {
         if (formData.city) updateData.city = formData.city;
       }
 
+      if (workProfile || clean.group) {
+        let saved = (await studentRequest<{ profile: NonNullable<typeof workProfile> }>('/api/student-profile', { action: workProfile ? 'update' : 'create', student: clean }, authFetch)).profile;
+        setWorkProfile(saved);
+        identitySaved = true;
+        if (!saved.accountLinked) {
+          saved = (await studentRequest<{ profile: NonNullable<typeof workProfile> }>('/api/student-profile', { action: 'linkAccount' }, authFetch)).profile;
+          setWorkProfile(saved);
+        }
+      }
       await updateProfile(updateData);
       setMessage({ type: 'success', text: 'Профиль сохранён' });
       setIsEditing(false);
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
-      setMessage({ type: 'error', text: 'Ошибка сохранения' });
+      setMessage({ type: 'error', text: identitySaved ? 'ФИО и ОП сохранены. Остальные данные аккаунта сохранить не удалось — повторите сохранение.' : err instanceof Error ? err.message : 'Ошибка сохранения' });
       console.error(err);
     } finally {
       setIsSaving(false);
@@ -215,6 +236,7 @@ export default function Account() {
   };
 
   const handleCancel = () => {
+    setIdentityDraft(identity);
     if (profile) {
       setFormData({
         full_name: profile.full_name || '',
@@ -546,7 +568,7 @@ export default function Account() {
           <section className="account-section account-profile-section">
             <div className="account-section-heading">
               <div><span>Учетная запись</span><h2 className="account-section-title">Профиль</h2></div>
-              {!isEditing && <button className="account-edit-trigger" onClick={() => setIsEditing(true)}>Редактировать</button>}
+              {!isEditing && <button className="account-edit-trigger" disabled={identityLoading || !!identityError} onClick={() => { setIdentityDraft(identity); setIsEditing(true); }}>Редактировать</button>}
             </div>
 
             <div className="account-profile-header">
@@ -579,27 +601,18 @@ export default function Account() {
               <div>
                 {accountAccess && <span className="account-membership-badge">{accountAccess.isPremium ? '✦ PHYSEZ PRO' : 'БАЗОВЫЙ ДОСТУП'}</span>}
                 <div className="account-profile-name-row">
-                  <div className="account-profile-name">{profile?.full_name || 'Не указано'}</div>
+                  <div className="account-profile-name">{[identity.firstName, identity.lastName].filter(Boolean).join(' ') || profile?.full_name || 'Не указано'}</div>
                 </div>
                 <div className="account-profile-email">{user.email}</div>
               </div>
             </div>
 
             <div className={`account-profile-info ${isEditing ? 'editing' : 'readonly'}`}>
+              <AccountStudentIdentity editing={isEditing} value={isEditing ? identityDraft : identity} onChange={setIdentityDraft} variantNumber={workProfile?.variantNumber} loading={identityLoading} error={identityError} onRetry={() => void refreshIdentity()} />
               {isEditing ? (
                 <>
                   <div className="account-field">
-                    <label className="account-label">Имя</label>
-                    <input
-                      type="text"
-                      className="account-input"
-                      value={formData.full_name}
-                      onChange={(e) => handleInputChange('full_name', e.target.value)}
-                      placeholder="Введите имя"
-                    />
-                  </div>
-                  <div className="account-field">
-                    <label className="account-label">Роль</label>
+                    <label className="account-label">Роль в образовании</label>
                     <select
                       className="account-select"
                       value={formData.role}
@@ -615,7 +628,7 @@ export default function Account() {
               ) : (
                 <>
                   <div className="account-field">
-                    <label className="account-label">Роль</label>
+                    <label className="account-label">Роль в образовании</label>
                     <div className="account-value">{getRoleLabel(profile?.role || 'pupil')}</div>
                   </div>
                   {roleFields.map((field, i) => (
@@ -628,7 +641,6 @@ export default function Account() {
               )}
             </div>
 
-            {accountAccess.role === 'user' && (profile?.role === 'student' || profile?.role === 'pupil' || !profile?.role) && <AccountStudentIdentity />}
 
             <div className="account-profile-access">
               <div>
@@ -709,6 +721,7 @@ export default function Account() {
                   <button
                     className="account-btn account-btn-secondary"
                     onClick={handleCancel}
+                    disabled={isSaving}
                   >
                     Отмена
                   </button>

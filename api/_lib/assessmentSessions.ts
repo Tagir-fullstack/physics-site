@@ -4,6 +4,7 @@ import { and, desc, eq, isNull, sql as drizzleSql } from 'drizzle-orm'
 import { db, databaseSql as sql, schema } from './db.js'
 import { isAdmin, type ClerkUser } from './auth.js'
 import { sameOrigin } from './studentProfile.js'
+import { studentForWork, STUDENT_RECOVERY_REQUIRED } from './studentWorkIdentity.js'
 import { currentPeriod, selectedPeriod } from './assessmentPeriods.js'
 import type { AssessmentLanguage, StudentIdentity } from './mechanicsAssessment.js'
 import { isAssessmentGroup } from '../../src/lib/monitorGrading.js'
@@ -26,7 +27,9 @@ const sessionKey = (s: Session) => `${s.periodKey}-s-${s.id}`
 export const sessionDeadline = (s: Session, member: Member) => new Date(Math.min(s.endsAt.getTime() + member.extraSeconds * 1000, s.endedAt?.getTime() ?? Infinity))
 const identityHash = (student: StudentIdentity) => hash([student.lastName, student.firstName, student.group].map(v => v.trim().replace(/\s+/g, ' ').toLocaleLowerCase('ru')).join('|'))
 function setCookie(res: VercelResponse, testId: TestId, id: string, secret: string) {
-  res.setHeader('Set-Cookie', `${cookieName(testId)}=${id}.${secret}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${process.env.VERCEL_ENV === 'production' ? '; Secure' : ''}`)
+  const cookie = `${cookieName(testId)}=${id}.${secret}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${process.env.VERCEL_ENV === 'production' ? '; Secure' : ''}`
+  const previous = res.getHeader?.('Set-Cookie')
+  res.setHeader('Set-Cookie', previous ? [...(Array.isArray(previous) ? previous.map(String) : [String(previous)]), cookie] : cookie)
 }
 export async function accessSettings(periodKey: string, testId: TestId) {
   const [row] = await db.select().from(schema.assessmentAccessSettings).where(eq(schema.assessmentAccessSettings.periodKey, periodKey)).limit(1)
@@ -250,13 +253,18 @@ export async function handleSessionRequest(req: VercelRequest, res: VercelRespon
   if (!policy.sessionsRequired && body.action !== 'joinSession') return false
   if (req.method === 'POST' && !sameOrigin(req)) { res.status(403).json({ error: 'Origin mismatch' }); return true }
   if (req.method === 'POST' && body.action === 'joinSession') {
-    const code = clean(body.code, 20).replace(/\s/g, '').toUpperCase(), student = engine.student(body.student)
+    const code = clean(body.code, 20).replace(/\s/g, '').toUpperCase()
+    let student = engine.student(body.student)
     if (!student || !/^(?:\d{6}|[A-F0-9]{12})$/.test(code)) { res.status(400).json({ error: kk ? 'Деректер мен сеанс кодын тексеріңіз.' : 'Проверьте ФИО, группу и код сеанса (6 цифр; прежние 12-значные коды тоже работают).' }); return true }
     if (!isAssessmentGroup(student.group)) { res.status(400).json({ error: kk ? 'Тізімнен ОП таңдаңыз: B062, B063, B064, B076 немесе B057.' : 'Выберите ОП из списка: B062, B063, B064, B076 или B057.' }); return true }
     const [s] = await db.select().from(schema.assessmentSessions).where(and(eq(schema.assessmentSessions.code, code), eq(schema.assessmentSessions.testId, testId), eq(schema.assessmentSessions.periodKey, current.key))).limit(1)
     if (!s) { res.status(404).json({ error: kk ? 'Сеанс табылмады.' : 'Сеанс с таким кодом не найден.' }); return true }
     const secret = randomBytes(24).toString('base64url'), id = randomUUID()
     if (context?.session.id === s.id) { res.status(200).json(await entry(req, testId, user)); return true }
+    if (Date.now() < s.opensAt.getTime() || Date.now() >= s.endsAt.getTime() || s.endedAt) { res.status(409).json({ error: 'Вход в этот сеанс закрыт.' }); return true }
+    student = await studentForWork(req, res, user, student)
+    if (!student) { res.status(409).json({ error: STUDENT_RECOVERY_REQUIRED }); return true }
+    if (!isAssessmentGroup(student.group)) { res.status(400).json({ error: 'Проверьте ОП в своём профиле.' }); return true }
     const [, rows] = await sql.transaction([
       sql`select id from assessment_sessions where id=${s.id}::uuid for update`,
       sql`insert into assessment_participants(id,session_id,student,identity_hash,clerk_user_id,token_hash,status)

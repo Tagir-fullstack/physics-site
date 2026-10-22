@@ -3,6 +3,8 @@ import { randomBytes } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createAssessmentHandler } from '../api/mechanics-assessment.js'
 import midterm from '../api/midterm-assessment.js'
+import oberbeck from '../api/oberbeck.js'
+import studentProfile from '../api/student-profile.js'
 import { handleSessionRequest, finalizeExpiredSessionAttempts } from '../api/_lib/assessmentSessions.js'
 import { databaseSql as sql } from '../api/_lib/db.js'
 import { createVariant, variantFingerprint, createVariantCode, gradeVariant, type StudentIdentity } from '../api/_lib/mechanicsAssessment.js'
@@ -17,14 +19,16 @@ type Browser = { cookies: Record<string, string> }
 async function call(browser: Browser, body?: Record<string, unknown>, query = {}, teacher = false, handler = publicHandler, origin = 'http://localhost:5173') {
   let status = 200; let payload: Record<string, unknown> = {}
   const req = { method: body ? 'POST' : 'GET', body, query, cookies: { ...browser.cookies }, headers: { host: 'localhost:5173', origin, ...(teacher ? { authorization: 'Bearer fixture-only-helper' } : {}) } } as unknown as VercelRequest
-  const res = { setHeader: (name: string, value: string) => { if (name.toLowerCase() === 'set-cookie') { const [name, token] = value.split(';')[0].split('='); browser.cookies[name] = token } }, status: (s: number) => { status = s; return res }, json: (p: Record<string, unknown>) => { payload = p; return res } } as unknown as VercelResponse
+  const headers = new Map<string, string | string[]>()
+  const res = { getHeader: (name: string) => headers.get(name.toLowerCase()), setHeader: (name: string, value: string | string[]) => { headers.set(name.toLowerCase(), value); if (name.toLowerCase() === 'set-cookie') for (const cookie of Array.isArray(value) ? value : [value]) { const [key, token] = cookie.split(';')[0].split('='); browser.cookies[key] = token } }, status: (s: number) => { status = s; return res }, json: (p: Record<string, unknown>) => { payload = p; return res } } as unknown as VercelResponse
   // Only helper tests inject an already-verified user. Public tests always use real auth middleware.
   if (teacher) assert.equal(await handleSessionRequest(req, res, body ?? {}, testId, admin, engine), true)
   else await handler(req, res)
   return { status, payload }
 }
 const teacher: Browser = { cookies: {} }, one: Browser = { cookies: {} }, two: Browser = { cookies: {} }, late: Browser = { cookies: {} }, rejected: Browser = { cookies: {} }
-const student = (name: string, group = 'B076') => ({ lastName: 'Проверочный', firstName: name, group })
+const fixtureSurname = 'Проверочный ' + Array.from(randomBytes(12), n => String.fromCharCode(0x430 + n % 32)).join('')
+const student = (name: string, group = 'B076') => ({ lastName: fixtureSurname, firstName: name, group })
 const adminCall = (body: Record<string, unknown>) => call(teacher, { ...body, period: key }, {}, true)
 try {
   await sql`insert into assessment_periods(key,test_id,name,active,max_points_tenths) values(${key},${key},'Fixture only',true,20)`
@@ -59,8 +63,15 @@ try {
   assert.equal(new Date(updatedSession.opens_at).toISOString(), newEntry)
   assert.equal(new Date(updatedSession.ends_at).getTime() - new Date(updatedSession.starts_at).getTime(), 50 * 60_000)
   assert.equal((await call(one, { action: 'joinSession', code, student: student('Первый') }, {}, false, publicHandler, 'https://foreign.invalid')).status, 403)
-  const joined = await call(one, { action: 'joinSession', code, student: student('Первый') })
+  const joined = await call(one, { action: 'joinSession', code, student: { ...student('Первый'), variantNumber: 999999, studentProfileId: '00000000-0000-4000-8000-000000000000' } })
   assert.equal(joined.payload.phase, 'waiting'); assert.ok(!('tasks' in joined.payload))
+  const profile = (await call(one, undefined, {}, false, studentProfile)).payload.profile as { id: string; variantNumber: number }
+  assert.ok(profile.variantNumber > 0, 'A new entrant receives one permanent variant number')
+  assert.notEqual(profile.variantNumber, 999999, 'A client cannot select or spoof the permanent number')
+  assert.ok(one.cookies.physez_student && one.cookies[`physez_exam_${testId}`], 'Both profile and exam cookies survive in one response')
+  assert.equal((joined.payload.student as StudentIdentity).variantNumber, profile.variantNumber)
+  const lab = await call(one, { action: 'start' }, {}, false, oberbeck)
+  assert.equal((lab.payload.profile as { variantNumber: number }).variantNumber, profile.variantNumber, 'Lab and assessment share one profile number')
   assert.equal((await call(one, { action: 'start', student: student('Другой') })).payload.status, 'locked')
   assert.equal((await call(two, { action: 'joinSession', code, student: student('Второй', 'B062') })).payload.phase, 'waiting')
   const removed: Browser = { cookies: {} }
@@ -82,6 +93,7 @@ try {
   assert.equal((await adminCall({ action: 'updateEntryTime', sessionId, opensAt: newEntry })).status, 409)
   const started = await call(one, { action: 'resume' }), other = await call(two, { action: 'resume' })
   assert.equal(started.payload.status, 'active'); assert.equal((started.payload.tasks as unknown[]).length, 3)
+  assert.equal((started.payload.student as StudentIdentity).variantNumber, profile.variantNumber)
   assert.equal(started.payload.expiresAt, other.payload.expiresAt)
   assert.notEqual(started.payload.variantCode, other.payload.variantCode)
   assert.ok(!('review' in started.payload)); assert.ok(!JSON.stringify(started.payload).includes('expected'))
@@ -151,5 +163,7 @@ try {
   await sql`delete from assessment_sessions where period_key=${key} and test_id=${key}`
   await sql`delete from assessment_access_settings where period_key=${key}`
   await sql`delete from assessment_periods where key=${key} and test_id=${key}`
+  await sql`delete from oberbeck_variants where student_id in (select id from student_profiles where last_name=${fixtureSurname} and clerk_id is null)`
+  await sql`delete from student_profiles where last_name=${fixtureSurname} and clerk_id is null`
   console.log('Removed only isolated session-test fixtures.')
 }

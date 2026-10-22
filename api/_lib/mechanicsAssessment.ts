@@ -9,6 +9,8 @@ export type StudentIdentity = {
   lastName: string
   firstName: string
   group: string
+  studentProfileId?: string
+  variantNumber?: number
 }
 
 export type MechanicsVariant = {

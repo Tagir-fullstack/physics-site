@@ -7,7 +7,7 @@ import { databaseSql as sql } from '../api/_lib/db.js'
 import { currentStudent, linkStudentAccount, publicProfile } from '../api/_lib/studentProfile.js'
 import { variantFingerprint } from '../src/lib/oberbeckVariant.js'
 import type { OberbeckVariant } from '../src/lib/oberbeckVariant.js'
-type Payload = { profile?: { id: string; firstName: string }; code?: string; variant?: { id: string; code: string; parameters: OberbeckVariant }; error?: string }
+type Payload = { profile?: { id: string; firstName: string; variantNumber: number }; code?: string; variant?: { id: string; code: string; parameters: OberbeckVariant }; error?: string }
 const fixtureGroup = `OB-TEST-${randomBytes(8).toString('hex')}`
 const fixtureIds: string[] = []
 async function call(handler: typeof profileHandler, method: string, body?: unknown, token?: string, query: Record<string, string> = {}, origin = 'http://localhost:5173') {
@@ -23,6 +23,7 @@ try {
   const identities = [0, 1].map(n => ({ firstName: n ? 'Второй' : 'Первый', lastName: 'Тестовый', group: fixtureGroup }))
   const created = await call(profileHandler, 'POST', { action: 'create', student: identities[0] })
   assert.equal(created.status, 201); fixtureIds.push(created.body.profile!.id)
+  assert.ok(created.body.profile!.variantNumber > 0)
   const token = created.body.code!
   assert.ok(created.cookie.includes('HttpOnly') && created.cookie.includes('SameSite=Lax'))
   assert.ok(!JSON.stringify(created.body.profile).includes('recoveryHash'))
@@ -32,15 +33,18 @@ try {
   assert.ok(!('expected' in a.body), 'Student response must not include teacher answers')
   const modified = await call(profileHandler, 'POST', { action: 'update', student: { ...identities[0], firstName: 'Исправленный' } }, token)
   assert.equal(modified.body.profile!.id, created.body.profile!.id)
+  assert.equal(modified.body.profile!.variantNumber, created.body.profile!.variantNumber)
   assert.equal((await call(labHandler, 'GET', undefined, token)).body.variant!.id, a.body.variant!.id)
   const restored = await call(profileHandler, 'POST', { action: 'recover', code: token })
   assert.equal(restored.status, 200); assert.equal(restored.body.profile!.firstName, 'Исправленный')
+  assert.equal(restored.body.profile!.variantNumber, created.body.profile!.variantNumber)
   const wrongToken = `${token.slice(0, -1)}${token.endsWith('A') ? 'B' : 'A'}`
   assert.equal((await call(profileHandler, 'POST', { action: 'recover', code: wrongToken })).status, 401)
   assert.equal((await call(profileHandler, 'POST', { action: 'update', student: identities[0] }, token, {}, 'https://untrusted.example')).status, 403)
   assert.equal((await call(labHandler, 'GET', undefined, token, { view: 'list' })).status, 403)
   assert.equal((await call(labHandler, 'GET', undefined, token, { view: 'expected', id: a.body.variant!.id })).status, 403)
   const second = await call(profileHandler, 'POST', { action: 'create', student: identities[1] }); assert.equal(second.status, 201); fixtureIds.push(second.body.profile!.id)
+  assert.notEqual(second.body.profile!.variantNumber, created.body.profile!.variantNumber)
   const secondVariant = await call(labHandler, 'POST', { action: 'start' }, second.body.code!)
   assert.notEqual(variantFingerprint(secondVariant.body.variant!.parameters), variantFingerprint(a.body.variant!.parameters))
   assert.equal((await call(profileHandler, 'GET', undefined, token)).body.profile!.firstName, 'Исправленный')

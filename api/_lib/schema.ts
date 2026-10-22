@@ -31,6 +31,7 @@ export const commentStatusEnum = pgEnum('comment_status', [
 
 export const studentProfiles = pgTable('student_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
+  variantNumber: serial('variant_number').notNull().unique(),
   clerkId: varchar('clerk_id', { length: 64 }).unique(),
   lastName: varchar('last_name', { length: 60 }).notNull(),
   firstName: varchar('first_name', { length: 60 }).notNull(),

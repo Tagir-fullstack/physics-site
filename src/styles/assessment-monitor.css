@@ -195,6 +195,8 @@
 .monitor-page--oberbeck .monitor-toolbar { flex-wrap: wrap; font-size: .85rem; }
 .monitor-page--oberbeck .ob-variant-actions { gap: .35rem; }
 .ob-variants-panel .monitor-table { min-width: 1000px; table-layout: fixed; }
+.ob-variants-panel .monitor-toolbar { flex-wrap: wrap; }
+.ob-variants-panel .monitor-table-tools { flex-wrap: wrap; }
 .ob-variants-panel .monitor-table :is(th, td) { padding: .3rem .4rem; overflow-wrap: anywhere; }
 .ob-variants-panel .monitor-table th:first-child { width: 24%; }
 .ob-variants-panel .monitor-table th:nth-child(2) { width: 8%; }

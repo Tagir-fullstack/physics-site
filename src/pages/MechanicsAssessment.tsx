@@ -17,7 +17,7 @@ type Task = {
   options?: Array<{ id: string; text: string }>;
 };
 type Answers = Record<string, Record<string, string>>;
-type StudentIdentity = { lastName: string; firstName: string; group: string };
+type StudentIdentity = { lastName: string; firstName: string; group: string; variantNumber?: number };
 type PenaltyInfo = { policyVersion?: number | null; penaltyPoints?: number; finalPercent?: number | null; waiverReason?: string | null };
 type AssessmentLanguage = 'ru' | 'kk';
 type ReadyResponse = { status: 'ready' };
@@ -669,7 +669,7 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
             </article>)}
           </section>}
           <div className="assessment-result-meta">
-            <span>{copy.variant}: <strong>{submitted.variantCode}</strong></span>
+            <span>{copy.variant}: <strong>{submitted.student?.variantNumber ?? submitted.variantCode}</strong></span>
             <span>{copy.eventsRecorded}: <strong>{submitted.violationsCount}</strong></span>
           </div>
           <p className="assessment-source">{copy.sources}: Чертов А. Г., Воробьёв А. А. — {submitted.sources.join(', ')}.{midterm && (language === 'kk' ? ' Теориялық сұрақтар берілген RU/ҚАЗ дәрістері негізінде құрастырылған.' : ' Теоретические вопросы составлены по предоставленным лекциям RU/ҚАЗ.')}</p>
@@ -749,12 +749,12 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
       <div className="assessment-watermark" aria-hidden="true">
         {Array.from({ length: 18 }, (_, index) => (
           <span key={index}>
-            {active.variantCode} · {active.student ? `${active.student.lastName} ${active.student.firstName} · ${active.student.group}` : user?.email}
+            {active.student?.variantNumber ?? active.variantCode} · {active.student ? `${active.student.lastName} ${active.student.firstName} · ${active.student.group}` : user?.email}
           </span>
         ))}
       </div>
       <section className="assessment-topbar">
-        <div><span>{copy.variant}</span><strong>{active.variantCode}</strong></div>
+        <div><span>{copy.variant}</span><strong>{active.student?.variantNumber ?? active.variantCode}</strong></div>
         <div className={remaining < 300 ? 'assessment-timer urgent' : 'assessment-timer'}><span>{copy.remaining}</span><strong>{formatTime(remaining)}</strong></div>
         <div><span>{copy.filled}</span><strong>{answeredFields}/{totalFields}</strong></div>
         <div><span>{copy.events}</span><strong>{violations}</strong></div>

@@ -245,9 +245,10 @@ export default function Header() {
                   <div className="nav-item">
                     <span className="nav-title">Лабораторные работы</span>
                     <div className="dropdown">
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs')}><span className="nav-lab-number">↗</span><span>Все лабораторные</span></button>
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/atwood')}><span className="nav-lab-number">01</span><span>Машина Атвуда</span></button>
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/ball-collision')}><span className="nav-lab-number">02</span><span>Столкновение шаров</span></button>
-                      <button className="dropdown-item nav-lab-item nav-lab-new" onClick={() => handleLinkClick('/labs/oberbeck')}><span className="nav-lab-number">03</span><span>Маятник Обербека</span><span className="nav-new-badge">NEW</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/oberbeck')}><span className="nav-lab-number">03</span><span>Маятник Обербека</span></button>
                     </div>
                   </div>
                 </div>

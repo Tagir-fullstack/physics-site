@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { isEmailAdmin } from '../../lib/apiClient'
+import { useApiClient } from '../../lib/apiClient'
 import { G, experiment, numberFrom, sampleTimeFactor, timeErrorBound } from './oberbeckModel'
 import { referenceVariant, type OberbeckVariant } from '../../lib/oberbeckVariant'
 import type { StudentProfile } from '../../lib/studentProfile'
+import OberbeckManualControls from '../../components/OberbeckManualControls'
+import { OBERBECK_SPEEDS, type ManualOberbeckSetup } from '../../lib/oberbeckManual'
+import { variantFingerprint } from '../../lib/oberbeckVariant'
 import '../../styles/atwood.css'
 import '../../styles/oberbeck.css'
 
@@ -45,15 +48,44 @@ function Plot({ rows, task, slope, intercept, smallRadius }: { rows: Row[]; task
 }
 
 export default function OberbeckPendulum({ variant = referenceVariant, variantCode, student }: { variant?: OberbeckVariant; variantCode?: string; student?: StudentProfile }) {
+  const { user, isLoading } = useAuth()
+  const { authFetch } = useApiClient()
+  const [access, setAccess] = useState<{ userId: string; allowed: boolean; error: string } | null>(null)
+  const [accessAttempt, setAccessAttempt] = useState(0)
+  const [manual, setManual] = useState<{ userId: string; setup: ManualOberbeckSetup } | null>(null)
+  const [revision, setRevision] = useState(0)
+  const userId = user?.id
+  useEffect(() => {
+    if (isLoading || !userId) return
+    let live = true
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 15000)
+    void authFetch('/api/account', { signal: controller.signal }).then(async response => {
+      const body = await response.json() as { userId?: string; role?: string; isPremium?: boolean }
+      if (!response.ok || body.userId !== userId) throw Error('Не удалось проверить доступ PRO. Повторите проверку.')
+      if (live) setAccess({ userId, allowed: body.isPremium === true || body.role === 'admin' || body.role === 'owner', error: '' })
+    }).catch(() => { if (live) setAccess({ userId, allowed: false, error: 'Не удалось проверить доступ PRO. Повторите проверку.' }) }).finally(() => window.clearTimeout(timeout))
+    return () => { live = false; controller.abort(); window.clearTimeout(timeout) }
+  }, [authFetch, isLoading, userId, accessAttempt])
+  const verified = !isLoading && !!userId && access?.userId === userId
+  const isPro = Boolean(verified && access?.allowed)
+  const custom = isPro && manual && manual.userId === userId ? manual.setup : null
+  const current = custom ?? { variant, length: 10 }
+  const manualKey = custom ? `manual:${userId}:${variantFingerprint(custom.variant)}:${custom.length}` : undefined
+  const controls = isPro ? <OberbeckManualControls setup={current} custom={!!custom} onApply={setup => { setManual({ userId: userId!, setup }); setRevision(n => n + 1) }} onReset={() => { setManual(null); setRevision(n => n + 1) }} /> : verified && access?.error ? <p className="ob-access-error" role="alert">{access.error} <button type="button" onClick={() => setAccessAttempt(n => n + 1)}>Повторить</button></p> : null
+  return <OberbeckSimulation key={`${manualKey ?? 'assigned'}:${revision}`} variant={current.variant} variantCode={variantCode} student={student} isPro={isPro} accessLoading={isLoading || Boolean(userId && !verified)} advancedControls={controls} custom={!!custom} initialLength={current.length} manualNotebookKey={manualKey} />
+}
+
+function OberbeckSimulation({ variant, variantCode, student, isPro, accessLoading: isLoading, advancedControls, custom, initialLength, manualNotebookKey }: { variant: OberbeckVariant; variantCode?: string; student?: StudentProfile; isPro: boolean; accessLoading: boolean; advancedControls: ReactNode; custom: boolean; initialLength: number; manualNotebookKey?: string }) {
+  const { user } = useAuth()
   const { height: HEIGHT, base: BASE, small: SMALL, large: LARGE, radii: RADII } = variant
   const TOTAL = BASE + SMALL + LARGE
-  const notebookKey = variantCode ? `${KEY}:${student?.id}:${variantCode}` : KEY
-  const { user, isPremium, isLoading } = useAuth()
-  const isPro = !isLoading && (isPremium || isEmailAdmin(user?.email))
+  const notebookKey = manualNotebookKey ? `${KEY}:${manualNotebookKey}` : variantCode ? `${KEY}:${student?.id}:${variantCode}` : KEY
   const [small, setSmall] = useState(false)
   const [large, setLarge] = useState(false)
   const [radius, setRadius] = useState<number>(RADII[0])
-  const [length, setLength] = useState(10)
+  const [length, setLength] = useState(initialLength)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [time, setTime] = useState(0)
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
@@ -67,8 +99,8 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
   const mass = BASE + (small ? SMALL : 0) + (large ? LARGE : 0)
   const { acceleration, duration } = experiment(mass, radius, length / 100, timeFactor, HEIGHT)
   const travel = Math.min(HEIGHT, acceleration * time ** 2 / 2)
-  const angle = travel / radius * 180 / Math.PI
-  const largePulleyRadius = 15 * RADII[1] / RADII[0]
+  const angle = (travel / radius * 180 / Math.PI) % 360
+  const largePulleyRadius = Math.min(50, 15 * RADII[1] / RADII[0])
   const pulleyTop = 196 - (radius === RADII[0] ? 15 : largePulleyRadius)
   const platformY = 237 + travel / HEIGHT * 173
   const locked = running || time > 0
@@ -80,7 +112,7 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
     let frame = 0
     let previous: number | null = null
     const tick = (now: number) => {
-      if (previous !== null) elapsed.current = Math.min(duration, elapsed.current + (now - previous) / 1000)
+      if (previous !== null) elapsed.current = Math.min(duration, elapsed.current + (now - previous) / 1000 * (isPro ? playbackSpeed : 1))
       previous = now
       setTime(elapsed.current)
       if (elapsed.current >= duration) { setRunning(false); setFinished(true); return }
@@ -88,7 +120,7 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [running, duration])
+  }, [running, duration, playbackSpeed, isPro])
   const reset = () => { setRunning(false); setFinished(false); setTime(0); elapsed.current = 0; sampled.current = false }
   const toggleRun = () => {
     if (!running && !sampled.current) { setTimeFactor(sampleTimeFactor()); sampled.current = true }
@@ -133,6 +165,7 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
     if (!isPro) return
     const quote = (v: unknown) => `"${String(v).replace(/"/g, '""')}"`
     const lines: unknown[][] = [['Таблица', '№', 'm, г', 'R, мм', 'l, см', 'h, м', 't, с', 'M, Н·м / l², см²', 'ε, рад/с² / J, кг·м²']]
+    if (student?.variantNumber) lines.push(['Постоянный вариант студента', student.variantNumber], ['Код работы', variantCode ?? ''])
     ;[book.one, book.two].forEach((rows, task) => rows.forEach((r, i) => lines.push([task + 2, i + 1, r.reading ? f(r.reading.mass * 1000) : '', r.reading ? r.reading.radius * 1000 : '', r.reading?.length ?? '', HEIGHT, r.reading?.time ?? '', r.first, r.second])))
     lines.push(['Наклон k, задание 1', book.slope1], ['Наклон k, задание 2', book.slope2], ['Jкр, кг·м²', book.intercept2], ['Вывод 1', book.conclusion1], ['Вывод 2', book.conclusion2])
     lines.push(['Учебные предельные погрешности (не паспортные)', 'Δh = 1 мм; ΔR = 0,1 мм; Δm = 0,01 г; Δl = 1 мм; Δt = 0,01 с + 0,005t'], ['Разброс времени модели', 'до ±0,5%; независимый при каждом новом запуске'])
@@ -145,13 +178,14 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
 
   return <main className="atwood-page oberbeck-page"><div className="atwood-container">
     <header className="atwood-header"><div className="atwood-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ №3</div><h1>Маятник Обербека</h1></header>
-    {student && <div className="ob-student-heading"><span>{student.lastName} {student.firstName} · {student.group}</span><strong>Вариант {variantCode}</strong><Link to="/student/profile">Профиль и код восстановления</Link></div>}
+    {student && <div className="ob-student-heading"><span>{student.lastName} {student.firstName} · {student.group}</span><strong title={variantCode ? `Код работы: ${variantCode}` : undefined}>Вариант {student.variantNumber ? `№ ${student.variantNumber}` : variantCode}</strong><Link to={user ? '/account' : '/student/profile'}>Мой профиль</Link></div>}
+    {custom && <p className="ob-manual-notice" role="status">Ручной режим сверки. Показаны введённые параметры; сохранённый вариант студента не изменён. Схема условная, не в масштабе.</p>}
     <section className="atwood-grid">
       <div className="atwood-card atwood-simulation-card"><div className="atwood-scene-heading"><h2 className="atwood-card-title"><span>1</span> Схема установки</h2><span className="atwood-state">{running ? 'Опыт идёт' : finished ? 'Опыт завершён' : time > 0 ? 'Пауза' : 'Готово к запуску'}</span></div>
         <svg className="atwood-scene ob-scene" viewBox="0 0 640 470" role="img" aria-label={`Маятник: шкив ${radius === RADII[0] ? 'R₁' : 'R₂'}, цилиндры на расстоянии ${length} см, подвешено ${f(mass * 1000)} г`}>
           <g transform="translate(32 23) scale(.9)">
             <path d="M256 196 V430 M264 196 V430 M208 430 H545 M192 438 H560" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".4"/>
-            <g transform={`rotate(${angle} 260 196)`} stroke="currentColor"><path d="M94 196 H426 M260 30 V362" strokeWidth="2"/>{[0,90,180,270].map(deg => <g key={deg} transform={`rotate(${deg} 260 196)`}><rect x={260 + length / 22 * 145 - 7} y="184" width="14" height="24" fill="#8796a8" stroke="#c3ced8" strokeWidth="1.5"/></g>)}</g>
+            <g transform={`rotate(${angle} 260 196)`} stroke="currentColor"><path d="M94 196 H426 M260 30 V362" strokeWidth="2"/>{[0,90,180,270].map(deg => <g key={deg} transform={`rotate(${deg} 260 196)`}><rect x={260 + Math.min(length, 22) / 22 * 145 - 7} y="184" width="14" height="24" fill="#8796a8" stroke="#c3ced8" strokeWidth="1.5"/></g>)}</g>
             <circle className={`ob-pulley-groove${radius === RADII[1] ? ' active' : ''}`} cx="260" cy="196" r={largePulleyRadius} fill="var(--ob-scene-bg)" stroke="currentColor" strokeWidth="1.5"/>
             <circle className={`ob-pulley-groove${radius === RADII[0] ? ' active' : ''}`} cx="260" cy="196" r="15" fill="none" stroke="currentColor" strokeWidth="1.5"/>
             <circle cx="260" cy="196" r="4" fill="var(--ob-scene-bg)" stroke="currentColor" strokeWidth="1.5"/>
@@ -167,18 +201,23 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
       </div>
       <aside className="atwood-card atwood-controls"><h2 className="atwood-card-title"><span>2</span> Параметры опыта</h2><fieldset disabled={locked}><legend className="ob-control-caption">Радиус шкива</legend><div className="ob-pulleys">{RADII.map((r, i) => <button key={r} aria-pressed={radius === r} onClick={() => setRadius(r)} className={radius === r ? 'selected' : ''}><span className={`ob-pulley-icon ob-pulley-${i}`}/><strong>{i === 0 ? 'Малый R₁' : 'Большой R₂'}</strong><small>{f(r * 1000, 1)} мм</small></button>)}</div>
         <div className="ob-control-caption">Подвешенный груз</div><div className="ob-base">Платформа <strong>{f(BASE * 1000)} г</strong></div><label className="ob-weight ob-weight-small"><input type="checkbox" checked={small} onChange={e => setSmall(e.target.checked)}/>Малый груз <strong>{f(SMALL * 1000)} г</strong></label><label className="ob-weight ob-weight-large"><input type="checkbox" checked={large} onChange={e => setLarge(e.target.checked)}/>Большой груз <strong>{f(LARGE * 1000)} г</strong></label><div className="ob-total">Общая масса m <strong>{f(mass * 1000)} г</strong></div>
-        <div className="ob-distance"><label htmlFor="ob-distance">Расстояние цилиндров от оси</label><div className="ob-stepper"><button aria-label="Приблизить цилиндры на 2 см" disabled={length <= 10} onClick={() => setLength(l => l - 2)}>−</button><strong>{length} см</strong><button aria-label="Отдалить цилиндры на 2 см" disabled={length >= 22} onClick={() => setLength(l => l + 2)}>+</button></div><input id="ob-distance" aria-label="Расстояние цилиндров, см" type="range" min="10" max="22" step="2" value={length} onChange={e => setLength(Number(e.target.value))}/></div></fieldset>
+        <div className="ob-distance"><label htmlFor="ob-distance">Расстояние цилиндров от оси</label><div className="ob-stepper"><button aria-label="Приблизить цилиндры на 2 см" disabled={length <= 10} onClick={() => setLength(l => l - 2)}>−</button><strong>{length} см</strong><button aria-label="Отдалить цилиндры на 2 см" disabled={length >= 22} onClick={() => setLength(l => l + 2)}>+</button></div><input id="ob-distance" aria-label="Расстояние цилиндров, см" type="range" min={custom ? Math.min(10, length) : 10} max={custom ? Math.max(22, length) : 22} step={custom ? 'any' : 2} value={length} onChange={e => setLength(Number(e.target.value))}/></div></fieldset>
         <div className="atwood-constants atwood-pulley-constants"><span>h: <strong>{f(HEIGHT * 100, 1)} см</strong></span><span>R: <strong>{f(radius * 1000, 1)} мм</strong></span></div>
         <div className="ob-desktop-run-controls">{runButtons}</div>
         <div className="atwood-progress" role="progressbar" aria-label="Пройденный путь" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(travel / HEIGHT * 100)}><div style={{ transform: `scaleX(${travel / HEIGHT})` }}/></div>
         <div className="ob-desktop-run-controls">{timeReadout}</div>
       </aside>
     </section>
-    <div className="atwood-pro-heading"><span className="atwood-pro-badge">PRO</span><span>Инструменты работы</span></div>
+    {!isPro && <div className="atwood-pro-heading"><span className="atwood-pro-badge">PRO</span><span>Инструменты работы</span></div>}
+    {!isPro && advancedControls}
     {!isPro && <section className="atwood-card atwood-pro-locked" aria-busy={isLoading}><span className="atwood-pro-badge">PRO</span><div><h2>{isLoading ? 'Проверяем доступ…' : 'Полная лабораторная с PRO'}</h2><p>Задания, таблицы, графики, обработка погрешностей и скачивание работы доступны по подписке PRO. Установка доступна всем.</p></div>{!isLoading && <Link className="atwood-secondary" to="/account">Моя подписка</Link>}</section>}
     {isPro && <>
-    <div className="ob-work-links"><a className="atwood-secondary" href="#ob-task1">01 · Закон вращения</a><a className="atwood-secondary" href="#ob-task2">02 · Момент инерции</a><button className="atwood-secondary" onClick={download}>Скачать работу ↓</button></div>
-    <div className="ob-notice" role="status">{message || 'Одна установка — два исследования. Соберите нужный груз и проведите каждый опыт самостоятельно.'}</div>
+    <section className="atwood-card ob-advanced-tools" aria-label="Настройки и сверка опыта">
+      {advancedControls}
+        <div className="ob-playback-controls"><label>Скорость анимации<select aria-label="Скорость анимации" value={playbackSpeed} onChange={event => { const value = Number(event.target.value); if (OBERBECK_SPEEDS.some(speed => speed === value)) setPlaybackSpeed(value) }}>{OBERBECK_SPEEDS.map(speed => <option key={speed} value={speed}>×{speed}</option>)}</select></label></div>
+    </section>
+    <div className="atwood-pro-heading"><span className="atwood-pro-badge">PRO</span><span>Инструменты работы</span></div>
+    {message && <div className="ob-notice" role="status">{message}</div>}
     {([1, 2] as const).map(task => { const rows = task === 1 ? book.one : book.two; const firstReading = rows.find(r => r.reading)?.reading; return <section id={`ob-task${task}`} className="atwood-card ob-task" key={task}>
       <div className="ob-task-heading"><div><div className="atwood-eyebrow">ЗАДАНИЕ {task} · ТАБЛИЦА {task + 1}</div><h2>{task === 1 ? 'Закон вращения маятника' : 'Момент инерции крестовины'}</h2></div><span>{rows.filter(r => r.reading).length} / {rows.length} опытов</span></div>
       <p>{task === 1 ? 'Сохраните l = 10 см. На малом шкиве измерьте время для платформы, платформы с малым грузом, с большим грузом и со всеми грузами. Повторите четыре опыта на большом шкиве.' : 'Подвесьте все грузы и выберите большой шкив для всей серии. Начните с l = 10 см. Проведите семь опытов, каждый раз отдаляя все четыре цилиндра на 2 см: до 22 см.'}</p>
@@ -193,8 +232,8 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
       </details>
       <div className="ob-analysis"><div><details><summary>Формулы и обработка</summary><p>{task === 1 ? 'a = 2h/t²; M = mR(g − a); ε = a/R. Используйте СИ и g = 9,81 м/с². Постройте ε = f(M), определите k = Δε/ΔM и J = 1/k.' : 'J = mR²(gt²/(2h) − 1). В таблице l² укажите в см², на графике — в м². Определите k = ΔJ/Δ(l²), Jкр — пересечение прямой с осью J, m₀ = k/4.'}</p></details><button className="atwood-secondary" onClick={() => check(task)}>Проверить расчёты</button>{feedback?.task === task && <p className="ob-feedback" role="status">{feedback.text}</p>}<div className="ob-fit-fields"><label>Ваш наклон k<input inputMode="decimal" placeholder="Δy / Δx" value={task === 1 ? book.slope1 : book.slope2} onChange={e => setBook(b => ({ ...b, [task === 1 ? 'slope1' : 'slope2']: e.target.value }))}/></label>{task === 2 && <label>Ваш Jкр, кг·м²<input inputMode="decimal" placeholder="Пересечение с осью J" value={book.intercept2} onChange={e => setBook(b => ({ ...b, intercept2: e.target.value }))}/></label>}</div><label className="ob-conclusion">{task === 1 ? 'Ваш результат: J и вывод' : 'Ваш результат: m₀ и вывод'}<textarea rows={3} value={task === 1 ? book.conclusion1 : book.conclusion2} onChange={e => setBook(b => ({ ...b, [task === 1 ? 'conclusion1' : 'conclusion2']: e.target.value }))} placeholder="Результат ± погрешность, единицы и ваш вывод…"/></label></div><Plot smallRadius={RADII[0]} rows={rows} task={task} slope={task === 1 ? book.slope1 : book.slope2} intercept={book.intercept2}/></div>
     </section> })}
-    <footer className="ob-footer"><span>{storageError ? 'Автосохранение недоступно. Сохраните свои результаты перед закрытием.' : 'Черновик сохраняется в этом браузере на данном устройстве.'}</span>{isPro && <button className="atwood-secondary" onClick={download}>Скачать таблицы и выводы</button>}</footer>
     <details className="atwood-card ob-model"><summary>О модели установки</summary><p>Высота, радиусы и массы подвешенных грузов соответствуют вашему индивидуальному варианту. Инерция установки одинакова для вариантов и оценена по двум исходным измерениям: 18,5 с для платформы 92,7 г на радиусе 10 мм при высоте 0,5 м (принято l = 10 см) и 6,7 с для массы 245,93 г на радиусе 17,5 мм при l = 12 см. Масса цилиндров и инерция крестовины оценены по этим точкам, а не измерены на приборе. Трение и проскальзывание отдельно не моделируются. Каждый запуск получает независимое случайное отклонение времени до ±0,5% вокруг расчётного значения (треугольное распределение). Это учебная имитация разброса, а не воспроизведение всех ошибок реального прибора. Запись времени в таблицу округляется до 0,01 с; дополнительные цифры секундомера не означают большую точность.</p></details>
+    <footer className="ob-footer"><span>{storageError ? 'Автосохранение недоступно. Сохраните свои результаты перед закрытием.' : 'Черновик сохраняется в этом браузере на данном устройстве.'}</span>{isPro && <button className="atwood-secondary" onClick={download}>Скачать работу ↓</button>}</footer>
     </>}
   </div></main>
 }

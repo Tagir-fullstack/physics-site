@@ -20,6 +20,8 @@ export interface Profile {
   id: string;
   email: string | null;
   full_name: string | null;
+  first_name?: string;
+  last_name?: string;
   avatar_url: string | null;
   role: UserRole;
   grade?: number;

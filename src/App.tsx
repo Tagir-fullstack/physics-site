@@ -56,6 +56,7 @@ const StudentTests = lazy(() => import('./pages/StudentTests'));
 const StudentTestRunner = lazy(() => import('./pages/StudentTestRunner'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
+const Labs = lazy(() => import('./pages/Labs'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
 const MechanicsAssessment = lazy(() => import('./pages/MechanicsAssessment'));
 const AssessmentIndex = lazy(() => import('./pages/AssessmentIndex'));
@@ -138,6 +139,7 @@ function App() {
                   <Route path="/student/test/:attemptId" element={<StudentTestRunner />} />
                   <Route path="/thesis" element={<Thesis />} />
                   <Route path="/labs/atwood" element={<AtwoodMachine />} />
+                  <Route path="/labs" element={<Labs />} />
                   <Route path="/labs/oberbeck" element={<OberbeckEntry />} />
                   <Route path="/admin/oberbeck-variants" element={<OberbeckVariants />} />
                   <Route path="/labs/ball-collision" element={<BallCollision />} />

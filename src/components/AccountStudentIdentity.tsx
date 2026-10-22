@@ -1,36 +1,26 @@
-import { useState } from 'react';
-import StudentIdentityForm from './StudentIdentityForm';
-import { studentRequest, useStudentProfile } from '../lib/studentProfile';
-import '../styles/student-profile.css';
+import { ASSESSMENT_GROUPS } from '../lib/monitorGrading';
 
-export default function AccountStudentIdentity() {
-  const { profile, loading, error, refresh, setProfile, authFetch } = useStudentProfile();
-  const [editing, setEditing] = useState(false);
-  const [message, setMessage] = useState('');
-  const [linking, setLinking] = useState(false);
-  const [linkError, setLinkError] = useState('');
+export type ProfileIdentity = { lastName: string; firstName: string; group: string };
+type Props = {
+  editing: boolean;
+  value: ProfileIdentity;
+  onChange: (value: ProfileIdentity) => void;
+  variantNumber?: number;
+  loading: boolean;
+  error: string;
+  onRetry: () => void;
+};
 
-  const linkAccount = async () => {
-    setLinking(true);
-    setLinkError('');
-    try {
-      const result = await studentRequest<{ profile: NonNullable<typeof profile> }>('/api/student-profile', { action: 'linkAccount' }, authFetch);
-      setProfile(result.profile);
-      setMessage('Данные связаны с аккаунтом. Ваш вариант сохранён.');
-    } catch (reason) { setLinkError(reason instanceof Error ? reason.message : 'Не удалось связать данные с аккаунтом.'); }
-    finally { setLinking(false); }
-  };
-
-  return <div className="account-lab-identity">
-    <div className="account-lab-identity-heading"><h3>Данные для работ</h3>{!loading && !error && !editing && <button type="button" onClick={() => { setEditing(true); setMessage(''); }}>{profile ? 'Изменить' : 'Заполнить'}</button>}</div>
-    {loading ? <p role="status">Загружаем ФИО и группу…</p> : error ? <><p role="alert">{error}</p><button type="button" onClick={() => void refresh()}>Повторить</button></> : <>
-      {editing ? <>
-        <StudentIdentityForm key={profile?.id ?? 'new'} profile={profile} onComplete={saved => { setProfile(saved); setEditing(false); setMessage('ФИО и группа сохранены. Ваш вариант не изменился.'); }} />
-        <button type="button" className="account-lab-identity-cancel" onClick={() => setEditing(false)}>Закрыть</button>
-      </> : profile ? <dl><div><dt>Фамилия</dt><dd>{profile.lastName}</dd></div><div><dt>Имя</dt><dd>{profile.firstName}</dd></div><div><dt>Группа</dt><dd>{profile.group}</dd></div></dl> : <p>Укажите ФИО и группу один раз — они будут подставляться в лабораторных работах.</p>}
-      {profile && !profile.accountLinked && <div className="account-lab-link"><p>Данные пока сохранены на этом устройстве. Привяжите их к аккаунту, чтобы открывать свой вариант на других устройствах.</p><button type="button" disabled={linking} onClick={() => void linkAccount()}>{linking ? 'Связываем…' : 'Связать с аккаунтом'}</button></div>}
-      {linkError && <p role="alert">{linkError}</p>}
-      {message && <p role="status">{message}</p>}
-    </>}
-  </div>;
+export default function AccountStudentIdentity({ editing, value, onChange, variantNumber, loading, error, onRetry }: Props) {
+  const groups = [...ASSESSMENT_GROUPS] as string[];
+  if (value.group && !groups.includes(value.group)) groups.push(value.group);
+  return <>
+    {(['lastName', 'firstName', 'group'] as const).map(key => <div className="account-field" key={key}>
+      <label className="account-label" htmlFor={editing ? `account-${key}` : undefined}>{key === 'lastName' ? 'Фамилия' : key === 'firstName' ? 'Имя' : 'ОП / группа'}</label>
+      {editing ? key === 'group' ? <select id="account-group" className="account-select" value={value.group} onChange={event => onChange({ ...value, group: event.target.value })}><option value="">Не указана</option>{groups.map(group => <option key={group}>{group}</option>)}</select> : <input id={`account-${key}`} className="account-input" autoComplete={key === 'lastName' ? 'family-name' : 'given-name'} maxLength={60} value={value[key]} onChange={event => onChange({ ...value, [key]: event.target.value })} /> : <div className="account-value">{value[key] || 'Не указано'}</div>}
+    </div>)}
+    {variantNumber && <div className="account-field account-student-variant"><span className="account-label">Вариант</span><strong className="account-value">№ {variantNumber}</strong></div>}
+    {loading && <p className="account-identity-status" role="status">Загружаем данные профиля…</p>}
+    {error && <div className="account-identity-status" role="alert">{error} <button type="button" onClick={onRetry}>Повторить</button></div>}
+  </>;
 }

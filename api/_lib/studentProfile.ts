@@ -52,4 +52,4 @@ export function setProfileCookie(req: VercelRequest, res: VercelResponse, token:
   const secure = process.env.VERCEL_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https'
   res.setHeader('Set-Cookie', `${PROFILE_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000${secure ? '; Secure' : ''}`)
 }
-export const publicProfile = (p: NonNullable<Awaited<ReturnType<typeof currentStudent>>>) => ({ id: p.id, lastName: p.lastName, firstName: p.firstName, group: p.group, accountLinked: Boolean(p.clerkId) })
+export const publicProfile = (p: NonNullable<Awaited<ReturnType<typeof currentStudent>>>) => ({ id: p.id, lastName: p.lastName, firstName: p.firstName, group: p.group, variantNumber: p.variantNumber, accountLinked: Boolean(p.clerkId) })

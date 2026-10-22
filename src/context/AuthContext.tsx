@@ -18,7 +18,9 @@ function toProfile(user: ReturnType<typeof useUser>['user']): Profile | null {
   return {
     id: user.id,
     email: user.primaryEmailAddress?.emailAddress ?? null,
-    full_name: user.fullName,
+    full_name: typeof meta.full_name === 'string' && meta.full_name.trim() ? meta.full_name.trim() : user.fullName,
+    first_name: typeof meta.first_name === 'string' ? meta.first_name : user.firstName ?? '',
+    last_name: typeof meta.last_name === 'string' ? meta.last_name : user.lastName ?? '',
     avatar_url: user.imageUrl,
     role: (meta.role as UserRole) ?? 'pupil',
     grade: meta.grade as number | undefined,
@@ -72,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateProfile: async (data: Partial<Profile>) => {
         if (!user) throw new Error('Not authenticated');
         const nextMeta: Record<string, unknown> = { ...(user.unsafeMetadata ?? {}) };
-        const editableFields = new Set(['full_name', 'role', 'grade', 'course', 'institution', 'city', 'subject', 'experience', 'profile_completed']);
+        const editableFields = new Set(['full_name', 'first_name', 'last_name', 'role', 'grade', 'course', 'institution', 'city', 'subject', 'experience', 'profile_completed']);
         for (const [key, val] of Object.entries(data)) {
           if (val !== undefined && editableFields.has(key)) nextMeta[key] = val;
         }

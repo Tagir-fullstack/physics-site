@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useApiClient } from '../lib/apiClient'
 import { ASSESSMENT_GROUPS } from '../lib/monitorGrading'
+import { useStudentProfile } from '../lib/studentProfile'
 import '../styles/assessment-sessions.css'
 
-type Student = { lastName: string; firstName: string; group: string }
+type Student = { lastName: string; firstName: string; group: string; variantNumber?: number }
 type Entry = { mode: 'session' | 'legacy'; phase: 'code' | 'waiting' | 'pending' | 'rejected' | 'closed' | 'active'; canPractice: boolean; serverNow: string; revealAt: string | null; released: boolean; participantId?: string; student?: Student; session?: { id: string; name: string; startsAt: string; endsAt: string }; error?: string }
 export type SessionRunnerProps = { practice?: boolean; participantStudent?: Student; sessionDeadline?: { expiresAt: string; serverNow: string } }
 export default function AssessmentSessionGate({ endpoint, children }: { endpoint: string; children: (props: SessionRunnerProps) => ReactNode }) {
   const { isLoading } = useAuth()
+  const { profile } = useStudentProfile()
   const { authFetch } = useApiClient()
   const [entry, setEntry] = useState<Entry | null>(null)
   const [error, setError] = useState('')
@@ -64,7 +66,7 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
           localStorage.setItem('mechanics-assessment-student', JSON.stringify(student)); setEntry(payload)
         } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось войти.') }
         finally { setBusy(false) }
-      }}><label>{kk ? 'Сеанс коды' : 'Код сеанса'}<input name="code" required minLength={6} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder={kk ? 'Мысалы: 482915' : 'Например: 482915'} /></label><label>{kk ? 'Тегі' : 'Фамилия'}<input name="lastName" required minLength={2} maxLength={60} autoComplete="family-name" /></label><label>{kk ? 'Аты' : 'Имя'}<input name="firstName" required minLength={2} maxLength={60} autoComplete="given-name" /></label><label>{kk ? 'ОП / топ' : 'ОП / группа'}<select name="group" required defaultValue=""><option value="" disabled>{kk ? 'ОП таңдаңыз' : 'Выберите ОП'}</option>{ASSESSMENT_GROUPS.map(group => <option key={group} value={group}>{group}</option>)}</select></label><button disabled={busy}>{busy ? '…' : (kk ? 'Кіру / рұқсат сұрау' : 'Войти / запросить допуск')}</button></form></>}
+      }}><label>{kk ? 'Сеанс коды' : 'Код сеанса'}<input name="code" required minLength={6} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder={kk ? 'Мысалы: 482915' : 'Например: 482915'} /></label><label>{kk ? 'Тегі' : 'Фамилия'}<input name="lastName" defaultValue={profile?.lastName} readOnly={!!profile} required minLength={2} maxLength={60} autoComplete="family-name" /></label><label>{kk ? 'Аты' : 'Имя'}<input name="firstName" defaultValue={profile?.firstName} readOnly={!!profile} required minLength={2} maxLength={60} autoComplete="given-name" /></label><label>{kk ? 'ОП / топ' : 'ОП / группа'}<select key={profile?.group ?? 'empty'} name="group" disabled={!!profile} required defaultValue={profile?.group ?? ''}><option value="" disabled>{kk ? 'ОП таңдаңыз' : 'Выберите ОП'}</option>{ASSESSMENT_GROUPS.map(group => <option key={group} value={group}>{group}</option>)}</select>{profile && <input type="hidden" name="group" value={profile.group} />}</label><button disabled={busy}>{busy ? '…' : (kk ? 'Кіру / рұқсат сұрау' : 'Войти / запросить допуск')}</button></form></>}
     <div className="exam-entry-release"><h2>{kk ? 'Нәтижелер мен дұрыс жауаптар' : 'Результаты и правильные ответы'}</h2><p>{kk ? 'Барлық ағындар аяқталғаннан кейін ашылады.' : 'Откроются после завершения всех потоков.'}</p>{entry?.revealAt ? <time dateTime={entry.revealAt}>{date(entry.revealAt)}</time> : <p>{kk ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Дату открытия назначит преподаватель.'}</p>}</div>
     {entry?.canPractice && <button type="button" className="exam-entry-practice" onClick={() => setPractice(true)}>{kk ? 'Әкімшінің тест режимі' : 'Тестовый запуск администратора'}</button>}
   </section></main>

@@ -20,7 +20,7 @@ const EVENT_LABELS: Record<string, string> = {
   'print-shortcut': 'Попытка печати (Ctrl/Cmd + P)',
   'navigation-attempt': 'Попытка перехода на другую страницу',
 };
-type Student = { lastName: string; firstName: string; group: string };
+type Student = { lastName: string; firstName: string; group: string; variantNumber?: number };
 type Attempt = Partial<PenaltySummary> & {
   id: string;
   student: Student | null;
@@ -196,7 +196,7 @@ export default function AssessmentMonitor() {
       if (groupFilter && (normalizeMonitorGroup(attempt.student?.group ?? '') ?? attempt.student?.group) !== groupFilter) return false;
       if (!normalized) return true;
       const student = attempt.student;
-      return [student?.lastName, student?.firstName, student?.group, attempt.variantCode]
+      return [student?.lastName, student?.firstName, student?.group, student?.variantNumber, attempt.variantCode]
         .filter(Boolean)
         .some((value) => String(value).toLocaleLowerCase('ru-RU').includes(normalized));
     }).sort((a, b) => sort === 'name' ? `${a.student?.lastName ?? ''} ${a.student?.firstName ?? ''}`.localeCompare(`${b.student?.lastName ?? ''} ${b.student?.firstName ?? ''}`, 'ru') : sort === 'score' ? (b.finalPercent ?? (b.score ?? -1) / b.maxScore * 100) - (a.finalPercent ?? (a.score ?? -1) / a.maxScore * 100) : sort === 'events' ? b.violationsCount - a.violationsCount : Date.parse(b.startedAt) - Date.parse(a.startedAt));
@@ -221,7 +221,7 @@ export default function AssessmentMonitor() {
   const exportCsv = () => {
     const rows = visibleAttempts.map((attempt) => [
       attempt.student?.lastName ?? '', attempt.student?.firstName ?? '', attempt.student?.group ?? '',
-      attempt.variantCode, statusText[attempt.status], attempt.score ?? '', attempt.maxScore,
+      attempt.student?.variantNumber ?? attempt.variantCode, statusText[attempt.status], attempt.score ?? '', attempt.maxScore,
       attempt.answeredFields, attempt.totalFields, attempt.violationsCount,
       formatDate(attempt.startedAt), formatDate(attempt.submittedAt),
       attempt.finalPercent ?? (attempt.score === null ? '' : Math.round(attempt.score / attempt.maxScore * 10000) / 100), attempt.penaltyPoints ?? 0, attempt.waiverReason ?? '',
@@ -411,7 +411,7 @@ export default function AssessmentMonitor() {
               <td>{attempt.penaltyPoints ? `−${attempt.penaltyPoints}` : '—'}</td>
               <td className={attempt.violationsCount ? 'monitor-event-warning' : ''}>{attempt.violationsCount}</td>
               <td>{attempt.status === 'active' ? formatRemaining(attempt.expiresAt, now) : formatDate(attempt.submittedAt)}</td>
-              <td className="monitor-variant-cell">{attempt.variantCode}</td>
+              <td className="monitor-variant-cell" title={`Код работы: ${attempt.variantCode}`}>{attempt.student?.variantNumber ?? attempt.variantCode}</td>
               <td><div className="monitor-row-actions">
                 <button type="button" className="monitor-row-open" title="Разбор работы" onClick={() => void openDetail(attempt.id)} aria-label={`Разобрать работу ${attempt.student?.lastName ?? attempt.variantCode}`}>
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l4 4v3M13 3v5h5M7 8h3M7 12h3M7 16h2"/><circle cx="16" cy="16" r="4"/><path d="m19 19 3 3"/></svg>
@@ -446,7 +446,7 @@ export default function AssessmentMonitor() {
               <div>
                 <span>Разбор попытки</span>
                 <h2>{detail?.student ? `${detail.student.lastName} ${detail.student.firstName}` : 'Загрузка…'}</h2>
-                {detail && <p>{detail.student?.group || 'Группа не указана'} · вариант {detail.variantCode}</p>}
+                {detail && <p>{detail.student?.group || 'Группа не указана'} · вариант {detail.student?.variantNumber ?? detail.variantCode}</p>}
               </div>
               <button className="monitor-detail-close" type="button" disabled={waiving} onClick={closeDetail} aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4L14 14M14 4L4 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>
             </header>

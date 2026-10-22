@@ -1,7 +1,7 @@
 .oberbeck-page { --ob-line: #363a40; --ob-inset: #202225; --ob-muted: #a9b0ba; }
 .oberbeck-page .atwood-card-title { margin-top: 0; }
-.ob-work-links { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; }
-.ob-work-links a { text-decoration: none; }
+.oberbeck-page .atwood-grid { gap: 1rem; margin-bottom: 1rem; }
+.oberbeck-page .atwood-pro-heading { margin: 1rem 0 .75rem; }
 .oberbeck-page .ob-scene { --ob-scene-bg: #0a0a0a; min-height: 300px; flex: 1; }
 .ob-pulley-groove { stroke-opacity: .45; }
 .ob-pulley-groove.active { stroke-opacity: 1; }
@@ -38,6 +38,49 @@
 .ob-stepper button { display: grid; place-items: center; width: 38px; height: 32px; padding: 0; line-height: 1; border: 1px solid var(--ob-line); border-radius: 8px; background: var(--ob-inset); color: var(--text-primary); font: 22px Arial, sans-serif; cursor: pointer; }
 .oberbeck-page input[type=range] { padding: .1rem 0; accent-color: #fc6255; }
 .oberbeck-page button:disabled { cursor: not-allowed; opacity: .4; }
+.ob-manual-controls { margin-bottom: 1rem; padding: .75rem; border: 1px solid var(--ob-line); border-radius: 8px; background: var(--ob-inset); }
+.ob-manual-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin: 0; color: #78acee; font: inherit; font-size: 1rem; }
+.ob-manual-controls p { font-size: .8rem; color: var(--ob-muted); line-height: 1.5; }
+.ob-manual-controls p { margin: .4rem 0 .6rem; line-height: 1.35; }
+.ob-manual-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .4rem .65rem; }
+.ob-manual-fields label { display: grid; gap: .15rem; min-width: 0; font-size: .8rem; }
+.ob-manual-fields input, .ob-playback-controls select { width: 100%; min-width: 0; box-sizing: border-box; padding: .5rem; border: 1px solid var(--ob-line); border-radius: 6px; font: inherit; color: var(--text-primary); background: var(--ob-scene-bg,#101114); }
+.ob-manual-fields input { padding: .3rem .5rem; }
+.ob-manual-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+.ob-manual-actions button { padding: .5rem .65rem; font-size: .8rem; }
+.oberbeck-page .ob-manual-actions .atwood-primary { flex: 0 1 auto; background: #2869b0; border-color: #2869b0; color: #fff; }
+.oberbeck-page .ob-manual-actions .atwood-primary:hover:not(:disabled) { background: #205892; border-color: #205892; }
+.ob-manual-notice { padding: .7rem 1rem; margin: 0 0 1rem; border-left: 3px solid #4a90e2; background: rgba(74,144,226,.08); font-size: .9rem; }
+.ob-playback-controls { margin: 1rem 0; display: grid; gap: .5rem; }
+.ob-playback-controls > label:first-child { display: flex; align-items: center; justify-content: space-between; gap: .6rem; font-size: .9rem; }
+.ob-playback-controls select { width: auto; color-scheme: dark; }
+.ob-advanced-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem 1rem; align-items: center; margin: 0 0 1rem; padding: .75rem; }
+.ob-advanced-tools .ob-manual-controls { margin: 0; }
+.ob-advanced-tools .ob-playback-controls { grid-column: 2; grid-row: 1; margin: 0; }
+.ob-advanced-tools .ob-playback-controls select { padding: .25rem .5rem; }
+.oberbeck-page .ob-advanced-tools { background: #152337; border-color: #345578; }
+.ob-advanced-tools .ob-manual-controls { display: contents; }
+.ob-advanced-tools .ob-manual-heading { grid-column: 1; grid-row: 1; margin: 0; }
+.ob-advanced-tools .ob-manual-controls form { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
+.a11y-light-theme .oberbeck-page .ob-advanced-tools { background: #edf5ff !important; border-color: #c6dcf4 !important; }
+@media(max-width:700px) {
+  .ob-advanced-tools { grid-template-columns: minmax(0,1fr); }
+  .ob-advanced-tools .ob-playback-controls { grid-column: 1; grid-row: 2; }
+  .ob-advanced-tools .ob-manual-controls form { grid-row: 3; }
+}
+@media(min-width:1000px) {
+  .ob-advanced-tools .ob-manual-controls form { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .4rem .65rem; align-items: end; }
+  .ob-manual-fields { display: contents; }
+  .ob-manual-actions { margin: 0; }
+  .ob-manual-actions button { padding: .3rem .5rem; }
+  .ob-manual-controls .student-error { grid-column: 1 / -1; }
+}
+.ob-access-error { font-size: .85rem; color: #d99; }
+.a11y-light-theme .ob-manual-controls { background: transparent !important; border-color: transparent; }
+.a11y-light-theme .ob-manual-heading { color: #276fbd; }
+.a11y-light-theme .ob-manual-fields input, .a11y-light-theme .ob-playback-controls select { color: #293544 !important; background: #fff !important; border-color: #cfd4da; color-scheme: light; }
+.a11y-light-theme .ob-playback-controls select option { background: #fff; color: #293544; }
+@media(max-width:360px) { .ob-manual-fields { grid-template-columns: minmax(0,1fr); } }
 .ob-notice { border-left: 3px solid #4a90e2; padding: .8rem 1rem; background: rgba(74,144,226,.08); margin: 1.2rem 0; color: var(--text-secondary); font-size: .95rem; }
 .ob-task { margin-bottom: 1rem; scroll-margin-top: 85px; }
 .ob-task-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }

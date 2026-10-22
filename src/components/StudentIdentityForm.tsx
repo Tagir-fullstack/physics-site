@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useUser } from '@clerk/clerk-react'
+import { useAuth } from '../context/AuthContext'
 import { useApiClient } from '../lib/apiClient'
 import { studentRequest, type StudentProfile } from '../lib/studentProfile'
 export default function StudentIdentityForm({ profile, onComplete, start = false }: { profile?: StudentProfile | null; onComplete: (profile: StudentProfile) => void | Promise<void>; start?: boolean }) {
   const { user, isLoaded } = useUser()
+  const { profile: accountProfile } = useAuth()
   const { authFetch } = useApiClient()
   const [initial] = useState(() => {
     if (profile) return profile
-    if (user) return { lastName: user.lastName ?? '', firstName: user.firstName ?? '', group: '' }
+    if (user) return { lastName: accountProfile?.last_name ?? user.lastName ?? '', firstName: accountProfile?.first_name ?? user.firstName ?? '', group: '' }
     try { const saved = JSON.parse(localStorage.getItem('mechanics-assessment-student') || 'null'); return saved && typeof saved.lastName === 'string' && typeof saved.firstName === 'string' && typeof saved.group === 'string' ? saved as StudentProfile : null } catch { return null }
   })
   const [lastName, setLastName] = useState(initial?.lastName ?? '')
