@@ -144,9 +144,17 @@ async function responseFor(
   teacher = false
 ) {
   const variant = attempt.variantData as MechanicsVariant
+  const score = attempt.submittedAt ? storedScore(attempt.score) ?? gradeVariant(variant, (attempt.answers ?? {}) as Answers).score : null
+  const penalty = assessmentPenalty(variant.penaltyPolicy, Array.isArray(attempt.violations) ? attempt.violations as Violation[] : [], score)
   if (attempt.submittedAt && !teacher) {
     const release = await attemptRelease(attempt, testId)
-    if (!release.released) return { status: 'sealed' as const, attemptId: attempt.id, student: variant.student, submittedAt: attempt.submittedAt.toISOString(), revealAt: release.revealAt?.toISOString() ?? null }
+    // Only aggregate grades are public before release; never include task-level feedback or answer keys.
+    if (!release.released) return {
+      status: 'sealed' as const, attemptId: attempt.id, student: variant.student,
+      score, maxScore, ...penalty,
+      late: attempt.submittedAt.getTime() > attempt.expiresAt.getTime() + 30_000,
+      submittedAt: attempt.submittedAt.toISOString(), revealAt: release.revealAt?.toISOString() ?? null,
+    }
   }
   const base = {
     attemptId: attempt.id,
@@ -155,7 +163,7 @@ async function responseFor(
     expiresAt: attempt.expiresAt.toISOString(),
     serverNow: new Date().toISOString(),
     student: variant.student,
-    ...assessmentPenalty(variant.penaltyPolicy, Array.isArray(attempt.violations) ? attempt.violations as Violation[] : [], attempt.submittedAt ? storedScore(attempt.score) ?? gradeVariant(variant, (attempt.answers ?? {}) as Answers).score : null),
+    ...penalty,
   }
   if (attempt.submittedAt) {
     const result = gradeVariant(variant, (attempt.answers ?? {}) as Answers)
@@ -168,7 +176,7 @@ async function responseFor(
       score: storedScore(attempt.score) ?? result.score,
       maxScore,
       correctness: late ? emptyCorrectness(variant) : result.correctness,
-      // Answer keys are returned only after the attempt has been submitted.
+      // Students receive answer keys only after submission AND the configured release date.
       review: studentReview.tasks.map(task => ({
         id: task.id, title: task.title, text: task.text,
         fields: studentReview.fields.filter(field => field.taskId === task.id).map(field => ({

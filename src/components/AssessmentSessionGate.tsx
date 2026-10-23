@@ -15,6 +15,7 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
   const [entry, setEntry] = useState<Entry | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [switchError, setSwitchError] = useState('')
   const [practice, setPractice] = useState(false)
   const [language, setLanguage] = useState<'ru' | 'kk'>(() => localStorage.getItem('mechanics-assessment-language') === 'kk' ? 'kk' : 'ru')
   const kk = language === 'kk'
@@ -25,12 +26,12 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
     return payload
   }, [authFetch, endpoint])
   useEffect(() => {
-    if (isLoading || practice) return
+    if (isLoading || practice || busy) return
     let live = true
     const update = () => { void load().then(payload => { if (live) { setEntry(previous => ({ ...payload, student: previous?.participantId === payload.participantId ? previous?.student ?? payload.student : payload.student })); setError('') } }).catch(reason => { if (live) setError(reason instanceof Error ? reason.message : 'Нет связи.') }) }
     update(); const timer = window.setInterval(update, 3000)
     return () => { live = false; window.clearInterval(timer) }
-  }, [load, isLoading, practice])
+  }, [load, isLoading, practice, busy])
   const switchLanguage = (next: 'ru' | 'kk') => { localStorage.setItem('mechanics-assessment-language', next); setLanguage(next) }
   if (practice) return children({ practice: true })
   // Legacy mechanics and fixture previews retain their existing entry form.
@@ -54,6 +55,26 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
     {entry?.phase === 'pending' && <p className="exam-entry-notice">{kk ? 'Сіз старттан кейін кірдіңіз. Өтінім оқытушыға жіберілді. Рұқсат берілсе, тек қалған уақыт беріледі.' : 'Вы вошли после старта. Заявка отправлена преподавателю. При допуске будет доступно только оставшееся время.'}</p>}
     {entry?.phase === 'closed' && <p className="exam-entry-notice">{kk ? 'Бұл сеансқа жаңа қатысушылар қабылданбайды. Оқытушыға хабарласыңыз.' : 'Приём новых участников завершён. Обратитесь к преподавателю.'}</p>}
     {entry?.phase === 'rejected' && <div className="exam-entry-notice exam-entry-notice--rejected"><h2>{kk ? 'Не істеу керек?' : 'Что делать дальше?'}</h2><p>{kk ? 'Оқытушы бұл сеансқа кіруге рұқсат бермеді. Тапсырмалар қолжетімсіз. Егер бұл қате болса, оқытушыға хабарласыңыз.' : 'Преподаватель отклонил или отозвал допуск к этому сеансу. Задания недоступны. Если это ошибка, обратитесь к преподавателю.'}</p></div>}
+    {(entry?.phase === 'rejected' || entry?.phase === 'closed') && entry.student && <section className="exam-entry-switch">
+      <h2>{kk ? 'Басқа сеансқа кіру' : 'Войти в другой сеанс'}</h2>
+      <p>{kk ? 'Оқытушы берген жаңа кодты енгізіңіз. Аты-жөніңіз бен ОП сақталады; бұрынғы сеанстағы рұқсат өзгермейді.' : 'Введите новый код от преподавателя. ФИО и ОП сохранятся; допуск в прежнем сеансе не изменится.'}</p>
+      {switchError && <p className="exam-entry-notice" role="alert">{switchError}</p>}
+      <form onSubmit={async event => {
+        event.preventDefault(); if (busy) return
+        const code = String(new FormData(event.currentTarget).get('code') ?? '')
+        setBusy(true); setSwitchError('')
+        try {
+          const response = await authFetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'joinSession', code, student: entry.student, language }) })
+          const payload = await response.json() as Entry
+          if (!response.ok) throw Error(payload.error || (kk ? 'Кіру мүмкін болмады.' : 'Не удалось войти.'))
+          if (payload.participantId === entry.participantId) {
+            setSwitchError(kk ? 'Бұл — бұрынғы сеанс. Басқа сеанстың кодын енгізіңіз.' : 'Это прежний сеанс. Введите код другого сеанса.')
+          }
+          setEntry(payload); setError('')
+        } catch (reason) { setSwitchError(reason instanceof Error ? reason.message : 'Не удалось войти.') }
+        finally { setBusy(false) }
+      }}><label>{kk ? 'Жаңа сеанс коды' : 'Код нового сеанса'}<input name="code" required minLength={6} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder={kk ? 'Мысалы: 482915' : 'Например: 482915'} /></label><button disabled={busy}>{busy ? '…' : (kk ? 'Басқа сеансқа кіру' : 'Войти в другой сеанс')}</button></form>
+    </section>}
     {entry?.phase === 'code' && <><p>{kk ? 'Аудиториядағы оқытушыдан сеанс кодын алыңыз. Стартқа дейін тапсырмалар көрсетілмейді. ОП/топ қатысушыларды бөлу үшін қолданылмайды.' : 'Получите код сеанса у преподавателя в аудитории. До старта задания скрыты. В одном сеансе могут участвовать студенты разных ОП и групп.'}</p>
       <form onSubmit={async event => {
         event.preventDefault(); if (busy) return
@@ -67,7 +88,7 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
         } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось войти.') }
         finally { setBusy(false) }
       }}><label>{kk ? 'Сеанс коды' : 'Код сеанса'}<input name="code" required minLength={6} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder={kk ? 'Мысалы: 482915' : 'Например: 482915'} /></label><label>{kk ? 'Тегі' : 'Фамилия'}<input name="lastName" defaultValue={profile?.lastName} readOnly={!!profile} required minLength={2} maxLength={60} autoComplete="family-name" /></label><label>{kk ? 'Аты' : 'Имя'}<input name="firstName" defaultValue={profile?.firstName} readOnly={!!profile} required minLength={2} maxLength={60} autoComplete="given-name" /></label><label>{kk ? 'ОП / топ' : 'ОП / группа'}<select key={profile?.group ?? 'empty'} name="group" disabled={!!profile} required defaultValue={profile?.group ?? ''}><option value="" disabled>{kk ? 'ОП таңдаңыз' : 'Выберите ОП'}</option>{ASSESSMENT_GROUPS.map(group => <option key={group} value={group}>{group}</option>)}</select>{profile && <input type="hidden" name="group" value={profile.group} />}</label><button disabled={busy}>{busy ? '…' : (kk ? 'Кіру / рұқсат сұрау' : 'Войти / запросить допуск')}</button></form></>}
-    <div className="exam-entry-release"><h2>{kk ? 'Нәтижелер мен дұрыс жауаптар' : 'Результаты и правильные ответы'}</h2><p>{kk ? 'Барлық ағындар аяқталғаннан кейін ашылады.' : 'Откроются после завершения всех потоков.'}</p>{entry?.revealAt ? <time dateTime={entry.revealAt}>{date(entry.revealAt)}</time> : <p>{kk ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Дату открытия назначит преподаватель.'}</p>}</div>
+    <div className="exam-entry-release"><h2>{kk ? 'Дұрыс жауаптар және талдау' : 'Правильные ответы и разбор'}</h2><p>{kk ? 'Қорытынды балл жұмысты тапсырғаннан кейін бірден көрінеді. Жауаптар мен талдау оқытушы белгілеген уақытта ашылады.' : 'Итоговый балл виден сразу после сдачи. Ответы и разбор откроются в срок, указанный преподавателем.'}</p>{entry?.revealAt ? <time dateTime={entry.revealAt}>{date(entry.revealAt)}</time> : <p>{kk ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Дату открытия назначит преподаватель.'}</p>}</div>
     {entry?.canPractice && <button type="button" className="exam-entry-practice" onClick={() => setPractice(true)}>{kk ? 'Әкімшінің тест режимі' : 'Тестовый запуск администратора'}</button>}
   </section></main>
 }

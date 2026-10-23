@@ -7,7 +7,7 @@ import oberbeck from '../api/oberbeck.js'
 import studentProfile from '../api/student-profile.js'
 import { handleSessionRequest, finalizeExpiredSessionAttempts } from '../api/_lib/assessmentSessions.js'
 import { databaseSql as sql } from '../api/_lib/db.js'
-import { createVariant, variantFingerprint, createVariantCode, gradeVariant, type StudentIdentity } from '../api/_lib/mechanicsAssessment.js'
+import { createVariant, variantFingerprint, createVariantCode, gradeVariant, reviewVariant, type MechanicsVariant, type StudentIdentity } from '../api/_lib/mechanicsAssessment.js'
 
 // A separate test ID and period: never alter any real student's work or schedule.
 const key = `session-test-${randomBytes(6).toString('hex')}`
@@ -136,11 +136,20 @@ try {
   assert.equal((await adminCall({ action: 'saveReveal', revealAt: new Date().toISOString() })).status, 409)
   const future = new Date(Date.now() + 7 * 86400_000).toISOString()
   assert.equal((await adminCall({ action: 'saveReveal', revealAt: future })).status, 200)
-  const submitted = await call(one, { action: 'submit', answers: {} })
+  const [fixtureAttempt] = await sql`select variant_data from assessment_attempts where id=${started.payload.attemptId as string}::uuid and assessment_key like ${key + '-s-%'}`
+  const correctAnswers: Record<string, Record<string, string | number>> = {}
+  for (const field of reviewVariant(fixtureAttempt.variant_data as MechanicsVariant, {}).fields) {
+    (correctAnswers[field.taskId] ??= {})[field.fieldId] = field.expected
+  }
+  const submitted = await call(one, { action: 'submit', answers: correctAnswers })
   assert.equal(submitted.payload.status, 'sealed')
+  assert.equal(submitted.payload.score, 3, 'A submitted grade is visible immediately, before the answer-release date')
+  assert.equal(submitted.payload.maxScore, 3)
+  assert.equal(submitted.payload.finalPercent, 100)
+  assert.equal(submitted.payload.revealAt, future)
   assert.equal((await adminCall({ action: 'restoreParticipant', sessionId, participantId: joined.payload.participantId })).status, 409)
-  for (const field of ['tasks', 'review', 'score', 'correctness', 'answers', 'variantCode', 'sources']) assert.ok(!(field in submitted.payload), `Sealed response must not contain ${field}`)
-  assert.equal((await call(one, { action: 'resume' })).payload.status, 'sealed')
+  for (const field of ['tasks', 'review', 'correctness', 'answers', 'variantCode', 'sources', 'taskScores', 'taskMaxScores', 'taskLabels']) assert.ok(!(field in submitted.payload), `Sealed response must not contain ${field}`)
+  assert.deepEqual((await call(one, { action: 'resume' })).payload, submitted.payload, 'Reload keeps the grade visible without exposing answers')
   assert.equal((await adminCall({ action: 'extendParticipant', sessionId, participantId: joined.payload.participantId, minutes: 5, reason: 'Сданную нельзя' })).status, 409)
   assert.equal((await call(two, { action: 'restart' })).status, 403)
   await call(two, { action: 'progress', answers: { fixture: { value: 17 } } })
@@ -149,13 +158,32 @@ try {
   await finalizeExpiredSessionAttempts(key, engine)
   const [saved] = await sql`select submitted_at,answers from assessment_attempts where id=${other.payload.attemptId as string}::uuid and assessment_key like ${key + '-s-%'}`
   assert.ok(saved.submitted_at); assert.deepEqual(saved.answers, { fixture: { value: 17 } })
-  assert.equal((await call(two, { action: 'submit', answers: { fixture: { value: 999 } } })).payload.status, 'sealed')
+  const finalized = await call(two, { action: 'submit', answers: { fixture: { value: 999 } } })
+  assert.equal(finalized.payload.status, 'sealed')
+  assert.equal(finalized.payload.score, 0, 'Automatically finalized work also exposes only its aggregate grade')
+  assert.ok(!('review' in finalized.payload)); assert.ok(!('correctness' in finalized.payload))
   assert.equal((await call({ cookies: {} }, { action: 'joinSession', code, student: student('После') })).status, 409)
   assert.equal((await adminCall({ action: 'saveReveal', revealAt: new Date().toISOString() })).status, 200)
   const released = await call(one, { action: 'resume' })
   assert.equal(released.payload.status, 'submitted'); assert.ok('review' in released.payload); assert.ok('score' in released.payload)
+  assert.equal(released.payload.score, submitted.payload.score)
+  assert.equal(released.payload.finalPercent, submitted.payload.finalPercent)
   assert.equal((await adminCall({ action: 'saveReveal', revealAt: null })).status, 200)
-  assert.equal((await call(one, { action: 'resume' })).payload.status, 'sealed')
+  const resealed = await call(one, { action: 'resume' })
+  assert.equal(resealed.payload.status, 'sealed')
+  assert.equal(resealed.payload.score, 3, 'An unset release date hides answers, not the grade')
+  assert.ok(!('review' in resealed.payload)); assert.ok(!('correctness' in resealed.payload))
+  const oldCookies = { ...removed.cookies }
+  assert.equal((await call(removed, { action: 'joinSession', code, student: student('Удаляемый') })).payload.phase, 'rejected', 'Re-entering the rejected session must not restore admission')
+  const replacement = await adminCall({ action: 'createSession', name: 'Replacement fixture', opensAt: new Date(Date.now() - 60_000).toISOString(), startsAt: new Date(Date.now() + 600_000).toISOString(), durationMinutes: 50 })
+  assert.equal(replacement.status, 201)
+  const switched = await call(removed, { action: 'joinSession', code: replacement.payload.code, student: waitingRemoved.payload.student })
+  assert.equal(switched.payload.phase, 'waiting')
+  assert.notEqual(switched.payload.participantId, waitingRemoved.payload.participantId)
+  assert.deepEqual(switched.payload.student, waitingRemoved.payload.student, 'Changing sessions preserves the verified profile and variant number')
+  assert.equal((await call(removed, undefined, { view: 'entry' })).payload.participantId, switched.payload.participantId)
+  assert.equal((await call({ cookies: oldCookies }, undefined, { view: 'entry' })).payload.phase, 'rejected', 'Original rejection remains in force after switching')
+  assert.equal((await call(removed, { action: 'resume' })).payload.status, 'locked', 'The new session still obeys its scheduled start')
   console.log('PASS: waiting room, mixed OPs, scheduled gate, late admission/rejection, same attempt, extension, server deadline, saved-answer finalization, sealed results, common release, origin/auth guards')
 } finally {
   // Exact isolated fixture namespace, no real exam or student data.

@@ -54,7 +54,7 @@ type SubmittedResponse = PenaltyInfo & {
   canRestart: boolean;
   student?: StudentIdentity;
 };
-type SealedResponse = { status: 'sealed'; attemptId: string; student?: StudentIdentity; submittedAt: string; revealAt: string | null };
+type SealedResponse = PenaltyInfo & { status: 'sealed'; attemptId: string; student?: StudentIdentity; score: number; maxScore: number; late?: boolean; submittedAt: string; revealAt: string | null };
 type AssessmentResponse = ReadyResponse | ActiveResponse | SubmittedResponse | SealedResponse | { status: 'locked' };
 
 const STUDENT_STORAGE_KEY = 'mechanics-assessment-student';
@@ -309,8 +309,8 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
   const [language, setLanguage] = useState<AssessmentLanguage>(savedLanguage);
   const copy = midterm ? { ...COPY[language],
     introTitle: language === 'kk' ? 'Аралық бақылау' : 'Рубежный срез',
-    introMeta: language === 'kk' ? '4 есеп + 3 теория · 50 минут · 8 балл' : '4 задачи + 3 теории · 50 минут · 8 баллов',
-    heading: language === 'kk' ? '4 есеп және 3 теориялық сұрақ' : '4 задачи и 3 вопроса теории',
+    introMeta: language === 'kk' ? '3 теория + 4 есеп · 50 минут · 8 балл' : '3 теории + 4 задачи · 50 минут · 8 баллов',
+    heading: language === 'kk' ? '3 теориялық сұрақ және 4 есеп' : '3 вопроса теории и 4 задачи',
     headingLead: language === 'kk' ? 'Есептерге сандық жауап жазыңыз. Теорияда барлық дұрыс жауаптарды белгілеңіз. Есептің әр дұрыс өрісіне ішінара балл беріледі; теорияда тек толық дұрыс жиын есептеледі. Барлығы — 8 балл. Сандарды жүздікке дейін дөңгелектеңіз.' : 'В задачах введите числа, в теории отметьте все верные ответы. За верные поля задач начисляются частичные баллы; в теории засчитывается только точный набор. Всего — 8 баллов. Числа округляйте до сотых.',
   } : COPY[language];
   const [data, setData] = useState<AssessmentResponse | null>(null);
@@ -616,11 +616,23 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
   }
 
   if (data?.status === 'sealed' || data?.status === 'locked') {
-    return <main className="exam-entry-page"><section className="exam-entry-card">
-      <h1>{data.status === 'sealed' ? (language === 'kk' ? 'Жұмыс қабылданды' : 'Работа принята') : (language === 'kk' ? 'Кіру жабық' : 'Доступ закрыт')}</h1>
-      <p>{language === 'kk' ? 'Тапсырмалар, бағалар және дұрыс жауаптар барлық ағындар үшін ортақ күнге дейін жабық.' : 'Задания, баллы и правильные ответы закрыты до общей даты для всех потоков.'}</p>
+    return <main className="assessment-shell"><section className="assessment-result">
+      <AssessmentLanguageSwitch language={language} onChange={changeLanguage} />
+      {data.status === 'sealed' && <>
+        <span className="assessment-kicker">{copy.finalGrade}</span>
+        <h1>{data.policyVersion === 1 ? `${data.finalPercent ?? 0}%` : `${data.score} ${copy.scoreJoin} ${data.maxScore}`}</h1>
+        {midterm && <p>{copy.finalGrade}: <strong>{Math.round((data.finalPercent ?? data.score / data.maxScore * 100) * .8) / 10} / 8</strong></p>}
+        {data.policyVersion === 1 && <p>{data.score} {copy.scoreJoin} {data.maxScore} · {language === 'kk' ? 'балл' : 'баллов'}</p>}
+        <p>{data.late ? copy.late : copy.saved}</p>
+        {data.policyVersion === 1 && <div className="assessment-policy-note"><p>{copy.deduction}: {data.penaltyPoints ?? 0} п. п.</p>{data.waiverReason && <p>{copy.penaltyWaived}: {data.waiverReason}</p>}</div>}
+      </>}
+      {data.status === 'locked' && <h1>{language === 'kk' ? 'Кіру жабық' : 'Доступ закрыт'}</h1>}
+      <p>{language === 'kk' ? 'Тапсырмалар, дұрыс жауаптар және талдау оқытушы белгілеген уақытқа дейін жабық.' : 'Задания, правильные ответы и разбор закрыты до срока, указанного преподавателем.'}</p>
       {data.status === 'sealed' && data.student && <p>{data.student.lastName} {data.student.firstName} · {data.student.group}</p>}
-      {data.status === 'sealed' && data.revealAt && <p>{language === 'kk' ? 'Ашылатын уақыт' : 'Откроются'}: {new Date(data.revealAt).toLocaleString(language === 'kk' ? 'kk-KZ' : 'ru-RU')}</p>}
+      {data.status === 'sealed' && data.revealAt && <div className="assessment-release-date">
+        <span>{language === 'kk' ? 'Дұрыс жауаптар және талдау ашылады' : 'Правильные ответы и разбор откроются'}</span>
+        <time dateTime={data.revealAt}>{new Date(data.revealAt).toLocaleDateString(language === 'kk' ? 'kk-KZ' : 'ru-RU')} · {new Date(data.revealAt).toLocaleTimeString(language === 'kk' ? 'kk-KZ' : 'ru-RU', { hour: '2-digit', minute: '2-digit' })}</time>
+      </div>}
       {data.status === 'sealed' && !data.revealAt && <p>{language === 'kk' ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Преподаватель назначит дату открытия позже.'}</p>}
     </section></main>;
   }

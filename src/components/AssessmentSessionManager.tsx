@@ -59,7 +59,7 @@ export default function AssessmentSessionManager({ endpoint, period, testId, act
     {data && <form className="exam-reveal-form" onSubmit={event => {
       event.preventDefault(); const value = String(new FormData(event.currentTarget).get('revealAt') ?? '')
       void action({ action: 'saveReveal', revealAt: value ? new Date(value).toISOString() : null })
-    }}><SessionDateTimeInput key={data.revealAt ?? 'closed'} label="Открыть студентам результаты и правильные ответы" name="revealAt" defaultValue={data.revealAt ? localInput(data.revealAt) : ''} /><button className="monitor-export" disabled={busy}>Сохранить дату</button><small>{data.revealAt ? `Общая дата для всех потоков: ${date(data.revealAt)}` : 'Дата не задана — результаты и разбор закрыты. Задайте конец всей экзаменационной недели.'}</small></form>}
+    }}><SessionDateTimeInput key={data.revealAt ?? 'closed'} label="Открыть студентам правильные ответы и разбор" name="revealAt" defaultValue={data.revealAt ? localInput(data.revealAt) : ''} /><button className="monitor-export" disabled={busy}>Сохранить дату</button><small>Итоговый балл виден сразу после сдачи. {data.revealAt ? `Ответы и разбор откроются всем потокам: ${date(data.revealAt)}` : 'Дата не задана — ответы и разбор закрыты. Задайте конец всей экзаменационной недели.'}</small></form>}
     {creating && <form className="exam-create-form" onSubmit={event => {
       event.preventDefault(); const fields = new FormData(event.currentTarget)
       void action({ action: 'createSession', name: String(fields.get('name')), opensAt: new Date(String(fields.get('opensAt'))).toISOString(), startsAt: new Date(String(fields.get('startsAt'))).toISOString(), durationMinutes: Number(fields.get('durationMinutes')) })

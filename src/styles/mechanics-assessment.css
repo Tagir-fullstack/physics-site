@@ -1082,3 +1082,18 @@
 .assessment-molecule { display: block; width: min(100%, 340px); height: auto; margin: 12px 0 20px; color: inherit; }
 .assessment-molecule .molecule-atoms { fill: #18202c; }
 .a11y-light-theme .assessment-molecule .molecule-atoms { fill: #edf2f7; }
+
+.assessment-release-date {
+  display: grid;
+  gap: .5rem;
+  margin-top: 1.5rem;
+  padding: 1.1rem 1rem;
+  border: 1px solid #426fa5;
+  border-radius: 12px;
+  background: #17283e;
+  color: #c5defc;
+}
+.assessment-release-date > span { font-size: .95rem; }
+.assessment-release-date > time { font-size: clamp(1.5rem, 5vw, 2.25rem); font-weight: 700; line-height: 1.25; color: #9dcbff; }
+.a11y-light-theme .assessment-release-date { background: #edf5ff !important; border-color: #92bced; color: #254c7a !important; }
+.a11y-light-theme .assessment-release-date > time { color: #2166af !important; }
