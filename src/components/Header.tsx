@@ -42,7 +42,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (location.pathname === '/thesis') return null;
+  if (['/thesis', '/premium'].includes(location.pathname.replace(/\/$/, ''))) return null;
 
   // Burger menu handlers
   const openMenu = () => {
@@ -249,6 +249,7 @@ export default function Header() {
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/atwood')}><span className="nav-lab-number">01</span><span>Машина Атвуда</span></button>
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/ball-collision')}><span className="nav-lab-number">02</span><span>Столкновение шаров</span></button>
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/oberbeck')}><span className="nav-lab-number">03</span><span>Маятник Обербека</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/clement-desormes')}><span className="nav-lab-number">05</span><span>Метод Клемана—Дезорма</span></button>
                     </div>
                   </div>
                 </div>

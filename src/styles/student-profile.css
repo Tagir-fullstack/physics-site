@@ -1,4 +1,4 @@
-.student-page { min-height: 70vh; padding: calc(var(--dropdown-top, 62px) + 16px) 18px 40px; }
+.student-page { min-height: 100svh; box-sizing: border-box; padding: calc(var(--dropdown-top, 62px) + 16px) 18px 40px; }
 .student-panel { max-width: 660px; margin: 0 auto; padding: 1.5rem; border: 1px solid #343434; border-radius: 10px; background: #161616; color: #eee; }
 .student-panel h1, .student-panel h2 { font-family: 'CCUltimatum', Arial, sans-serif; margin: .5rem 0 1rem; }
 .student-panel h2 { font-size: 1.2rem; }
@@ -35,8 +35,32 @@
 .cookie-notice p { margin: 0; font-size: .8rem; line-height: 1.4; }
 .cookie-notice a { color: #7faee4; }
 .cookie-notice button { flex-shrink: 0; padding: .5rem .7rem; color: #7faee4; background: transparent; border: 1px solid #445c78; border-radius: 5px; }
-.a11y-light-theme .student-panel, .a11y-light-theme .cookie-notice { background: #fff; color: #222; border-color: #d6d8db; }
+.a11y-light-theme .student-panel, .a11y-light-theme .cookie-notice { background: #fff !important; color: #222; border-color: #d6d8db; }
 .a11y-light-theme .student-panel p, .a11y-light-theme .student-identity-form label { color: #667085; }
 .a11y-light-theme .student-identity-form input { background: #fafafa; color: #222; border-color: #cfd4da; }
 .a11y-light-theme .student-recovery, .a11y-light-theme .ob-variant-intro .student-identity-form { border-color: #d6d8db; }
 @media(max-width: 720px) { .ob-variant-intro { grid-template-columns: 1fr; gap: 1rem; } .ob-variant-intro .student-identity-form { border-left: 0; padding-left: 0; } .cookie-notice { align-items: flex-start; } .student-panel { padding: 1rem; } }
+
+.student-page .atwood-primary { background: #2169b5; border-color: #2169b5; color: #fff !important; }
+.student-page .atwood-primary:hover:not(:disabled) { background: #174f96; border-color: #174f96; }
+.student-page .student-panel a { color: #7faee4; }
+.a11y-light-theme .student-page .student-panel a { color: #2169b5 !important; }
+.student-page .atwood-secondary { border-color: #40546d; color: #a6c5ea; }
+.a11y-light-theme .student-page .atwood-secondary { border-color: #cfd8e3; color: #2169b5; }
+.guest-profile-page { display: flex; align-items: center; justify-content: center; }
+.guest-profile-panel { width: 100%; max-width: 960px; display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; box-sizing: border-box; padding: 2rem; }
+.guest-profile-intro h1 { font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.15; }
+.guest-profile-intro .atwood-eyebrow { color: #7faee4; }
+.a11y-light-theme .guest-profile-intro .atwood-eyebrow { color: #2169b5 !important; }
+.guest-profile-content { min-width: 0; }
+.guest-profile-content .student-recovery { margin-bottom: 0; }
+.guest-profile-content button { max-width: 100%; }
+.guest-profile-variant { margin-top: 1rem; }
+.guest-profile-variant strong { color: #7faee4; white-space: nowrap; }
+.a11y-light-theme .guest-profile-variant strong { color: #2169b5; }
+@media(max-width: 720px) {
+  .guest-profile-page { align-items: flex-start; }
+  .guest-profile-panel { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.25rem; }
+}
+
+.a11y-light-theme .student-page .student-recovery summary { color: #2169b5; }

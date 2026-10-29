@@ -178,7 +178,7 @@ function OberbeckSimulation({ variant, variantCode, student, isPro, accessLoadin
 
   return <main className="atwood-page oberbeck-page"><div className="atwood-container">
     <header className="atwood-header"><div className="atwood-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ №3</div><h1>Маятник Обербека</h1></header>
-    {student && <div className="ob-student-heading"><span>{student.lastName} {student.firstName} · {student.group}</span><strong title={variantCode ? `Код работы: ${variantCode}` : undefined}>Вариант {student.variantNumber ? `№ ${student.variantNumber}` : variantCode}</strong><Link to={user ? '/account' : '/student/profile'}>Мой профиль</Link></div>}
+    {student && <div className="ob-student-heading"><span>{student.lastName} {student.firstName} · {student.group}</span><strong title={variantCode ? `Код работы: ${variantCode}` : undefined}>Вариант {student.variantNumber ? `№ ${student.variantNumber}` : variantCode}</strong><Link to={user ? '/account' : '/student/profile?from=oberbeck'}>Мой профиль</Link></div>}
     {custom && <p className="ob-manual-notice" role="status">Ручной режим сверки. Показаны введённые параметры; сохранённый вариант студента не изменён. Схема условная, не в масштабе.</p>}
     <section className="atwood-grid">
       <div className="atwood-card atwood-simulation-card"><div className="atwood-scene-heading"><h2 className="atwood-card-title"><span>1</span> Схема установки</h2><span className="atwood-state">{running ? 'Опыт идёт' : finished ? 'Опыт завершён' : time > 0 ? 'Пауза' : 'Готово к запуску'}</span></div>

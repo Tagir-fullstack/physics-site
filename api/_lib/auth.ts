@@ -2,6 +2,7 @@ import './env.js'
 import { createPublicKey } from 'node:crypto'
 import { createClerkClient, verifyToken } from '@clerk/backend'
 import type { VercelRequest } from '@vercel/node'
+import { billingHasPremium } from './billing/store.js'
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY
 const CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -123,7 +124,7 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
     return { userId, email: '', isPremium: true }
   }
 
-  if (!clerk) return { userId, email: '', isPremium: false }
+  if (!clerk) return { userId, email: '', isPremium: await billingHasPremium(userId) }
 
   try {
     const user = await clerk.users.getUser(userId)
@@ -131,12 +132,12 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
     return {
       userId,
       email: (email || '').toLowerCase(),
-      isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata),
+      isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata) || await billingHasPremium(userId),
       accessRole: user.publicMetadata.accessRole === 'admin' ? 'admin' : 'user',
     }
   } catch {
     // A verified session must remain usable if Clerk's user API is temporarily unavailable.
-    return { userId, email: '', isPremium: false }
+    return { userId, email: '', isPremium: await billingHasPremium(userId) }
   }
 }
 

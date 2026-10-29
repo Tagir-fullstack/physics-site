@@ -19,7 +19,7 @@
 .ob-pulleys button { display: grid; grid-template-columns: 22px 1fr; gap: .2rem .4rem; align-items: center; padding: .55rem; color: var(--text-secondary); background: var(--ob-inset); border: 1px solid var(--ob-line); border-radius: 8px; cursor: pointer; text-align: left; font: inherit; }
 .ob-pulleys button strong { font-size: .85rem; font-weight: 400; white-space: nowrap; }
 .ob-pulleys button small { grid-column: 2; font-size: .85rem; }
-.ob-pulleys button.selected { border-color: #fc6255; background: rgba(252,98,85,.12); }
+.ob-pulleys button.selected { border-color: #2169b5; background: rgba(74,144,226,.12); }
 .ob-pulleys button.selected:nth-child(2) { border-color: #4a90e2; background: rgba(74,144,226,.13); }
 .ob-pulley-icon { width: 14px; height: 14px; border: 1px solid currentColor; border-radius: 50%; grid-row: span 2; justify-self: center; }
 .ob-pulley-1 { width: 21px; height: 21px; }
@@ -29,14 +29,14 @@
 .ob-weight strong { margin-left: auto; }
 .oberbeck-page .ob-weight input { width: 17px; height: 17px; accent-color: var(--weight-color); }
 .ob-weight-small { --weight-color: #4a90c9; }
-.ob-weight-large { --weight-color: #fc6255; }
+.ob-weight-large { --weight-color: #2169b5; }
 .ob-weight-small:has(input:checked) { border-color: var(--weight-color); background: rgba(74,144,201,.08); }
-.ob-weight-large:has(input:checked) { border-color: var(--weight-color); background: rgba(252,98,85,.08); }
+.ob-weight-large:has(input:checked) { border-color: var(--weight-color); background: rgba(74,144,226,.08); }
 .oberbeck-page .ob-distance { margin: .5rem 0 0; font-size: .9rem; }
 .oberbeck-page .ob-distance label { margin-bottom: .3rem; font-size: .9rem; }
 .ob-stepper { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .ob-stepper button { display: grid; place-items: center; width: 38px; height: 32px; padding: 0; line-height: 1; border: 1px solid var(--ob-line); border-radius: 8px; background: var(--ob-inset); color: var(--text-primary); font: 22px Arial, sans-serif; cursor: pointer; }
-.oberbeck-page input[type=range] { padding: .1rem 0; accent-color: #fc6255; }
+.oberbeck-page input[type=range] { padding: .1rem 0; accent-color: #2169b5; }
 .oberbeck-page button:disabled { cursor: not-allowed; opacity: .4; }
 .ob-manual-controls { margin-bottom: 1rem; padding: .75rem; border: 1px solid var(--ob-line); border-radius: 8px; background: var(--ob-inset); }
 .ob-manual-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin: 0; color: #78acee; font: inherit; font-size: 1rem; }
@@ -111,3 +111,8 @@
 .a11y-light-theme .oberbeck-page { --ob-line: #d2d8df; --ob-inset: #f2f5f8; --ob-muted: #566171; }
 @media(max-width: 800px) { .oberbeck-page .atwood-grid, .ob-analysis { grid-template-columns: 1fr; } .ob-task-heading { align-items: start; } }
 @media(max-width: 450px) { .oberbeck-page .atwood-card { padding: .85rem; } .atwood-scene-heading { flex-wrap: wrap; gap: 0; } }
+
+.a11y-light-theme .oberbeck-page .ob-pulleys button.selected { border-color: #2169b5; background: #edf4fc; }
+.a11y-light-theme .oberbeck-page .ob-weight { --weight-color: #2169b5; }
+.a11y-light-theme .oberbeck-page .ob-weight:has(input:checked) { border-color: #2169b5; background: #edf4fc; }
+.a11y-light-theme .oberbeck-page input[type=range] { accent-color: #2169b5; }

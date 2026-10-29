@@ -88,7 +88,6 @@ export default function AssessmentMonitor() {
   const [query, setQuery] = useState('');
   const [groupFilter, setGroupFilter] = useState('');
   const [sort, setSort] = useState('newest');
-  const [page, setPage] = useState(1);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [now, setNow] = useState(Date.now());
   const [detail, setDetail] = useState<AttemptDetail | null>(null);
@@ -203,20 +202,6 @@ export default function AssessmentMonitor() {
   }, [attempts, filter, query, groupFilter, sort]);
   const groups = [...new Set(attempts.map(a => a.student?.group ? normalizeMonitorGroup(a.student.group) ?? a.student.group : null).filter((g): g is string => !!g))].sort((a, b) => a.localeCompare(b, 'ru'));
   const editableGroups = [...new Set([...DEFAULT_MONITOR_GROUPS, ...groups.map(normalizeMonitorGroup).filter((g): g is string => !!g)])].sort();
-  const pageCount = Math.max(1, Math.ceil(visibleAttempts.length / 50));
-  const currentPage = Math.min(page, pageCount);
-  const pageAttempts = visibleAttempts.slice((currentPage - 1) * 50, currentPage * 50);
-  const changePage = (nextPage: number) => {
-    setEditing(null);
-    setPage(nextPage);
-    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-  };
-  const renderPagination = (position: 'top' | 'bottom') => (
-    <nav className={`monitor-pagination monitor-pagination--${position}`} aria-label={`Страницы работ ${position === 'top' ? 'над таблицей' : 'под таблицей'}`}>
-      <span>Страница {currentPage} из {pageCount} · {pageAttempts.length ? `работы ${(currentPage - 1) * 50 + 1}–${(currentPage - 1) * 50 + pageAttempts.length} из ${visibleAttempts.length}` : 'нет работ'}</span>
-      <div><button type="button" aria-label="Предыдущая страница" disabled={currentPage <= 1} onClick={() => changePage(currentPage - 1)}>←</button><button type="button" aria-label="Следующая страница" disabled={currentPage >= pageCount} onClick={() => changePage(currentPage + 1)}>→</button></div>
-    </nav>
-  );
 
   const exportCsv = () => {
     const rows = visibleAttempts.map((attempt) => [
@@ -387,22 +372,21 @@ export default function AssessmentMonitor() {
           <div className="monitor-toolbar">
             <div className="monitor-filters">
               {(['all', 'active', 'submitted', 'expired'] as Filter[]).map((value) => (
-                <button key={value} type="button" className={filter === value ? 'active' : ''} onClick={() => { setFilter(value); setPage(1); }}>
+                <button key={value} type="button" className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>
                   {value === 'all' ? 'Все' : statusText[value]}
                 </button>
               ))}
             </div>
             <label className="monitor-search">
               <span>Поиск</span>
-              <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Фамилия, имя или вариант" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Фамилия, имя или вариант" />
             </label>
-            <div className="monitor-table-tools"><label>Группа<select value={groupFilter} onChange={e => { setGroupFilter(e.target.value); setPage(1); }}><option value="">Все группы</option>{groups.map(g => <option key={g}>{g}</option>)}</select></label><label>Порядок<select value={sort} onChange={e => { setSort(e.target.value); setPage(1); }}><option value="newest">Новые сверху</option><option value="name">По фамилии</option><option value="score">По результату</option><option value="events">По событиям</option></select></label><span>Найдено: {visibleAttempts.length} из {attempts.length}</span></div>
+            <div className="monitor-table-tools"><label>Группа<select value={groupFilter} onChange={e => setGroupFilter(e.target.value)}><option value="">Все группы</option>{groups.map(g => <option key={g}>{g}</option>)}</select></label><label>Порядок<select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">Новые сверху</option><option value="name">По фамилии</option><option value="score">По результату</option><option value="events">По событиям</option></select></label><span>Найдено: {visibleAttempts.length} из {attempts.length}</span></div>
             <button type="button" className="monitor-export" onClick={exportCsv} disabled={!visibleAttempts.length}>Экспорт CSV</button>
           </div>
 
-          {renderPagination('top')}
           <div className="monitor-table-scroll"><table className="monitor-table"><thead><tr>{['Студент', 'Группа', 'Статус', testId === 'midterm' ? 'Задания' : 'Задачи', 'Оценка', 'Штраф', 'События', 'Сдано / осталось', 'Вариант', ''].map((label, i) => <th key={i}>{label}</th>)}</tr></thead><tbody>
-            {pageAttempts.map(attempt => <Fragment key={attempt.id}><tr>
+            {visibleAttempts.map(attempt => <Fragment key={attempt.id}><tr>
               <td><button className="monitor-student-link" onClick={() => void openDetail(attempt.id)}>{attempt.student ? `${attempt.student.lastName} ${attempt.student.firstName}` : 'Без имени'}</button>{attempt.archived && <small className="monitor-retry-note">Архив</small>}</td>
               <td>{normalizeMonitorGroup(attempt.student?.group ?? '') ?? attempt.student?.group ?? '—'}</td>
               <td><span className={`monitor-status-dot ${attempt.status}`} role="img" aria-label={statusText[attempt.status]} title={statusText[attempt.status]} tabIndex={0}/></td>
@@ -433,9 +417,8 @@ export default function AssessmentMonitor() {
                 </form>
               </td></tr>}
             </Fragment>)}
-            {!pageAttempts.length && <tr><td colSpan={10} className="monitor-empty">По выбранному фильтру работ нет.</td></tr>}
+            {!visibleAttempts.length && <tr><td colSpan={10} className="monitor-empty">По выбранному фильтру работ нет.</td></tr>}
           </tbody></table></div>
-          {renderPagination('bottom')}
         </section>
       </div>
 

@@ -5,10 +5,12 @@ import { db, schema } from './_lib/db.js'
 import { bodyOf, currentStudent, hash, identityFrom, profileForToken, publicProfile, sameOrigin, setProfileCookie, tokenOf, PROFILE_COOKIE, linkStudentAccount } from './_lib/studentProfile.js'
 import { getClerkUser } from './_lib/auth.js'
 import { findStudentRecovery, redeemStudentRecovery } from './_lib/studentRecovery.js'
+import { clementLab } from './_lib/clementLab.js'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   res.setHeader('Referrer-Policy', 'no-referrer')
   try {
+    if (req.query.lab === 'clement-desormes') return await clementLab(req, res)
     const account = await getClerkUser(req)
     const profile = await currentStudent(req, account)
     if (req.method === 'GET') { if (profile && (await profileForToken(tokenOf(req)))?.id === profile.id) setProfileCookie(req, res, tokenOf(req)); return res.status(200).json({ profile: profile ? publicProfile(profile) : null }) }

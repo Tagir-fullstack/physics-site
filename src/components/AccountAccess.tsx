@@ -139,10 +139,9 @@ export default function AccountAccess({ access }: Props) {
           <span className="account-plan-badge">{access.paymentsEnabled ? 'Подписка' : 'Скоро'}</span>
         </div>
         <p>Создавайте тесты, работайте с классами и используйте инструменты преподавателя. Материалы и прохождение контрольных остаются бесплатными.</p>
-        <button className="account-btn account-btn-secondary" disabled={!access.paymentsEnabled}>
-          {access.paymentsEnabled ? 'Оформить PRO' : 'Оформление PRO скоро появится'}
-        </button>
+        <Link className="account-btn account-btn-secondary" to="/premium">Узнать о PRO</Link>
       </div>}
+      {access.isPremium && <Link className="account-btn account-btn-secondary" to="/premium">Подписка и платежи</Link>}
     </div>
   );
 }

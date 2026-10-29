@@ -46,6 +46,9 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Changelog = lazy(() => import('./pages/Changelog'));
 const Account = lazy(() => import('./pages/Account'));
+const Premium = lazy(() => import('./pages/Premium'));
+const Payments = lazy(() => import('./pages/Payments'));
+const BillingLegal = lazy(() => import('./pages/BillingLegal'));
 const Teacher = lazy(() => import('./pages/Teacher'));
 const KtpList = lazy(() => import('./pages/teacher/KtpList'));
 const KtpNew = lazy(() => import('./pages/teacher/KtpNew'));
@@ -57,6 +60,8 @@ const StudentTestRunner = lazy(() => import('./pages/StudentTestRunner'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
 const Labs = lazy(() => import('./pages/Labs'));
+const ClementDesormes = lazy(() => import('./pages/labs/ClementDesormes'));
+const ClementVariants = lazy(() => import('./pages/ClementVariants'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
 const MechanicsAssessment = lazy(() => import('./pages/MechanicsAssessment'));
 const AssessmentIndex = lazy(() => import('./pages/AssessmentIndex'));
@@ -124,6 +129,9 @@ function App() {
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/changelog" element={<Changelog />} />
                   <Route path="/account" element={<Account />} />
+                  <Route path="/premium" element={<Premium />} />
+                  <Route path="/payments" element={<Payments />} />
+                  <Route path="/legal/:document" element={<BillingLegal />} />
                   <Route path="/student/profile" element={<StudentProfile />} />
                   <Route path="/student/recover" element={<StudentRecovery />} />
                   <Route path="/auth/sso-callback" element={<GoogleAuthCallback />} />
@@ -141,6 +149,8 @@ function App() {
                   <Route path="/labs/atwood" element={<AtwoodMachine />} />
                   <Route path="/labs" element={<Labs />} />
                   <Route path="/labs/oberbeck" element={<OberbeckEntry />} />
+                  <Route path="/labs/clement-desormes" element={<ClementDesormes />} />
+                  <Route path="/admin/clement-variants" element={<ClementVariants />} />
                   <Route path="/admin/oberbeck-variants" element={<OberbeckVariants />} />
                   <Route path="/labs/ball-collision" element={<BallCollision />} />
                   <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />

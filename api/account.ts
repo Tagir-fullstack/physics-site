@@ -1,17 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClerkClient } from '@clerk/backend'
 import { getClerkUser, hasPremiumAccess, isAdmin, isOwner } from './_lib/auth.js'
+import { handleBilling } from './_lib/billing/handler.js'
+import { billingConfig } from './_lib/billing/config.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   try {
+    if (req.query.billing) return await handleBilling(req, res, () => getClerkUser(req))
     const user = await getClerkUser(req)
     if (!user) return res.status(401).json({ error: 'Войдите в аккаунт.' })
     if (req.method === 'GET') return res.status(200).json({
       userId: user.userId,
       role: isOwner(user) ? 'owner' : isAdmin(user) ? 'admin' : 'user',
       isPremium: hasPremiumAccess(user),
-      paymentsEnabled: false,
+      paymentsEnabled: billingConfig().enabled,
     })
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
     if (!isOwner(user)) return res.status(403).json({ error: 'Назначать администраторов может только владелец сайта.' })

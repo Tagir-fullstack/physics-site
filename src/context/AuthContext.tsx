@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { useUser, useClerk } from '@clerk/clerk-react';
+import { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
+import { useUser, useClerk, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import type {
   AuthContextType,
   AuthUser,
@@ -34,22 +34,35 @@ function toProfile(user: ReturnType<typeof useUser>['user']): Profile | null {
   };
 }
 
-function hasPremiumMetadata(user: ReturnType<typeof useUser>['user']): boolean {
-  if (!user) return false;
-  const metadata = {
-    ...(user.publicMetadata ?? {}),
-  } as Record<string, unknown>;
-  const subscription = metadata.subscription && typeof metadata.subscription === 'object'
-    ? metadata.subscription as Record<string, unknown>
-    : null;
-  const plan = String(metadata.plan ?? subscription?.plan ?? '').toLowerCase();
-  const status = String(metadata.subscriptionStatus ?? subscription?.status ?? 'active').toLowerCase();
-  return ['pro', 'premium', 'teacher'].includes(plan) && !['cancelled', 'expired', 'inactive'].includes(status);
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isLoaded, user } = useUser();
   const { signOut: clerkSignOut } = useClerk();
+  const { getToken } = useClerkAuth();
+  const [access, setAccess] = useState<{ userId: string; premium: boolean } | null>(null);
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    let live = true;
+    let request = 0;
+    const refresh = async () => {
+      const current = ++request;
+      try {
+        const token = await getToken();
+        if (!token) throw Error('Missing session');
+        const response = await fetch('/api/account', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        if (!response.ok) throw Error('Access unavailable');
+        const result = await response.json();
+        if (live && current === request) setAccess({ userId, premium: result.userId === userId && result.isPremium === true });
+      } catch { if (live && current === request) setAccess({ userId, premium: false }); }
+    };
+    void refresh();
+    const listener = () => { void refresh(); };
+    const interval = window.setInterval(listener, 60000);
+    window.addEventListener('billing-access-changed', listener);
+    window.addEventListener('focus', listener);
+    return () => { live = false; clearInterval(interval); window.removeEventListener('billing-access-changed', listener); window.removeEventListener('focus', listener); };
+  }, [userId, getToken]);
+  const premium = access?.userId === userId && access?.premium === true;
 
   const value = useMemo<AuthContextType>(() => {
     const authUser: AuthUser | null = user
@@ -66,11 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile: toProfile(user),
       subscription: null,
       isLoading: !isLoaded,
-      isPremium: hasPremiumMetadata(user),
+      isPremium: premium,
       signOut: async () => {
         await clerkSignOut();
       },
-      hasFeature: () => hasPremiumMetadata(user),
+      hasFeature: () => premium,
       updateProfile: async (data: Partial<Profile>) => {
         if (!user) throw new Error('Not authenticated');
         const nextMeta: Record<string, unknown> = { ...(user.unsafeMetadata ?? {}) };
@@ -82,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await user.reload();
       },
     };
-  }, [isLoaded, user, clerkSignOut]);
+  }, [isLoaded, user, clerkSignOut, premium]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

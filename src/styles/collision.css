@@ -8,7 +8,7 @@
 .collision-grid { align-items: stretch; }
 .collision-card { min-width: 0; background: var(--bg-card); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: clamp(1.25rem, 2vw, 2rem); }
 .collision-card-title { display: flex; align-items: center; gap: .6rem; color: #fff; font: 700 1.15rem 'CCUltimatum', sans-serif; margin-bottom: 1rem; }
-.collision-card-title span { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: rgba(252,98,85,.12); color: var(--proton-red); font: 700 .85rem 'CCUltimatum', sans-serif; flex-shrink: 0; }
+.collision-card-title span { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: rgba(74,144,226,.12); color: #79afea; font: 700 .85rem 'CCUltimatum', sans-serif; flex-shrink: 0; }
 .collision-simulation-card { display: flex; flex-direction: column; }
 .collision-scene-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
 .collision-state { color: #aaa; font-size: .8rem; text-align: right; }
@@ -36,7 +36,7 @@
 .collision-controls input { width: 100%; border: 1px solid #444; border-radius: 8px; padding: .7rem .75rem; background: #202020; color: #fff; font: inherit; }
 .collision-mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: 1rem; }
 .collision-mode-switch button, .collision-angle-presets button { border: 1px solid #444; border-radius: 8px; padding: .55rem .7rem; background: #202020; color: #aaa; cursor: pointer; font: inherit; }
-.collision-mode-switch button.collision-mode-active, .collision-angle-presets button.collision-preset-active { color: #fff; background: rgba(252,98,85,.16); border-color: #fc6255; }
+.collision-mode-switch button.collision-mode-active, .collision-angle-presets button.collision-preset-active { color: #fff; background: rgba(74,144,226,.16); border-color: #2169b5; }
 .collision-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
 .collision-angle-presets { display: flex; align-items: center; gap: .45rem; margin: -.25rem 0 .85rem; color: #888; font-size: .78rem; }
 .collision-angle-presets button { padding: .25rem .65rem; font-size: .8rem; }
@@ -44,13 +44,13 @@
 .collision-constants strong { color: #ddd; font-weight: 600; }
 .collision-control-buttons { display: flex; gap: .6rem; margin-top: .8rem; }
 .collision-primary, .collision-secondary, .collision-text-button { border-radius: 8px; padding: .65rem .8rem; cursor: pointer; font: inherit; }
-.collision-primary { flex: 1; border: 1px solid #fc6255; background: #fc6255; color: #fff; }
+.collision-primary { flex: 1; border: 1px solid #2169b5; background: #2169b5; color: #fff; }
 .collision-primary:disabled, .collision-secondary:disabled { opacity: .4; cursor: not-allowed; }
 .collision-secondary { border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: var(--text-secondary); }
-.collision-primary:hover:not(:disabled) { background: #e95348; }
+.collision-primary:hover:not(:disabled) { background: #174f96; }
 .collision-secondary:hover:not(:disabled) { background: #292929; }
 .collision-progress { height: 7px; background: #292929; border-radius: 10px; overflow: hidden; margin-top: 1.25rem; }
-.collision-progress div { width: 100%; height: 100%; background: #fc6255; transform-origin: left center; }
+.collision-progress div { width: 100%; height: 100%; background: #2169b5; transform-origin: left center; }
 .collision-time-row { display: flex; justify-content: space-between; gap: 1rem; color: #aaa; font-size: .84rem; margin-top: .7rem; font-variant-numeric: tabular-nums; }
 .collision-time-row strong { color: #fff; }
 .collision-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
@@ -80,13 +80,13 @@
 .collision-energy-legend span:first-child { color: #fc6255; }
 .collision-energy-legend span:nth-child(2) { color: #6faefa; }
 .collision-controls .collision-checkbox { display: flex; align-items: center; gap: .6rem; font-size: .85rem; margin: .75rem 0; cursor: pointer; }
-.collision-checkbox input { width: 17px; height: 17px; flex-shrink: 0; accent-color: #fc6255; padding: 0; }
+.collision-checkbox input { width: 17px; height: 17px; flex-shrink: 0; accent-color: #2169b5; padding: 0; }
 .collision-settings { border-block: 1px solid #333; padding: .65rem 0; margin: .8rem 0; }
 .collision-settings summary { cursor: pointer; color: #ccc; font-size: .88rem; }
 .collision-settings label { display: grid; gap: .35rem; color: var(--text-secondary); font-size: .85rem; margin-top: .75rem; }
-.collision-settings input[type="range"] { display: block; width: 100%; padding: 0; accent-color: #fc6255; }
+.collision-settings input[type="range"] { display: block; width: 100%; padding: 0; accent-color: #2169b5; }
 .collision-settings .collision-checkbox { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
-.collision-settings .collision-checkbox input { width: 17px; height: 17px; flex: 0 0 17px; margin: 0; padding: 0; accent-color: #fc6255; }
+.collision-settings .collision-checkbox input { width: 17px; height: 17px; flex: 0 0 17px; margin: 0; padding: 0; accent-color: #2169b5; }
 .collision-settings-locked { display: flex; align-items: center; gap: .65rem; padding: .7rem 0; margin: .8rem 0; border-block: 1px solid #333; }
 .collision-settings-locked > div { display: grid; min-width: 0; }
 .collision-settings-locked strong { font-size: .86rem; }
@@ -137,8 +137,8 @@
   color: #1a1a1a !important;
 }
 .a11y-light-theme .collision-page .collision-card-title span {
-  color: #c63d32 !important;
-  background: #fdebea;
+  background: #edf4fc;
+  color: #2169b5 !important;
 }
 .a11y-light-theme .collision-page .collision-eyebrow { color: #174f96 !important; }
 .a11y-light-theme .collision-page .collision-state,
@@ -175,9 +175,9 @@
 }
 .a11y-light-theme .collision-mode-switch button.collision-mode-active,
 .a11y-light-theme .collision-angle-presets button.collision-preset-active {
-  background: #fdebea;
-  border-color: #fc6255;
-  color: #1a1a1a !important;
+  background: #edf4fc;
+  border-color: #2169b5;
+  color: #2169b5 !important;
 }
 .a11y-light-theme .collision-secondary {
   background: #f5f5f5;
@@ -185,7 +185,11 @@
   color: #333 !important;
 }
 .a11y-light-theme .collision-secondary:hover:not(:disabled) { background: #eaeaea; }
-.a11y-light-theme .collision-primary { color: #1a1a1a !important; }
+.a11y-light-theme .collision-page .collision-primary { background: #2169b5; border-color: #2169b5; color: #fff !important; }
+.a11y-light-theme .collision-page .collision-primary:hover:not(:disabled) { background: #174f96; border-color: #174f96; }
+.a11y-light-theme .collision-page .collision-primary :is(span, strong) { color: inherit !important; }
+.a11y-light-theme .collision-page .collision-progress div { background: #2169b5; }
+.a11y-light-theme .collision-page :is(input[type='range'], input[type='checkbox']) { accent-color: #2169b5; }
 .a11y-light-theme .collision-primary:disabled,
 .a11y-light-theme .collision-secondary:disabled { opacity: .55; }
 .a11y-light-theme .collision-page .collision-settings,
@@ -225,3 +229,6 @@
   .collision-controls > .collision-scene-caption { order: 6; }
 }
 @media (max-width: 600px) { .collision-page { padding-inline: .7rem; } .collision-card { padding: 1rem; } .collision-input-grid { grid-template-columns: 1fr; gap: 0; } .collision-metrics { grid-template-columns: 1fr 1fr; } .collision-metrics strong { font-size: .78rem; } .collision-scene-caption { gap: .35rem .8rem; } .collision-settings-locked, .collision-pro-locked { flex-wrap: wrap; } .collision-settings-locked a, .collision-pro-locked a { margin-left: 0; } }
+
+.a11y-light-theme .collision-page .collision-primary .collision-pro-badge { color: inherit !important; background: transparent; border-color: currentColor; }
+.collision-page .collision-primary .collision-pro-badge { color: inherit; background: transparent; border-color: currentColor; }

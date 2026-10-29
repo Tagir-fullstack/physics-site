@@ -7,6 +7,7 @@ const LABS = [
   { id: 'atwood', number: '01', title: 'Машина Атвуда', topic: 'Движение и силы', description: 'Два груза, один блок. Изменяйте массы и исследуйте, от чего зависит ускорение системы.', route: '/labs/atwood', accent: 'blue' },
   { id: 'ball-collision', number: '02', title: 'Столкновение шаров', topic: 'Импульс и энергия', description: 'Сталкивайте шары, меняйте условия опыта и наблюдайте передачу движения при ударе.', route: '/labs/ball-collision', accent: 'coral' },
   { id: 'oberbeck', number: '03', title: 'Маятник Обербека', topic: 'Вращательное движение', description: 'Меняйте положение грузов и исследуйте связь момента силы, ускорения и момента инерции.', route: '/labs/oberbeck', accent: 'mint' },
+  { id: 'clement-desormes', number: '05', title: 'Метод Клемана—Дезорма', topic: 'Термодинамика', description: 'Управляйте кранами и компрессором, снимайте показания манометра и определяйте показатель адиабаты воздуха.', route: '/labs/clement-desormes', accent: 'blue' },
 ] as const
 
 
@@ -19,7 +20,7 @@ export default function Labs() {
         <h1 id="labs-title">Добро пожаловать<br />в лабораторию<span>.</span></h1>
         <p>Физика становится понятнее, когда её можно увидеть. Собирайте опыты, меняйте условия и находите закономерности — прямо в браузере.</p>
         <div className="labs-catalog-actions"><a href="#lab-catalog" className="labs-catalog-primary">Выбрать опыт <span aria-hidden="true">↓</span></a><Link to={user ? '/account' : '/student/profile'}>Мой профиль <span aria-hidden="true">↗</span></Link></div>
-        <div className="labs-catalog-facts"><span><strong>03</strong> установки</span><span>Механика</span><span>Без установки программ</span></div>
+        <div className="labs-catalog-facts"><span><strong>{String(LABS.length).padStart(2, '0')}</strong> установки</span><span>Механика и термодинамика</span><span>Без установки программ</span></div>
       </div>
       <div className="labs-hero-apparatus" aria-hidden="true"><div className="labs-apparatus-caption"><span>НАБЛЮДАЙТЕ. ИССЛЕДУЙТЕ.</span><span>↗</span></div><LabIllustration id="oberbeck" /><div className="labs-apparatus-footer"><span>От наблюдения<br />к пониманию</span><b>F → a</b></div></div>
     </section>

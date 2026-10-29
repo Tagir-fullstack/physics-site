@@ -13,7 +13,73 @@ import {
   smallint,
   index,
   uniqueIndex,
+  primaryKey,
+  foreignKey,
+  check,
+  pgSequence,
 } from 'drizzle-orm/pg-core'
+
+// Additive billing schema; apply with scripts/setup-billing.mjs after review.
+// Accounts remain in Clerk. Sandbox never grants production entitlements.
+export const billingInvoiceSequence = pgSequence('billing_invoice_seq', { startWith: 100000, minValue: 100000, maxValue: 999999, cycle: false })
+export const billingSubscriptions = pgTable('billing_subscriptions', {
+  userId: varchar('user_id', { length: 128 }).notNull(),
+  environment: varchar('environment', { length: 16 }).notNull(),
+  planId: varchar('plan_id', { length: 32 }),
+  amountMinor: integer('amount_minor'),
+  months: smallint('months'),
+  paidThrough: timestamp('paid_through', { withTimezone: true }),
+  autoRenew: boolean('auto_renew').notNull().default(false),
+  cardCipher: text('card_cipher'),
+  cancelVersion: integer('cancel_version').notNull().default(0),
+  consentVersion: varchar('consent_version', { length: 64 }),
+  consentAt: timestamp('consent_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [
+  primaryKey({ columns: [t.userId, t.environment] }),
+  check('billing_subscriptions_environment_check', sql`${t.environment} in ('sandbox','production')`),
+  check('billing_subscriptions_amount_minor_check', sql`${t.amountMinor}>0`),
+  check('billing_subscriptions_months_check', sql`${t.months} in (1,12)`),
+  index('billing_due').on(t.paidThrough).where(sql`${t.autoRenew}`),
+])
+export const billingOrders = pgTable('billing_orders', {
+  id: uuid('id').primaryKey(),
+  userId: varchar('user_id', { length: 128 }).notNull(),
+  environment: varchar('environment', { length: 16 }).notNull(),
+  invoice: varchar('invoice', { length: 6 }).notNull().unique().default(sql`nextval('billing_invoice_seq')::text`),
+  terminal: varchar('terminal', { length: 128 }).notNull(),
+  planId: varchar('plan_id', { length: 32 }).notNull(),
+  amountMinor: integer('amount_minor').notNull(),
+  months: smallint('months').notNull(),
+  recurring: boolean('recurring').notNull(),
+  kind: varchar('kind', { length: 16 }).notNull(),
+  cycleKey: varchar('cycle_key', { length: 128 }).notNull(),
+  idempotencyKey: uuid('idempotency_key').notNull(),
+  status: varchar('status', { length: 24 }).notNull().default('created'),
+  callbackHash: varchar('callback_hash', { length: 64 }).notNull(),
+  cancelVersion: integer('cancel_version').notNull(),
+  legalVersion: varchar('legal_version', { length: 64 }).notNull(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull().defaultNow(),
+  transactionId: varchar('transaction_id', { length: 128 }),
+  grantStarts: timestamp('grant_starts', { withTimezone: true }),
+  grantEnds: timestamp('grant_ends', { withTimezone: true }),
+  checkedAt: timestamp('checked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [
+  foreignKey({ columns: [t.userId, t.environment], foreignColumns: [billingSubscriptions.userId, billingSubscriptions.environment] }),
+  uniqueIndex('billing_orders_user_id_environment_idempotency_key_key').on(t.userId, t.environment, t.idempotencyKey),
+  uniqueIndex('billing_orders_user_id_environment_cycle_key_key').on(t.userId, t.environment, t.cycleKey),
+  uniqueIndex('billing_orders_environment_transaction_id_key').on(t.environment, t.transactionId),
+  uniqueIndex('billing_one_pending').on(t.userId, t.environment).where(sql`${t.status} in ('created','pending','dispatching','unknown','requires_action')`),
+  index('billing_entitlements').on(t.userId, t.environment, t.grantEnds).where(sql`${t.status}='paid'`),
+  check('billing_orders_environment_check', sql`${t.environment} in ('sandbox','production')`),
+  check('billing_orders_invoice_check', sql`${t.invoice} ~ '^[0-9]{6}$'`),
+  check('billing_orders_amount_minor_check', sql`${t.amountMinor}>0`),
+  check('billing_orders_months_check', sql`${t.months} in (1,12)`),
+  check('billing_orders_kind_check', sql`${t.kind} in ('checkout','renewal')`),
+  check('billing_orders_status_check', sql`${t.status} in ('created','pending','dispatching','unknown','requires_action','paid','failed','cancelled','refunded')`),
+])
 
 export const userRoleEnum = pgEnum('user_role', ['student', 'teacher', 'admin'])
 export const verificationStatusEnum = pgEnum('verification_status', [

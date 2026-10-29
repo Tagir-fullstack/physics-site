@@ -10,8 +10,8 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   const location = useLocation();
 
-  // Скрываем футер во время теста и на странице презентации
-  if (isQuizActive || location.pathname === '/thesis') {
+  // Тест, презентация и отдельная страница тарифов используют свой макет.
+  if (isQuizActive || ['/thesis', '/premium'].includes(location.pathname.replace(/\/$/, ''))) {
     return null;
   }
 
@@ -145,6 +145,7 @@ export default function Footer() {
             >
               Конфиденциальность
             </Link>
+            <Link to="/payments" style={{ color: '#c05348', textDecoration: 'none' }}>Оплата и подписка</Link>
             <Link to="/changelog" style={{
               color: '#666',
               textDecoration: 'none',
