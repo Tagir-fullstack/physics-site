@@ -129,7 +129,7 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
   useEffect(() => {
     let frame: number, previous = performance.now()
     const tick = (now: number) => {
-      const multiplier = live.current.phase === 'venting' ? 1 : canUsePro ? speed : Math.min(speed, 2)
+      const multiplier = live.current.phase === 'venting' ? 1 : canUsePro ? speed : Math.min(speed, 5)
       const next = stepClement(variant, live.current, (now - previous) / 1000 * multiplier)
       previous = now; live.current = next; setState(next); frame = requestAnimationFrame(tick)
     }
@@ -199,7 +199,7 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
   const computedGamma = clementGamma(num(notebook.rows[0].head), num(notebook.extrapolated))
   const liveControls = <div className="cd-live-controls" aria-label="Управление установкой">
         <div className="cd-clock"><span>{state.phase === 'venting' || state.ventTime ? 'Кран открыт' : 'Ожидание'}</span><strong>{f(state.phase === 'venting' || state.ventTime ? state.ventTime : waiting ? Math.min(80, state.elapsed) : 0, 2)} с</strong></div>
-        <label className="cd-speed"><span>Скорость</span><select aria-label="Скорость показа" value={canUsePro ? speed : Math.min(speed, 2)} disabled={state.phase === 'venting' || state.pumping} onChange={e => { const next = Number(e.target.value); if ([1, 2, ...(canUsePro ? [5, 10] : [])].includes(next)) setSpeed(next) }}>{[1, 2, 5, 10].map(s => <option key={s} value={s} disabled={!canUsePro && s > 2}>×{s}{s > 2 ? ' · PRO' : ''}</option>)}</select></label>
+        <label className="cd-speed"><span>Скорость</span><select aria-label="Скорость показа" value={canUsePro ? speed : Math.min(speed, 5)} disabled={state.phase === 'venting' || state.pumping} onChange={e => { const next = Number(e.target.value); if ([1, 2, 5, ...(canUsePro ? [10] : [])].includes(next)) setSpeed(next) }}>{[1, 2, 5, 10].map(s => <option key={s} value={s} disabled={!canUsePro && s > 5}>×{s}{s > 5 ? ' · PRO' : ''}</option>)}</select></label>
         <div className="cd-valve-buttons"><button type="button" aria-pressed={state.inletOpen} disabled={state.outletOpen || !['idle', 'pumping'].includes(state.phase)} onClick={() => act('inlet')}>К · {state.inletOpen ? 'открыт' : 'закрыт'}</button><button type="button" aria-pressed={state.outletOpen} disabled={state.phase !== 'ready' && !(state.phase === 'venting' && state.ventTime >= 1)} onClick={() => act('outlet')}>К₀ · {state.outletOpen ? 'открыт' : 'закрыт'}</button></div>
         <button type="button" className={`cd-primary cd-pump${state.pumping ? ' is-pumping' : ''}`} disabled={!state.inletOpen || state.outletOpen || !['idle', 'pumping'].includes(state.phase)} onPointerDown={e => {
           if (mobileLayout || !e.isPrimary || e.button !== 0) return
@@ -224,7 +224,7 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
         {!mobileLayout && liveControls}
         <div className="cd-status" role="status"><b>{phaseLabel}</b><p>{canUsePro ? mobileLayout ? phaseHint.replace('удерживайте «Компрессор»', 'включите компрессор').replace('Отпустите компрессор', 'Остановите компрессор') : phaseHint : basicHint}</p></div>
 
-{canUsePro ? <small className="cd-muted">При выпуске воздуха автоматически ×1. Секундомер показывает время опыта.</small> : <Link className="cd-pro-link" to="/account">Ускорение ×5 и ×10 доступно с PRO →</Link>}
+{canUsePro ? <small className="cd-muted">При выпуске воздуха автоматически ×1. Секундомер показывает время опыта.</small> : <Link className="cd-pro-link" to="/account">Ускорение ×10 доступно с PRO →</Link>}
         {notice && <p className="cd-notice" role="status">{notice}</p>}
       </section>
     </div>
