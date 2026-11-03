@@ -1,8 +1,10 @@
+import { isAssessmentGroup, normalizeMonitorGroup } from '../src/lib/monitorGrading.js'
 import { createHash, randomBytes } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, asc, eq, gt, isNull } from 'drizzle-orm'
 import { db, hasDatabaseConfig, schema } from './_lib/db.js'
 import { evaluateFormula, generateVariables, substituteVariables } from './_lib/safeFormula.js'
+import { getClerkUser } from './_lib/auth.js'
 
 type QuestionConfig = {
   options?: string[]
@@ -27,7 +29,6 @@ type Answers = Record<string, string | string[] | number>
 
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').slice(0, max) : ''
 const hash = (value: string) => createHash('sha256').update(value).digest('hex')
-const normalizedIdentity = (lastName: string, firstName: string, group: string) => [lastName, firstName, group].map((item) => item.toLocaleLowerCase('ru-RU')).join('|')
 const shuffle = <T>(items: T[]) => {
   const result = [...items]
   for (let index = result.length - 1; index > 0; index -= 1) {
@@ -73,6 +74,17 @@ function individualize(question: VariantQuestion): VariantQuestion {
 }
 
 async function studentFor(req: VercelRequest) {
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    const account = await getClerkUser(req)
+    if (!account) return null
+    const [linked] = await db.select({ student: schema.classStudents }).from(schema.educationProfiles)
+      .innerJoin(schema.classStudents, eq(schema.educationProfiles.classStudentId, schema.classStudents.id))
+      .innerJoin(schema.teacherClasses, eq(schema.classStudents.classId, schema.teacherClasses.id))
+      .where(and(eq(schema.educationProfiles.userId, account.userId), eq(schema.educationProfiles.role, 'student'),
+        eq(schema.teacherClasses.ownerClerkId, schema.educationProfiles.teacherUserId),
+        eq(schema.teacherClasses.archived, false), eq(schema.classStudents.active, true))).limit(1)
+    return linked?.student || null
+  }
   const token = clean(req.headers['x-student-token'], 200)
   if (!token) return null
   const [student] = await db.select().from(schema.classStudents).where(and(eq(schema.classStudents.joinTokenHash, hash(token)), eq(schema.classStudents.active, true))).limit(1)
@@ -101,20 +113,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const body = await bodyOf(req)
 
   if (req.method === 'POST' && body.action === 'join') {
+    const account = await getClerkUser(req)
+    if (!account || !req.headers.authorization?.startsWith('Bearer ')) return res.status(401).json({ error: 'Войдите через Google или почту перед подключением к классу.' })
     const inviteCode = clean(body.inviteCode, 12).toUpperCase()
     const lastName = clean(body.lastName, 60)
     const firstName = clean(body.firstName, 60)
-    const groupName = clean(body.group, 40)
-    if (!inviteCode || lastName.length < 2 || firstName.length < 2 || !groupName) return res.status(400).json({ error: 'Введите код, фамилию, имя и группу.' })
+    const groupName = normalizeMonitorGroup(clean(body.group, 40))?.replace('В','B') || ''
+    if (!inviteCode || lastName.length < 2 || firstName.length < 2 || !isAssessmentGroup(groupName)) return res.status(400).json({ error: 'Введите код, фамилию, имя и группу.' })
     const [teacherClass] = await db.select().from(schema.teacherClasses).where(and(eq(schema.teacherClasses.inviteCode, inviteCode), eq(schema.teacherClasses.archived, false))).limit(1)
     if (!teacherClass) return res.status(404).json({ error: 'Класс с таким кодом не найден.' })
-    const identity = normalizedIdentity(lastName, firstName, groupName)
+    const identity = 'account|' + account.userId
     const token = randomBytes(32).toString('base64url')
     const [student] = await db.insert(schema.classStudents).values({
       classId: teacherClass.id, lastName, firstName, groupName, normalizedIdentity: identity, joinTokenHash: hash(token),
     }).onConflictDoUpdate({
       target: [schema.classStudents.classId, schema.classStudents.normalizedIdentity],
-      set: { joinTokenHash: hash(token), lastSeenAt: new Date(), active: true },
+      set: { lastName, firstName, groupName, joinTokenHash: hash(token), lastSeenAt: new Date(), active: true },
     }).returning()
     return res.status(200).json({ token, student: { id: student.id, lastName, firstName, group: groupName }, class: { id: teacherClass.id, name: teacherClass.name, subject: teacherClass.subject } })
   }

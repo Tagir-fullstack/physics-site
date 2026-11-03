@@ -3,10 +3,12 @@ import { createClerkClient } from '@clerk/backend'
 import { getClerkUser, hasPremiumAccess, isAdmin, isOwner } from './_lib/auth.js'
 import { handleBilling } from './_lib/billing/handler.js'
 import { billingConfig } from './_lib/billing/config.js'
+import { handleEducation } from './_lib/education.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   try {
+    if (req.query.education) return await handleEducation(req, res)
     if (req.query.billing) return await handleBilling(req, res, () => getClerkUser(req))
     const user = await getClerkUser(req)
     if (!user) return res.status(401).json({ error: 'Войдите в аккаунт.' })

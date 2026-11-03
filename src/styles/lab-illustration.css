@@ -1,0 +1,36 @@
+.labs-illustration .lab-motion { animation-duration: 6s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; transform-box: view-box; }
+.lab-atwood-weight-left { animation-name: lab-weight-drift; }
+.lab-atwood-weight-right { animation-name: lab-weight-drift; animation-direction: reverse; }
+.lab-atwood-rope-left { transform-origin: 137px 53px; animation-name: lab-rope-left; }
+.lab-atwood-rope-right { transform-origin: 203px 53px; animation-name: lab-rope-right; }
+.lab-atwood-wheel { transform-origin: 170px 53px; animation-name: lab-wheel-drift; }
+.lab-ball-left { transform-origin: 168px 42px; animation-name: lab-collision-left; }
+.lab-ball-right { transform-origin: 192px 42px; animation-name: lab-collision-right; }
+.lab-oberbeck-rotor { transform-origin: 140px 100px; animation-name: lab-oberbeck-turn; }
+.lab-oberbeck-weight { animation-name: lab-weight-drift; }
+.lab-oberbeck-rope { transform-origin: 268px 96px; animation-name: lab-oberbeck-rope; }
+.lab-water-left { transform-origin: 560px 281px; animation-name: lab-water-drift; }
+.lab-water-right { transform-origin: 660px 261px; animation-name: lab-water-drift; animation-direction: reverse; }
+@keyframes lab-weight-drift { 0%, 50%, 100% { transform: translateY(0); } 25% { transform: translateY(16px); } 75% { transform: translateY(-16px); } }
+@keyframes lab-rope-left { 0%, 50%, 100% { transform: scaleY(1); } 25% { transform: scaleY(1.133333); } 75% { transform: scaleY(.866667); } }
+@keyframes lab-rope-right { 0%, 50%, 100% { transform: scaleY(1); } 25% { transform: scaleY(.692308); } 75% { transform: scaleY(1.307692); } }
+@keyframes lab-wheel-drift { 0%, 50%, 100% { transform: rotate(0); } 25% { transform: rotate(-27.8deg); } 75% { transform: rotate(27.8deg); } }
+@keyframes lab-oberbeck-turn { 0%, 50%, 100% { transform: rotate(0); } 25% { transform: rotate(76.4deg); } 75% { transform: rotate(-76.4deg); } }
+@keyframes lab-oberbeck-rope { 0%, 50%, 100% { transform: scaleY(1); } 25% { transform: scaleY(1.296296); } 75% { transform: scaleY(.703704); } }
+@keyframes lab-water-drift { 0%, 50%, 100% { transform: scaleY(1); } 25% { transform: scaleY(1.85); } 75% { transform: scaleY(.15); } }
+/* At contact both balls hang vertically and their edges meet. Motion transfers
+   to the other ball only after contact, then back on the return swing. */
+@keyframes lab-collision-left {
+  0%, 10% { transform: rotate(28deg); animation-timing-function: ease-in; }
+  30% { transform: rotate(0); }
+  70% { transform: rotate(0); animation-timing-function: ease-out; }
+  90%, 100% { transform: rotate(28deg); }
+}
+@keyframes lab-collision-right {
+  0% { transform: rotate(0); }
+  30% { transform: rotate(0); animation-timing-function: ease-out; }
+  50% { transform: rotate(-28deg); animation-timing-function: ease-in; }
+  70%, 100% { transform: rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) { .labs-illustration .lab-motion { animation: none !important; } }
+.a11y-reduced-motion .labs-illustration .lab-motion { animation: none !important; }

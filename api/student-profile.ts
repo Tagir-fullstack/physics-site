@@ -3,8 +3,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { eq } from 'drizzle-orm'
 import { db, schema } from './_lib/db.js'
 import { bodyOf, currentStudent, hash, identityFrom, profileForToken, publicProfile, sameOrigin, setProfileCookie, tokenOf, PROFILE_COOKIE, linkStudentAccount } from './_lib/studentProfile.js'
-import { getClerkUser } from './_lib/auth.js'
-import { findStudentRecovery, redeemStudentRecovery } from './_lib/studentRecovery.js'
+import { getClerkUser, isAdmin } from './_lib/auth.js'
+import { findStudentRecovery, redeemStudentRecovery, issueStudentRecovery } from './_lib/studentRecovery.js'
 import { clementLab } from './_lib/clementLab.js'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
@@ -17,6 +17,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
     if (!sameOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
     const body = await bodyOf(req)
+    if (body.action === 'issueRecovery') {
+      if (!isAdmin(account)) return res.status(403).json({ error: 'Выдавать ссылки восстановления может только администратор.' })
+      if (typeof body.studentId !== 'string' || !/^[a-f0-9-]{36}$/i.test(body.studentId)) return res.status(400).json({ error: 'Выберите профиль студента.' })
+      const [student] = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.id, body.studentId)).limit(1)
+      if (!student) return res.status(404).json({ error: 'Профиль не найден.' })
+      const recovery = await issueStudentRecovery(student.id, account!.userId)
+      return res.status(200).json({ path: `/student/recover?from=clement-desormes#token=${encodeURIComponent(recovery.token)}`, expiresAt: recovery.expiresAt })
+    }
     if (body.action === 'previewRecovery' || body.action === 'redeemRecovery') {
       const recovery = await findStudentRecovery(body.token)
       if (!recovery) return res.status(410).json({ error: 'Ссылка недействительна, уже использована или срок её действия истёк. Попросите преподавателя выдать новую.' })
@@ -32,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (body.action === 'linkAccount') {
       if (!profile || !account || !req.headers.authorization?.startsWith('Bearer ')) return res.status(401).json({ error: 'Сначала войдите в аккаунт и откройте свой профиль студента.' })
+      if (body.profileId && body.profileId !== profile.id) return res.status(409).json({ error: 'Открыт другой профиль. Вернитесь к своему профилю перед привязкой аккаунта.' })
       const linked = await linkStudentAccount(profile.id, account.userId)
       if (!linked) return res.status(409).json({ error: 'Профиль уже связан с другим аккаунтом.' })
       return res.status(200).json({ profile: publicProfile(linked) })
@@ -60,7 +69,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (profile) return res.status(200).json({ profile: publicProfile(profile) })
     const secret = randomBytes(24).toString('base64url')
     const [created] = await db.insert(schema.studentProfiles).values({ ...identity, clerkId: account?.userId ?? null, recoveryHash: hash(secret) }).onConflictDoNothing().returning()
-    if (!created) return res.status(409).json({ error: 'Профиль уже существует. Войдите через ранее связанный аккаунт Google или восстановите его по личному коду. Если код утерян, попросите преподавателя прислать ссылку восстановления. Номер OB-… для входа не подходит.' })
+    if (!created) {
+      const existing = await currentStudent(req, account)
+      if (existing) return res.status(200).json({ profile: publicProfile(existing) })
+      return res.status(409).json({ code: 'STUDENT_RECOVERY_REQUIRED', error: 'Ваш профиль уже сохранён. Войдите в ранее связанный аккаунт Google или восстановите доступ ниже — новый профиль и новый вариант создавать не нужно.' })
+    }
     setProfileCookie(req, res, `${created.id}.${secret}`)
     return res.status(201).json({ profile: publicProfile(created), code: `${created.id}.${secret}` })
   } catch (error) {

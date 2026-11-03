@@ -1,287 +1,136 @@
-import { useMemo } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Mousewheel } from 'swiper/modules';
-import 'swiper/swiper-bundle.css';
-import RandomAtomModel from '../components/RandomAtomModel';
-import { sections } from '../data/topics';
-import '../styles/home.css';
+import { type CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import RandomAtomModel from '../components/RandomAtomModel'
+import StaticDeBroglie from '../components/StaticDeBroglie'
+import StaticRutherford from '../components/StaticRutherford'
+import StaticSchrodinger from '../components/StaticSchrodinger'
+import StaticNucleus from '../components/StaticNucleus'
+import LabIllustration from '../components/LabIllustration'
+import { useShowcase } from '../components/useShowcase'
+import { sections } from '../data/topics'
+import { LABS } from '../data/labs'
+import { useAuth } from '../context/AuthContext'
+import '../styles/home.css'
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 }
-};
+const topicAccents: Record<string, [string, string]> = {
+  '/nuclear/rutherford': ['#ff8c82', '#b83930'],
+  '/nuclear/alpha': ['#f5a623', '#925b00'],
+  '/nuclear/beta': ['#79afea', '#2169b5'],
+  '/nuclear/gamma': ['#bb86e8', '#8042b0'],
+  '/nuclear/halflife': ['#7cbd70', '#38752d'],
+  '/nuclear/interactions': ['#e87998', '#aa315a'],
+  '/nuclear/droplet': ['#65c6ce', '#237780'],
+  '/nuclear/decay': ['#ed9262', '#a4471c'],
+  '/nuclear/chain': ['#f5a623', '#925b00'],
+}
 
-const staggerContainer = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
-};
+function SlideControls({ labels, accents, active, select, duration, playing, cycle, progressLabel }: {
+  labels: string[]; active: number; select: (n: number) => void
+  accents?: [string, string][]
+  duration: number; playing: boolean; cycle: number; progressLabel: string
+}) {
+  const accent = accents?.[active]
+  const style = accent ? {
+    '--home-slide-color': accent[0], '--home-slide-light-color': accent[1],
+  } as CSSProperties : undefined
+  return <div className="home-slide-controls" style={style} role="group" aria-label={progressLabel}>
+    <div className="home-slide-navigation"><div className="home-slide-dots">{labels.map((label, i) => <button type="button" key={label} aria-label={label} aria-current={active === i ? 'true' : undefined} style={accents?.[i] ? { '--home-dot-color': accents[i][0], '--home-dot-light-color': accents[i][1] } as CSSProperties : undefined} onClick={event => { select(i); if (event.detail > 0) event.currentTarget.blur() }}><span aria-hidden="true">{active === i && <i key={active + ':' + cycle} className="home-slide-fill" style={{ animationDuration: duration + 'ms', animationPlayState: playing ? 'running' : 'paused' }} />}</span></button>)}</div>
+    </div>
+  </div>
+}
 
-const particleIcons = {
-  proton: (
-    <svg width="48" height="48" viewBox="0 0 48 48">
-      <circle cx="24" cy="24" r="14" fill="url(#protonGrad)" />
-      <defs>
-        <radialGradient id="protonGrad" cx="40%" cy="35%">
-          <stop offset="0%" stopColor="#fd8a80" />
-          <stop offset="100%" stopColor="#FC6255" />
-        </radialGradient>
-      </defs>
-    </svg>
-  ),
-  neutron: (
-    <svg width="48" height="48" viewBox="0 0 48 48">
-      <circle cx="24" cy="24" r="14" fill="url(#neutronGrad)" />
-      <defs>
-        <radialGradient id="neutronGrad" cx="40%" cy="35%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#d0d0d0" />
-        </radialGradient>
-      </defs>
-    </svg>
-  ),
-  electron: (
-    <svg width="48" height="48" viewBox="0 0 48 48">
-      <circle cx="24" cy="24" r="6" fill="url(#electronGrad)" />
-      <defs>
-        <radialGradient id="electronGrad" cx="40%" cy="35%">
-          <stop offset="0%" stopColor="#a0c4f0" />
-          <stop offset="100%" stopColor="#4a90e2" />
-        </radialGradient>
-      </defs>
-    </svg>
-  ),
-};
+function CourseTopics() {
+  const { t } = useTranslation()
+  const topics = sections[0].topics
+  const slides = useShowcase(topics.length)
+  const titleFor = (topic: typeof topics[number]) => t('topics.' + topic.path.split('/').pop() + '.title', { defaultValue: topic.title })
+  return <section className="home-section home-course" id="course-topics" aria-labelledby="home-topics-title">
+    <div className="home-course-backdrop"><StaticDeBroglie /></div>
+    <div className="home-topic-layout" {...slides.visibility}>
+      <div className="home-topic-deck">
+        <div className="home-topic-image home-crossfade" tabIndex={0} {...slides.interaction}>
+          {topics.map((topic, i) => <img key={topic.path} data-active={i === slides.active} aria-hidden={i !== slides.active} src={topic.image} alt={titleFor(topic)} loading="lazy" decoding="async" />)}
+        </div>
+        <SlideControls accents={topics.map(item => topicAccents[item.path])} progressLabel={t('showcase.topicCounter', { current: slides.active + 1, total: topics.length })} labels={topics.map(titleFor)} {...slides} />
+      </div>
+      <div className="home-crossfade home-topic-copies">
+        {topics.map((topic, i) => <div className="home-topic-copy" key={topic.path} data-active={i === slides.active} aria-hidden={i !== slides.active} inert={i !== slides.active}>
+          <h2 className="home-topic-label" id={i === slides.active ? 'home-topics-title' : undefined}>{t('home.topicsTitle')} {t('home.topicsHighlight')}</h2>
+          <h3>{titleFor(topic)}</h3>
+          <p>{t('topics.' + topic.path.split('/').pop() + '.description', { defaultValue: topic.description })}</p>
+          <Link className="home-cta" to={topic.path}>{t('common.watch')}</Link>
+        </div>)}
+      </div>
+    </div>
+  </section>
+}
+
+function LabShowcase() {
+  const { t } = useTranslation()
+  const slides = useShowcase(LABS.length)
+  return <section className="home-section home-feature home-feature-blue home-labs" aria-labelledby="home-labs-title">
+    <div className="home-labs-backdrop"><StaticRutherford /></div>
+    <div className="home-feature-copy">
+      <span className="home-eyebrow">{t('showcase.experiment')}</span>
+      <h2 id="home-labs-title">{t('showcase.labsTitle')}</h2>
+      <p className="home-feature-description">{t('showcase.labsDescription')}</p>
+      <Link className="home-cta" to="/labs">{t('showcase.chooseLab')}</Link>
+    </div>
+    <div className="home-lab-preview" {...slides.visibility}>
+      <div className="home-lab-art home-crossfade" tabIndex={0} {...slides.interaction}>
+        {LABS.map((lab, i) => <div key={lab.id} data-active={i === slides.active} aria-hidden={i !== slides.active}><LabIllustration id={lab.id} /></div>)}
+      </div>
+      <div className="home-crossfade">
+        {LABS.map((lab, i) => <div key={lab.id} className="home-preview-caption" data-active={i === slides.active} aria-hidden={i !== slides.active} inert={i !== slides.active}><Link to={lab.route}>{t('showcase.labNames.' + lab.id, { defaultValue: lab.title })}</Link><p>{t('showcase.labTopics.' + lab.id, { defaultValue: lab.topic })}</p></div>)}
+      </div>
+      <SlideControls progressLabel={t('showcase.labCounter', { current: slides.active + 1, total: LABS.length })} labels={LABS.map(item => t('showcase.labNames.' + item.id, { defaultValue: item.title }))} {...slides} />
+    </div>
+  </section>
+}
+
+function ResultsPreview() {
+  const { t } = useTranslation()
+  return <div className="home-results-preview">
+    <div className="home-preview-topline"><span>{t('showcase.resultsExample')}</span><span>B062</span></div>
+    <div className="home-result-summary"><strong>24<span> / 30</span></strong><span>{t('showcase.submitted')}</span></div>
+    <div className="home-chart" aria-hidden="true">{[42, 58, 51, 73, 64, 86, 79, 94, 83, 68, 88, 98].map((height, i) => <i key={i} style={{ height: height + '%' }} />)}</div>
+    <div className="home-result-row"><span>{t('showcase.resultsColumns.student')}</span><span>{t('showcase.resultsColumns.score')}</span><span>{t('showcase.resultsColumns.state')}</span></div>
+    {[['01', '84'], ['02', '92'], ['03', '76']].map(([id, score]) => <div className="home-result-row" key={id}><span>{t('showcase.participant')} {id}</span><strong>{score}%</strong><span className="home-result-done">{t('showcase.done')}</span></div>)}
+  </div>
+}
+
+function PlanningPreview() {
+  const { t } = useTranslation()
+  return <div className="home-planning-preview">
+    <div className="home-plan-sheet"><div className="home-preview-topline"><span>PHYSEZ / {t('showcase.ktp')}</span><span>01 — 04</span></div><h3>{t('showcase.planSubject')}</h3><p>{t('showcase.planCaption')}</p><div className="home-plan-table"><div><span>№</span><span>{t('showcase.planTopic')}</span><span>{t('showcase.planHours')}</span></div>{['motion', 'forces', 'energy', 'momentum'].map((key, i) => <div key={key}><span>0{i + 1}</span><span>{t('showcase.planTopics.' + key)}</span><span>2</span></div>)}</div><div className="home-plan-footer"><span>DOCX · {t('showcase.ktp')}</span><span>{t('showcase.planStatus')}</span></div></div>
+    <div className="home-ksp-label">{t('showcase.kspSoon')}</div>
+  </div>
+}
 
 export default function Home() {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const prefersReducedMotion = useReducedMotion();
-
-  const nuclearTopics = sections.find(s => s.title === 'Физика Атомного ядра')?.topics ?? [];
-
-  const particles = useMemo(() => [
-    {
-      key: 'proton',
-      symbol: 'p\u207A',
-      charge: '+1e',
-      mass: '1.6726 \u00D7 10\u207B\u00B2\u2077 kg',
-      color: 'proton',
-      icon: particleIcons.proton,
-    },
-    {
-      key: 'neutron',
-      symbol: 'n\u2070',
-      charge: '0',
-      mass: '1.6749 \u00D7 10\u207B\u00B2\u2077 kg',
-      color: 'neutron',
-      icon: particleIcons.neutron,
-    },
-    {
-      key: 'electron',
-      symbol: 'e\u207B',
-      charge: '\u22121e',
-      mass: '9.1094 \u00D7 10\u207B\u00B3\u00B9 kg',
-      color: 'electron',
-      icon: particleIcons.electron,
-    },
-  ], []);
-
-  return (
-    <motion.main
-      className="home-v3"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* ===== HERO: text on top, atom below — scrolls naturally ===== */}
-      <section className="hero-v3">
-        <div className="hero-v3-text">
-          <motion.div
-            className="hero-v3-eyebrow"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            <span>{t('home.free')}</span>
-          </motion.div>
-
-          <motion.h1
-            className="hero-v3-title"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.7 }}
-          >
-            {t('home.animations')}
-            <span className="hero-v3-title-soft">{t('home.subtitle')}</span>
-          </motion.h1>
-        </div>
-
-        <motion.div
-          className="atom-stage"
-          style={prefersReducedMotion ? { opacity: 0.6 } : undefined}
-          aria-hidden={false}
-        >
-          <div className="atom-stage-inner">
-            <RandomAtomModel />
-          </div>
-        </motion.div>
-
-      </section>
-
-      {/* ===== TOPICS ===== */}
-      <section className="section-v3 topics-v3">
-        <motion.div
-          className="section-v3-head"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="section-v3-title">
-            {t('home.topicsTitle')} <span>{t('home.topicsHighlight')}</span>
-          </h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <Swiper
-            modules={[Navigation, Pagination, Mousewheel]}
-            spaceBetween={30}
-            slidesPerView={1}
-            navigation
-            pagination={{ clickable: true }}
-            mousewheel={{ forceToAxis: true, sensitivity: 1 }}
-            speed={600}
-            cssMode={false}
-            grabCursor
-            className="topics-swiper"
-          >
-            {nuclearTopics.map((topic, index) => {
-              const topicKey = topic.path.split('/').pop() || '';
-              return (
-                <SwiperSlide key={topic.path}>
-                  <div className="topic-slide-card">
-                    <div className="topic-slide-image">
-                      <img
-                        src={topic.image}
-                        alt={t(`topics.${topicKey}.title`)}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="topic-slide-info">
-                      <div className="topic-slide-number">
-                        {String(index + 1).padStart(2, '0')}
-                      </div>
-                      <div className="topic-slide-title">{t(`topics.${topicKey}.title`)}</div>
-                      <p className="topic-slide-desc">{t(`topics.${topicKey}.description`)}</p>
-                      <button
-                        className="topic-slide-btn"
-                        onClick={() => navigate(topic.path)}
-                      >
-                        {t('common.watch')}
-                      </button>
-                    </div>
-                  </div>
-                </SwiperSlide>
-              );
-            })}
-          </Swiper>
-        </motion.div>
-      </section>
-
-      {/* ===== PARTICLES ===== */}
-      <section className="section-v3 particles-v3">
-        <motion.div
-          className="section-v3-head"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="section-v3-title">
-            {t('home.subatomicTitle')} <span>{t('home.subatomicHighlight')}</span>
-          </h2>
-          <p className="section-v3-lead">
-            Три частицы, из которых построена вся материя.
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="particles-grid-v3"
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {particles.map((p) => (
-            <motion.div
-              key={p.key}
-              className={`particle-card-v3 particle-card-v3--${p.color}`}
-              variants={fadeUp}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="particle-card-v3-icon">{p.icon}</div>
-              <div className="particle-card-v3-name">
-                {t(`particles.${p.key}.name`)}{' '}
-                <span className="particle-card-v3-symbol">({p.symbol})</span>
-              </div>
-              <div className="particle-card-v3-props">
-                <div><span>{t('particles.charge')}</span><strong>{p.charge}</strong></div>
-                <div><span>{t('particles.mass')}</span><strong>{p.mass}</strong></div>
-              </div>
-              <p className="particle-card-v3-desc">{t(`particles.${p.key}.desc`)}</p>
-              <p className="particle-card-v3-discovery">{t(`particles.${p.key}.discovery`)}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* ===== ABOUT + DIPLOMA ===== */}
-      <section className="section-v3 about-v3">
-        <motion.div
-          className="about-v3-grid"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="about-v3-text">
-            <h2 className="section-v3-title">
-              {t('home.aboutTitle')} <span>{t('home.aboutHighlight')}</span>
-            </h2>
-            <p>{t('home.aboutText1')}</p>
-            <p>{t('home.aboutText1_2')}</p>
-          </div>
-
-          <div className="about-v3-award" role="figure" aria-label="Диплом III степени Министерства Просвещения РК">
-            <div className="about-v3-award-ribbon" />
-            <div className="about-v3-award-body">
-              <div className="about-v3-award-rank">III</div>
-              <div className="about-v3-award-title">Диплом степени</div>
-              <div className="about-v3-award-issuer">Министерство Просвещения<br />Республики Казахстан</div>
-              <div className="about-v3-award-divider" />
-              <div className="about-v3-award-note">За образовательный вклад в популяризацию физики</div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
-    </motion.main>
-  );
+  const { t, i18n } = useTranslation()
+  const { user } = useAuth()
+  return <main className="home-page" lang={i18n.resolvedLanguage}>
+    <section className="home-section home-hero home-feature" aria-labelledby="home-title">
+      <div className="home-feature-copy"><span className="home-eyebrow">{t('showcase.heroEyebrow')}</span><h1 id="home-title">{t('showcase.heroTitle')}</h1><p className="home-hero-subtitle">{t('showcase.heroDescription')}</p><a className="home-cta" href="#course-topics" onClick={event => {
+        event.preventDefault()
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('a11y-reduced-motion')
+        document.getElementById('course-topics')?.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth', block: 'center' })
+      }}>{t('common.startLearning')}</a></div>
+      <div className="home-atom"><RandomAtomModel /></div>
+    </section>
+    <CourseTopics />
+    <LabShowcase />
+    <section className="home-section home-feature home-feature-green home-results" aria-labelledby="home-results-title">
+      <div className="home-results-backdrop"><StaticSchrodinger /></div>
+      <div className="home-feature-copy"><span className="home-eyebrow">{t('showcase.teacher')}</span><h2 id="home-results-title">{t('showcase.resultsTitle')}</h2><p className="home-feature-description">{t('showcase.resultsDescription')}</p><Link className="home-cta home-pro-cta" to={user ? '/account' : '/register'}>{t('showcase.openAccount')}<span className="home-pro-badge">PRO</span></Link></div>
+      <ResultsPreview />
+    </section>
+    <section className="home-section home-feature home-feature-yellow" aria-labelledby="home-plan-title">
+      <div className="home-feature-copy"><span className="home-eyebrow">{t('showcase.planning')}</span><h2 id="home-plan-title">{t('showcase.planningTitle')}</h2><p className="home-feature-description">{t('showcase.planningDescription')}</p><Link className="home-cta home-pro-cta" to={user ? '/account' : '/register'}><span className="home-pro-badge">PRO</span>{t('showcase.openAccount')}</Link></div>
+      <PlanningPreview />
+    </section>
+    <section className="home-section home-about"><span className="home-about-backdrop" aria-hidden="true"><StaticNucleus /></span><div><span className="home-eyebrow home-about-brand"><span>PHYS</span><span>EZ</span></span><h2>{t('home.aboutTitle')} {t('home.aboutHighlight')}</h2></div><div><p>{t('home.aboutText1')}</p><p>{t('home.aboutText1_2')}</p></div></section>
+  </main>
 }

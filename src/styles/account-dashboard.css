@@ -168,9 +168,27 @@
 .a11y-light-theme .account-dashboard[data-account-theme="simple"] .account-tool-icon { background: #eff3f8; }
 
 @media (max-width: 1050px) {
-  .account-dashboard .account-grid { grid-template-columns: 240px minmax(0, 1fr); }
+  .account-dashboard .account-container { padding-inline: 0; }
+  .account-dashboard-heading { flex-wrap: wrap; }
+  .account-dashboard .account-grid { grid-template-columns: clamp(260px, 28vw, 290px) minmax(0, 1fr); grid-template-rows: auto; }
+  .account-dashboard .account-grid > .account-section { min-width: 0; }
+  .account-page.account-dashboard .account-profile-section { grid-column: 1; grid-row: 1; }
+  .account-dashboard .account-subscription { grid-column: 2; grid-row: 1; }
+  .account-dashboard .account-history-section { grid-column: 2; grid-row: auto; }
+  .account-page.account-dashboard .account-section-danger { grid-column: 1 / -1; grid-row: auto; }
+  .account-dashboard .account-profile-info { grid-template-columns: minmax(0, 1fr); }
+  .account-dashboard .account-profile-info.readonly { grid-template-columns: minmax(0, 1fr); }
+  .account-dashboard .account-profile-info.readonly .account-field { align-items: flex-start; flex-direction: column; gap: .2rem; }
+  .account-dashboard .account-profile-info.readonly .account-value { text-align: left; }
   .account-dashboard .account-access-navigation { grid-template-columns: 1fr; }
-  .account-page.account-dashboard .account-tool-card { min-height: 0; }
+  .account-page.account-dashboard .account-tool-card { min-height: 0; display: grid; grid-template-columns: 37px minmax(0, 1fr); gap: .3rem .7rem; }
+  .account-dashboard .account-tool-top { display: contents; }
+  .account-dashboard .account-tool-icon { grid-column: 1; grid-row: 1 / span 2; }
+  .account-dashboard .account-tool-number { display: none; }
+  .account-page.account-dashboard .account-tool-card h3 { grid-column: 2; margin: 0; }
+  .account-dashboard .account-tool-card p { grid-column: 2; }
+  .account-page.account-dashboard .account-tool-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; margin-top: .5rem; padding-top: .4rem; }
+  .account-dashboard .account-tool-actions a, .account-dashboard .account-tool-actions small { flex: 1 1 140px; }
   .account-dashboard .account-hero-orbit { position: absolute; right: -60px; opacity: .3; }
   .account-dashboard .account-quick-links { grid-template-columns: 1fr; }
 }
@@ -196,33 +214,44 @@
 .account-dashboard .account-student-variant .account-value { color: var(--electron-blue, #4985ca); font-weight: 600; }
 .account-identity-status { grid-column: 1 / -1; color: var(--dash-muted); font-size: .75rem; margin: .5rem 0; }
 
-/* FREE is neutral; colour belongs to the explicitly paid features. */
-.account-page.account-dashboard.account-tier-basic { --dash-accent: 125 125 125; --dash-second: 125 125 125; --dash-third: 125 125 125; --dash-bg: #101010; --dash-surface: #1b1b1b; --dash-border: #373737; --dash-muted: #a5a5a5; }
-.account-page.account-dashboard.account-tier-basic .account-workspace-hero { background: #242424; }
+/* The basic dashboard uses the same neutral surfaces throughout. */
+.account-page.account-dashboard.account-tier-basic { --dash-accent: 125 125 125; --dash-second: 125 125 125; --dash-third: 125 125 125; --dash-bg: #101010; --dash-surface: #1b1b1b; --dash-text: #e5e5e5; --dash-border: #373737; --dash-muted: #a5a5a5; }
+.account-dashboard.account-tier-basic .account-grid { align-items: stretch; }
+.account-dashboard.account-tier-basic .account-access-card { flex: 1; grid-template-rows: auto auto minmax(min-content, 1fr) auto; }
+.account-dashboard.account-tier-basic .account-access-navigation { align-items: stretch; }
+.account-page.account-dashboard.account-tier-basic .account-tool-card,
+.account-page.account-dashboard.account-tier-basic .account-tool-card.account-tool-upsell,
+.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic { background: var(--dash-surface); border-color: var(--dash-border); box-shadow: none; }
+.account-dashboard.account-tier-basic .account-tool-card:hover { transform: none; border-color: #666; }
 .account-page.account-dashboard.account-tier-basic .account-membership-badge,
-.account-page.account-dashboard.account-tier-basic .account-tool-icon { background: #303030; color: #c6c6c6; border-color: #454545; }
-.account-dashboard.account-tier-basic .account-student-variant .account-value { color: var(--dash-text); }
-.account-dashboard.account-tier-basic .account-tool-upsell.teacher { --upsell: 82 139 235; }
-.account-dashboard.account-tier-basic .account-tool-upsell.monitoring { --upsell: 168 117 228; }
-.account-dashboard.account-tier-basic .account-tool-upsell.tests { --upsell: 52 175 151; }
-.account-page.account-dashboard.account-tier-basic .account-tool-card.account-tool-upsell { background: linear-gradient(145deg, rgb(var(--upsell) / .22), rgb(var(--upsell) / .035) 85%), #181b22; border-color: rgb(var(--upsell) / .4); }
-.account-page.account-dashboard.account-tier-basic .account-tool-upsell .account-tool-icon { background: rgb(var(--upsell) / .2); color: rgb(var(--upsell)); }
-.account-page.account-dashboard.account-tier-basic .account-tool-upsell .account-tool-actions small { background: rgb(var(--upsell) / .12); color: #dce6fb; border-color: rgb(var(--upsell) / .5); border-style: solid; }
-.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic { background: linear-gradient(120deg, #193759, #30234e); border-color: #5868a2; }
-.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic h3 { color: #f3f5ff; }
-.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic :is(p, .account-access-eyebrow) { color: #c2d2f1; }
-.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-plan-badge { background: #647ed52b; color: #d9e4ff; border-color: #7d91c9; }
-.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-btn { background: linear-gradient(110deg, #326bce, #7750c3); border-color: #8c9bec; color: #fff; }
-.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-btn:disabled { opacity: .8; }
+.account-page.account-dashboard.account-tier-basic .account-tool-icon,
+.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-plan-badge { background: #303030; color: #c6c6c6; border-color: #454545; }
+.account-page.account-dashboard.account-tier-basic .account-tool-actions small { padding: .5rem; background: #252525; color: #b6b6b6; border: 1px solid #454545; border-radius: 7px; }
+.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic h3,
+.account-page.account-dashboard.account-tier-basic .account-student-variant .account-value { color: var(--dash-text); }
+.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic :is(p, .account-access-eyebrow) { color: var(--dash-muted); }
+.account-page.account-dashboard.account-tier-basic .account-tool-actions a,
+.account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-btn { background: #292929; color: #d0d0d0; border-color: #555; box-shadow: none; }
+.account-dashboard.account-tier-basic .account-theme-choice[aria-pressed="true"] { color: #ddd; border-color: #777; box-shadow: none; }
+.account-page.account-dashboard.account-tier-basic .account-quick-links a > span { background: #303030; color: #b6b6b6; }
 .a11y-light-theme .account-page.account-dashboard.account-tier-basic { --dash-bg: #f4f4f4; --dash-surface: #fff; --dash-text: #282828; --dash-muted: #686868; --dash-border: #d7d7d7; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-workspace-hero { background: #eaeaea; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-workspace-hero :is(h2, p, span, svg) { color: #454545 !important; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-membership-badge { background: #ededed; color: #555 !important; border-color: #d3d3d3; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-card.account-tool-upsell { background: linear-gradient(145deg, rgb(var(--upsell) / .16), rgb(var(--upsell) / .035) 85%), #fff; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-upsell .account-tool-icon { background: rgb(var(--upsell) / .15); color: rgb(var(--upsell)) !important; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-upsell .account-tool-actions small { background: rgb(var(--upsell) / .1); color: #34435e !important; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic { background: linear-gradient(120deg, #e5efff, #f0e6ff); border-color: #b2bfe5; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic h3 { color: #293f80 !important; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic :is(p, .account-access-eyebrow) { color: #4b5b80 !important; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-plan-badge { color: #344c8b; }
-.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-btn { color: #fff !important; }
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-membership-badge,
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-icon,
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-plan-badge,
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-quick-links a > span { background: #ededed; color: #666 !important; border-color: #d3d3d3; }
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-actions small { background: #f4f4f4; color: #686868 !important; border-color: #ddd; }
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic h3 { color: #282828 !important; }
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic :is(p, .account-access-eyebrow) { color: #686868 !important; }
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-actions a,
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-tool-actions a span,
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .account-pro-preview.basic .account-btn { background: #f0f0f0; border-color: #c9c9c9; color: #454545 !important; }
+.a11y-light-theme .account-dashboard.account-tier-basic .account-theme-choice[aria-pressed="true"] { color: #454545; border-color: #999; }
+.account-page.account-dashboard.account-tier-basic .education-account a,
+.a11y-light-theme .account-page.account-dashboard.account-tier-basic .education-account a { color: var(--dash-text) !important; }
+.education-account { margin-bottom: 20px; }
+.education-account p { color: #a6aab2; line-height: 1.5; }
+.education-account a { color: #79afea; }
+.education-account-action { display: inline-block; margin-top: 8px; }
+.account-review-link { margin: 0 0 18px; color: #79afea; }
+.a11y-light-theme .education-account p { color: #566172; }
+.a11y-light-theme .education-account a { color: #2169b5 !important; }

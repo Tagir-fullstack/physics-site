@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import { useApiClient } from '../lib/apiClient';
 import AccountStudentIdentity, { type ProfileIdentity } from '../components/AccountStudentIdentity';
 import { studentRequest, useStudentProfile } from '../lib/studentProfile';
 import '../styles/account-dashboard.css';
+import EducationAccount from '../components/EducationAccount';
 
 const ACCOUNT_THEMES = [
   { id: 'simple', name: 'Простая' },
@@ -563,6 +564,8 @@ export default function Account() {
           </div>
         )}
 
+        <EducationAccount userId={user.id} />
+        {(accountAccess?.role === 'owner' || accountAccess?.role === 'admin') && <Link className="education-account-action account-review-link" to="/admin/teacher-reviews">Заявки преподавателей →</Link>}
         <div className="account-grid">
           {/* Profile Section - Top Left */}
           <section className="account-section account-profile-section">

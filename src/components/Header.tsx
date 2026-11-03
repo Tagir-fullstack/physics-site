@@ -175,6 +175,7 @@ export default function Header() {
           }}>
           <Link to="/" className="logo"
             onClick={(e) => {
+              if (e.detail > 0) e.currentTarget.blur();
               if (isQuizActive) {
                 e.preventDefault();
                 return;
@@ -211,7 +212,7 @@ export default function Header() {
                 <div className={`nav-flyout${activeMenuPanel === 'nuclear' ? ' open' : ''}`}>
                   {visibleSections.map((section) => (
                     <div key={section.title} className="nav-item">
-                      <span className="nav-title">{section.title}</span>
+                      <button type="button" className="nav-title nav-title-link" onClick={() => handleLinkClick('/animations')}><span>{section.title}</span></button>
                       <div className="dropdown">
                         {section.topics.map((topic) => (
                           <button
@@ -243,13 +244,12 @@ export default function Header() {
                 </button>
                 <div className={`nav-flyout nav-flyout--labs${activeMenuPanel === 'labs' ? ' open' : ''}`}>
                   <div className="nav-item">
-                    <span className="nav-title">Лабораторные работы</span>
+                    <button type="button" className="nav-title nav-title-link" onClick={() => handleLinkClick('/labs')}><span>Лабораторные работы</span></button>
                     <div className="dropdown">
-                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs')}><span className="nav-lab-number">↗</span><span>Все лабораторные</span></button>
-                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/atwood')}><span className="nav-lab-number">01</span><span>Машина Атвуда</span></button>
-                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/ball-collision')}><span className="nav-lab-number">02</span><span>Столкновение шаров</span></button>
-                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/oberbeck')}><span className="nav-lab-number">03</span><span>Маятник Обербека</span></button>
-                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/clement-desormes')}><span className="nav-lab-number">05</span><span>Метод Клемана—Дезорма</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/atwood')}><span>Машина Атвуда</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/ball-collision')}><span>Столкновение шаров</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/oberbeck')}><span>Маятник Обербека</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/clement-desormes')}><span>Метод Клемана—Дезорма</span></button>
                     </div>
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export default function Header() {
 
               <div className="nav-section">
                 <button
-                  className={`nav-section-trigger${activeMenuPanel === 'assessments' ? ' active' : ''}`}
+                  className={`nav-section-trigger nav-section-trigger--assessments${activeMenuPanel === 'assessments' ? ' active' : ''}`}
                   type="button"
                   aria-expanded={activeMenuPanel === 'assessments'}
                   onPointerEnter={(event) => { if (event.pointerType === 'mouse' && window.matchMedia('(hover: hover)').matches) setActiveMenuPanel('assessments'); }}
@@ -265,12 +265,11 @@ export default function Header() {
                 >
                   <span>Контрольные срезы</span><span aria-hidden="true">‹</span>
                 </button>
-                <div className={`nav-flyout${activeMenuPanel === 'assessments' ? ' open' : ''}`}>
+                <div className={`nav-flyout nav-flyout--assessments${activeMenuPanel === 'assessments' ? ' open' : ''}`}>
                   <div className="nav-item">
-                    <span className="nav-title">Контрольные работы</span>
+                    <button type="button" className="nav-title nav-title-link" onClick={() => handleLinkClick('/assessment')}><span>Контрольные работы</span></button>
                     <div className="dropdown">
                       {ASSESSMENT_CATALOG.map((assessment, index) => <button key={assessment.id} type="button" className="dropdown-item nav-lab-item" onClick={() => handleLinkClick(assessment.route)}><span className="nav-lab-number">{String(index + 1).padStart(2, '0')}</span><span>{assessment.name}</span></button>)}
-                      <button type="button" className="dropdown-item" onClick={() => handleLinkClick('/assessment')}>Все контрольные срезы →</button>
                     </div>
                   </div>
                 </div>

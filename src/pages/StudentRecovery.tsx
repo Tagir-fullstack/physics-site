@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/clerk-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useApiClient } from '../lib/apiClient'
 import { studentRequest, type StudentProfile } from '../lib/studentProfile'
+import GoogleRegistration from '../components/auth/GoogleRegistration'
 import '../styles/atwood.css'
 import '../styles/student-profile.css'
 
@@ -13,8 +14,10 @@ export default function StudentRecovery() {
   const location = useLocation()
   const navigate = useNavigate()
   const token = new URLSearchParams(location.hash.slice(1)).get('token') ?? ''
+  const returnTo = new URLSearchParams(location.search).get('from') === 'clement-desormes' ? '/labs/clement-desormes' : '/labs/oberbeck'
   const [lookup, setLookup] = useState<{ token: string; accountId: string | null; preview: Preview | null; error: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [restored, setRestored] = useState<StudentProfile | null>(null)
   const [actionError, setActionError] = useState<{ token: string; message: string } | null>(null)
   const loading = !isLoaded || lookup?.token !== token || lookup?.accountId !== (userId ?? null)
   const preview = loading ? null : lookup?.preview ?? null
@@ -29,10 +32,17 @@ export default function StudentRecovery() {
     if (!preview || busy) return
     setBusy(true); setActionError(null)
     try {
-      await studentRequest('/api/student-profile', { action: 'redeemRecovery', token }, authFetch)
-      navigate('/labs/oberbeck', { replace: true })
+      const result = await studentRequest<{ profile: StudentProfile }>('/api/student-profile', { action: 'redeemRecovery', token }, authFetch)
+      setRestored(result.profile); setBusy(false)
     } catch (reason) { setActionError({ token, message: reason instanceof Error ? reason.message : 'Не удалось восстановить доступ.' }); setBusy(false) }
   }
+  if (restored) return <main className="student-page"><section className="student-panel student-recovery-panel">
+    <h1>Доступ восстановлен</h1><p>{restored.lastName} {restored.firstName} · {restored.group}. Ваш вариант сохранён.</p>
+    <GoogleRegistration profile={restored} onLinked={setRestored} />
+    <p>Свяжите профиль с Google сейчас, чтобы на другом устройстве входить в тот же аккаунт без повторного восстановления.</p>
+    <Link to={`/student/profile?from=${returnTo.split('/').pop()}`}>Открыть профиль и сохранить личный код →</Link>
+    <button type="button" className="atwood-primary" onClick={() => navigate(returnTo, { replace: true })}>Продолжить лабораторную</button>
+  </section></main>
   return <main className="student-page"><meta name="referrer" content="no-referrer"/><section className="student-panel student-recovery-panel">
     <span className="atwood-eyebrow">PHYSEZ · ДОСТУП К ЛАБОРАТОРНОЙ</span><h1>Восстановление доступа</h1>
     {!isLoaded || loading ? <p role="status">Проверяем личную ссылку…</p> : <>

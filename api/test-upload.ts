@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { canTeach } from './_lib/education.js'
 import busboy from 'busboy'
 import { eq } from 'drizzle-orm'
 import { db, hasDatabaseConfig, schema } from './_lib/db.js'
@@ -45,6 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await getClerkUser(req)
   if (!user) return res.status(401).json({ error: 'Войдите в аккаунт преподавателя.' })
   if (!hasPremiumAccess(user)) return res.status(403).json({ error: 'Загрузка тестов доступна только с PRO.' })
+  if (!await canTeach(user)) return res.status(403).json({ error: 'Дождитесь подтверждения преподавателя администратором.' })
 
   try {
     const file = await uploadedFile(req)

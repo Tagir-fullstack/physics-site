@@ -704,6 +704,16 @@ html.a11y-font-xlarge .header .burger span {
   border-left-color: #4a90e2 !important;
 }
 
+.a11y-light-theme .nav-section-trigger--assessments:hover,
+.a11y-light-theme .nav-section-trigger--assessments.active,
+.a11y-light-theme .nav-flyout--assessments .dropdown-item:hover,
+.a11y-light-theme .nav-flyout--assessments .dropdown-item:active {
+  background-color: rgba(245, 166, 35, .1) !important;
+  border-left-color: #f5a623 !important;
+}
+.a11y-light-theme .nav-section-trigger--assessments > span:last-child,
+.a11y-light-theme .nav-flyout--assessments .nav-title { color: #9a6200 !important; }
+
 .a11y-light-theme .nav-new-badge {
   color: #245b9b !important;
   background-color: #eaf3ff !important;

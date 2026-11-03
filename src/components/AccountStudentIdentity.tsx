@@ -13,7 +13,6 @@ type Props = {
 
 export default function AccountStudentIdentity({ editing, value, onChange, variantNumber, loading, error, onRetry }: Props) {
   const groups = [...ASSESSMENT_GROUPS] as string[];
-  if (value.group && !groups.includes(value.group)) groups.push(value.group);
   return <>
     {(['lastName', 'firstName', 'group'] as const).map(key => <div className="account-field" key={key}>
       <label className="account-label" htmlFor={editing ? `account-${key}` : undefined}>{key === 'lastName' ? 'Фамилия' : key === 'firstName' ? 'Имя' : 'ОП / группа'}</label>

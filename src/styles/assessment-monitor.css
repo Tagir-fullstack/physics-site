@@ -334,3 +334,5 @@
   .monitor-search { flex: 1 1 100%; min-width: 0; }
   .monitor-table-tools { flex: 1 1 100%; }
 }
+.teacher-review { padding:24px 0; border-bottom:1px solid var(--monitor-line,#343434); display:grid; gap:12px; }
+.teacher-review input { display:block; width:100%; box-sizing:border-box; margin-top:8px; padding:10px; border:1px solid #555; border-radius:8px; background:transparent; color:inherit; font:inherit; }

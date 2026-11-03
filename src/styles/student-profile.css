@@ -64,3 +64,5 @@
 }
 
 .a11y-light-theme .student-page .student-recovery summary { color: #2169b5; }
+.student-identity-form select { width:100%; box-sizing:border-box; padding:.65rem .75rem; border:1px solid #444; border-radius:6px; background:#202020; color:#eee; font:inherit; }
+.a11y-light-theme .student-identity-form select { background:#fafafa; color:#222; border-color:#cfd4da; }

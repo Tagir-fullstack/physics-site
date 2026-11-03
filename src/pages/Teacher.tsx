@@ -104,10 +104,10 @@ export default function Teacher() {
           <div style={{ backgroundColor: cardBg, border: cardBorder, borderRadius: 16, padding: '2rem 1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🛠</div>
             <h2 style={{ color: textPrimary, marginTop: 0, marginBottom: '0.75rem', fontSize: '1.3rem' }}>
-              Классы, расписание, СОР/СОЧ — в разработке
+              От класса к результатам
             </h2>
             <p style={{ color: textMuted, marginTop: 0, marginBottom: '1rem', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              КТП уже доступно. Скоро — классы, расписание, СОР/СОЧ и авто-генерация конспектов.
+              Создавайте классы, назначайте тесты и следите за результатами. Студенты могут выбрать вас при регистрации или присоединиться по коду класса.
             </p>
             <p style={{ color: textMuted, marginTop: 0, marginBottom: 0, fontSize: '0.85rem' }}>
               Следите за обновлениями в <Link to="/changelog" style={{ color: '#4a90e2' }}>changelog</Link>.

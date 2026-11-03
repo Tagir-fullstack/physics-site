@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { useEffect, lazy, Suspense, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
+import LabAccessGate from './components/LabAccessGate';
 import LoadingScreen from './components/LoadingScreen';
 import CookieNotice from './components/CookieNotice';
 
@@ -36,6 +37,10 @@ import './styles/auth.css';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
+const Register = lazy(() => import('./pages/Register'));
+const EducationSetup = lazy(() => import('./pages/EducationSetup'));
+const TeacherReviews = lazy(() => import('./pages/TeacherReviews'));
+const Animations = lazy(() => import('./pages/Animations'));
 const GoogleAuthCallback = lazy(() => import('./pages/GoogleAuth').then(m => ({ default: m.GoogleAuthCallback })));
 const GoogleAuthRequirements = lazy(() => import('./pages/GoogleAuth').then(m => ({ default: m.GoogleAuthRequirements })));
 const StudentProfile = lazy(() => import('./pages/StudentProfile'));
@@ -120,11 +125,17 @@ function App() {
           minHeight: '100vh'
         }}>
           <Header />
-          <div style={{ flex: 1 }}>
+          <div className="site-page-content" style={{ flex: 1 }}>
             <Suspense fallback={<PageLoadingFallback />}>
               <AnimatePresence mode="wait">
                 <Routes>
                   <Route path="/" element={<Home />} />
+                  <Route path="/register/*" element={<Register />} />
+                  <Route path="/education" element={<EducationSetup />} />
+                  <Route path="/admin/teacher-reviews" element={<TeacherReviews />} />
+                  <Route path="/sign-in/*" element={<Register />} />
+                  <Route path="/student/tests" element={<StudentTests />} />
+                  <Route path="/animations" element={<Animations />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/changelog" element={<Changelog />} />
@@ -136,7 +147,7 @@ function App() {
                   <Route path="/student/recover" element={<StudentRecovery />} />
                   <Route path="/auth/sso-callback" element={<GoogleAuthCallback />} />
                   <Route path="/labs/oberbeck/sign-in/*" element={<GoogleAuthRequirements />} />
-                  <Route path="/labs/oberbeck/sign-up/*" element={<GoogleAuthRequirements signup />} />
+                  <Route path="/labs/oberbeck/sign-up/*" element={<GoogleAuthRequirements />} />
                   <Route path="/teacher" element={<Teacher />} />
                   <Route path="/teacher/ktp" element={<KtpList />} />
                   <Route path="/teacher/ktp/new" element={<KtpNew />} />
@@ -146,13 +157,13 @@ function App() {
                   <Route path="/join/:code" element={<StudentTests />} />
                   <Route path="/student/test/:attemptId" element={<StudentTestRunner />} />
                   <Route path="/thesis" element={<Thesis />} />
-                  <Route path="/labs/atwood" element={<AtwoodMachine />} />
+                  <Route path="/labs/atwood" element={<LabAccessGate><AtwoodMachine /></LabAccessGate>} />
                   <Route path="/labs" element={<Labs />} />
-                  <Route path="/labs/oberbeck" element={<OberbeckEntry />} />
-                  <Route path="/labs/clement-desormes" element={<ClementDesormes />} />
+                  <Route path="/labs/oberbeck" element={<LabAccessGate><OberbeckEntry /></LabAccessGate>} />
+                  <Route path="/labs/clement-desormes" element={<LabAccessGate><ClementDesormes /></LabAccessGate>} />
                   <Route path="/admin/clement-variants" element={<ClementVariants />} />
                   <Route path="/admin/oberbeck-variants" element={<OberbeckVariants />} />
-                  <Route path="/labs/ball-collision" element={<BallCollision />} />
+                  <Route path="/labs/ball-collision" element={<LabAccessGate><BallCollision /></LabAccessGate>} />
                   <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />
                   <Route path="/assessment" element={<AssessmentIndex />} />
                   <Route path="/assessment/midterm" element={<MechanicsAssessment key="midterm" assessment="midterm" />} />

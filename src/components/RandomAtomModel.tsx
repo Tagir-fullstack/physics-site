@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { useMotionPreference } from '../lib/useMotionPreference';
 import '../styles/atom-models.css';
 
 interface AtomModel {
@@ -352,16 +353,16 @@ function BohrModel() {
   );
 }
 
-// Sommerfeld elliptical orbits for n=5: same semi-major axis, b/a grows with ℓ.
-// Ratios adjusted so the focus (where the nucleus sits) stays visibly inside every ellipse —
-// pure b = a*(ℓ+1)/n makes ℓ=0 nearly degenerate (focus on the boundary).
+// Schematic family of ellipses with the nucleus at their common focus.
+// The nearly circular orbit bridges the large focus-offset gap before the circle.
 const sommerfeldA = 130;
 const sommerfeldOrbits = [
-  { a: sommerfeldA, b: sommerfeldA * 0.45, rot: 0, speed: 2.5, color: '#e74c3c' },  // 5s ℓ=0
-  { a: sommerfeldA, b: sommerfeldA * 0.60, rot: 0, speed: 1.8, color: '#f39c12' },  // 5p ℓ=1
-  { a: sommerfeldA, b: sommerfeldA * 0.72, rot: 0, speed: 1.3, color: '#27ae60' },  // 5d ℓ=2
-  { a: sommerfeldA, b: sommerfeldA * 0.85, rot: 0, speed: 0.9, color: '#2980b9' },  // 5f ℓ=3
-  { a: sommerfeldA, b: sommerfeldA * 1.00, rot: 0, speed: 0.6, color: '#9b59b6' },  // 5g ℓ=4
+  { a: sommerfeldA, b: sommerfeldA * 0.45, rot: 0, speed: 2.5, color: '#e74c3c' },
+  { a: sommerfeldA, b: sommerfeldA * 0.60, rot: 0, speed: 1.8, color: '#f39c12' },
+  { a: sommerfeldA, b: sommerfeldA * 0.72, rot: 0, speed: 1.3, color: '#27ae60' },
+  { a: sommerfeldA, b: sommerfeldA * 0.85, rot: 0, speed: 0.9, color: '#2980b9' },
+  { a: sommerfeldA, b: sommerfeldA * 0.965, rot: 0, speed: 0.75, color: '#7567cc' },
+  { a: sommerfeldA, b: sommerfeldA * 1.00, rot: 0, speed: 0.6, color: '#9b59b6' },
 ];
 
 function SommerfeldModel() {
@@ -376,7 +377,7 @@ function SommerfeldModel() {
     const animate = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      setAngles(prev => prev.map((angle, i) => angle + sommerfeldOrbits[i].speed * dt));
+      setAngles(prev => sommerfeldOrbits.map((orbit, i) => (prev[i] ?? i * 1.23) + orbit.speed * dt));
       frameId = requestAnimationFrame(animate);
     };
     frameId = requestAnimationFrame(animate);
@@ -412,8 +413,9 @@ function SommerfeldModel() {
         const c = Math.sqrt(orb.a * orb.a - orb.b * orb.b);
         const rotRad = (orb.rot * Math.PI) / 180;
         // Electron position on ellipse (parametric)
-        const ex = orb.a * Math.cos(angles[i]);
-        const ey = orb.b * Math.sin(angles[i]);
+        const angle = angles[i] ?? i * 1.23;
+        const ex = orb.a * Math.cos(angle);
+        const ey = orb.b * Math.sin(angle);
         // Rotate by orbit angle, then offset by ellipse center
         const rx = ex * Math.cos(rotRad) - ey * Math.sin(rotRad);
         const ry = ex * Math.sin(rotRad) + ey * Math.cos(rotRad);
@@ -554,8 +556,14 @@ const DEFAULT_INTERVAL = 6000;
 
 export default function RandomAtomModel() {
   const { t } = useTranslation();
-  const { hoverPause } = useAccessibility();
-  const [index, setIndex] = useState(0);
+  const { hoverPause, reducedMotion } = useAccessibility();
+  const systemReducedMotion = useMotionPreference();
+  const [index, setIndex] = useState(() => {
+    const preferred = models.findIndex(model => model.id === 'debroglie');
+    if (Math.random() < .5) return preferred;
+    const alternatives = models.map((_, i) => i).filter(i => i !== 0 && i !== preferred);
+    return alternatives[Math.floor(Math.random() * alternatives.length)];
+  });
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [fastSwitch, setFastSwitch] = useState(false);
@@ -565,7 +573,7 @@ export default function RandomAtomModel() {
   const isTouchRef = useRef(false);
   const elapsedRef = useRef(0);
   const lastTimeRef = useRef(0);
-  const isPaused = hoverPause && (paused || hovered);
+  const isPaused = reducedMotion || !!systemReducedMotion || hoverPause && (paused || hovered);
 
   useEffect(() => {
     if (showHoverHint) localStorage.setItem('physez-atom-hover-hint-seen', 'true');

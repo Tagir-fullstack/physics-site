@@ -3,15 +3,16 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { db, schema } from './db.js'
 import { getClerkUser, type ClerkUser } from './auth.js'
+import { isAssessmentGroup, normalizeMonitorGroup } from '../../src/lib/monitorGrading.js'
 export const PROFILE_COOKIE = 'physez_student'
 export const hash = (value: string) => createHash('sha256').update(value).digest('hex')
 export function identityFrom(value: unknown) {
   if (!value || typeof value !== 'object') return null
   const raw = value as Record<string, unknown>
   const clean = (v: unknown) => typeof v === 'string' ? v.normalize('NFKC').trim().replace(/\s+/g, ' ') : ''
-  const lastName = clean(raw.lastName), firstName = clean(raw.firstName), group = clean(raw.group)
+  const lastName = clean(raw.lastName), firstName = clean(raw.firstName), group = normalizeMonitorGroup(clean(raw.group))?.replace('В', 'B') || ''
   const name = /^[\p{L}\p{M} '’.-]+$/u
-  if (![lastName, firstName].every(n => n.length >= 2 && n.length <= 60 && name.test(n)) || !group || group.length > 60 || /[\p{Cc}]/u.test(group)) return null
+  if (![lastName, firstName].every(n => n.length >= 2 && n.length <= 60 && name.test(n)) || !isAssessmentGroup(group)) return null
   return { lastName, firstName, group, identityKey: hash([lastName, firstName, group].map(v => v.toLocaleLowerCase('ru')).join('\0')) }
 }
 export async function bodyOf(req: VercelRequest): Promise<Record<string, unknown>> {

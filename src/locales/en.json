@@ -283,5 +283,70 @@
     },
     "atom": "Atom",
     "year": ""
+  },
+  "showcase": {
+    "topicCounter": "Topic {{current}} of {{total}}",
+    "labCounter": "Experiment {{current}} of {{total}}",
+    "heroEyebrow": "Physics, visualised",
+    "heroTitle": "ANIMATIONS",
+    "heroDescription": "Experiments and tools for learning.",
+    "free": "Free",
+    "explore": "From observation to understanding",
+    "experiment": "Experiment",
+    "labsTitle": "Virtual laboratory",
+    "labsDescription": "Change the conditions, run an experiment and discover patterns. Apparatus, measurements and working with results — right in your browser.",
+    "chooseLab": "Choose an experiment",
+    "labsNote": "Four experiments. Running experiments is free.",
+    "teacher": "For educators",
+    "resultsTitle": "From assignment to results",
+    "resultsDescription": "Create your own tests, organise classes and assign work. Follow progress, review answers and export results.",
+    "openAccount": "Open your account",
+    "resultsNote": "Tests, classes and results tools are available with PRO.",
+    "planning": "Plan your teaching",
+    "planningTitle": "Course and lesson plans",
+    "planningDescription": "Keep your academic year in one place. Upload your course plan, work with topics and hours, and follow the schedule.",
+    "planningNote": "Course plans are in pilot access. The lesson plan builder is coming soon.",
+    "resultsExample": "Example report",
+    "submitted": "assignments submitted",
+    "participant": "Student",
+    "done": "Submitted",
+    "ktp": "Course plan",
+    "planSubject": "Physics",
+    "planCaption": "Course plan · example",
+    "planTopic": "Topic",
+    "planHours": "Hours",
+    "planStatus": "Topics and schedule",
+    "kspSoon": "Lesson plans · coming soon",
+    "aboutLink": "About the platform",
+    "previous": "Previous card",
+    "next": "Next card",
+    "play": "Resume automatic switching",
+    "pause": "Pause automatic switching",
+    "libraryTitle": "Physics animations",
+    "libraryDescription": "From the structure of the atom to chain reactions. Choose a topic, watch an animation and check your understanding.",
+    "allAnimations": "All animations",
+    "resultsColumns": {
+      "student": "Student",
+      "score": "Result",
+      "state": "Status"
+    },
+    "planTopics": {
+      "motion": "Motion",
+      "forces": "Forces",
+      "energy": "Energy",
+      "momentum": "Momentum"
+    },
+    "labNames": {
+      "atwood": "Atwood machine",
+      "ball-collision": "Ball collision",
+      "oberbeck": "Oberbeck pendulum",
+      "clement-desormes": "Clément–Desormes method"
+    },
+    "labTopics": {
+      "atwood": "Motion and forces",
+      "ball-collision": "Momentum and energy",
+      "oberbeck": "Rotational motion",
+      "clement-desormes": "Thermodynamics"
+    }
   }
 }

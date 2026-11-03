@@ -1,7 +1,8 @@
 :root {
+  --site-background-dot: #ffffff0c;
   --bg-primary: #0a0a0a;
   --bg-secondary: #111111;
-  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card: #111111;
   --text-primary: #ffffff;
   --text-secondary: #cccccc;
   --text-muted: #888888;
@@ -10,6 +11,16 @@
   --neutron-white: #ffffff;
   --glow-red: rgba(252, 98, 85, 0.4);
   --glow-blue: rgba(74, 144, 226, 0.4);
+}
+
+/* Shared page texture; cards, inputs and experiment scenes keep their surfaces. */
+.a11y-light-theme { --site-background-dot: #20334314; }
+#root .site-page-content,
+#root .site-page-content > :first-child,
+#root .site-page-content main {
+  background-image: radial-gradient(circle, var(--site-background-dot) .8px, transparent 1px) !important;
+  background-size: 24px 24px !important;
+  background-position: 0 0 !important;
 }
 
 @font-face {

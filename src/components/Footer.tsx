@@ -16,7 +16,7 @@ export default function Footer() {
   }
 
   return (
-    <footer style={{
+    <footer className="site-footer" style={{
       backgroundColor: '#0a0a0a',
       color: '#cccccc',
       borderTop: '1px solid #222',
@@ -72,7 +72,7 @@ export default function Footer() {
               lineHeight: '1.8',
               color: '#888'
             }}>
-              <p>Email: tgr.aimurza@gmail.com</p>
+              <p><span className="footer-email-label">Email: </span>tgr.aimurza@gmail.com</p>
             </div>
           </div>
 

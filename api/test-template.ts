@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { canTeach } from './_lib/education.js'
 import { getClerkUser, hasPremiumAccess } from './_lib/auth.js'
 import { createTestTemplate } from './_lib/testWorkbook.js'
 
@@ -7,6 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await getClerkUser(req)
   if (!user) return res.status(401).json({ error: 'Войдите в аккаунт преподавателя.' })
   if (!hasPremiumAccess(user)) return res.status(403).json({ error: 'Шаблоны тестов доступны преподавателям с PRO.' })
+  if (!await canTeach(user)) return res.status(403).json({ error: 'Дождитесь подтверждения преподавателя администратором.' })
   const file = await createTestTemplate()
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   res.setHeader('Content-Disposition', 'attachment; filename="physez-test-template.xlsx"')

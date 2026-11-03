@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/test-platform.css';
+import { useApiClient } from '../lib/apiClient';
 
 const storageKey = 'physez-student-token';
 type Question = { id: string; orderNo: number; kind: string; prompt: string; points: number; config: { options?: string[]; unit?: string } };
@@ -8,20 +9,22 @@ type AttemptPayload = { attempt: { id: string; variantCode: string; expiresAt: s
 
 export default function StudentTestRunner() {
   const { attemptId = '' } = useParams(); const navigate = useNavigate();
+  const { authFetch } = useApiClient();
+  const transport = sessionStorage.getItem(`physez-attempt-auth-${attemptId}`) === 'account' ? authFetch : fetch;
   const [payload] = useState<AttemptPayload | null>(() => { try { return JSON.parse(sessionStorage.getItem(`physez-attempt-${attemptId}`) || 'null') as AttemptPayload | null; } catch { return null; } });
   const [answers, setAnswers] = useState<Record<string, string | string[] | number>>(payload?.attempt.answers || {}); const [error, setError] = useState(''); const [result, setResult] = useState<{ score: number; maxScore: number } | null>(null); const [now, setNow] = useState(0);
   const token = localStorage.getItem(storageKey) || '';
   useEffect(() => { const update = () => setNow(Date.now()); const first = window.setTimeout(update, 0); const timer = window.setInterval(update, 1000); return () => { window.clearTimeout(first); window.clearInterval(timer); }; }, []);
   useEffect(() => { if (!payload) navigate('/'); }, [payload, navigate]);
   useEffect(() => {
-    if (!payload) return; const timer = window.setTimeout(() => { void fetch('/api/student-platform', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Student-Token': token }, body: JSON.stringify({ action: 'progress', attemptId, answers }) }); }, 700);
+    if (!payload) return; const timer = window.setTimeout(() => { void transport('/api/student-platform', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Student-Token': token }, body: JSON.stringify({ action: 'progress', attemptId, answers }) }); }, 700);
     return () => window.clearTimeout(timer);
-  }, [answers, attemptId, payload, token]);
+  }, [answers, attemptId, payload, token, transport]);
   const remaining = useMemo(() => payload && now ? Math.max(0, Math.ceil((new Date(payload.attempt.expiresAt).getTime() - now) / 1000)) : null, [payload, now]);
   if (!payload) return null;
   const setAnswer = (id: string, value: string | string[]) => setAnswers((current) => ({ ...current, [id]: value }));
   const submit = async () => {
-    const response = await fetch('/api/student-platform', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Student-Token': token }, body: JSON.stringify({ action: 'submit', attemptId, answers }) });
+    const response = await transport('/api/student-platform', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Student-Token': token }, body: JSON.stringify({ action: 'submit', attemptId, answers }) });
     const data = await response.json() as { score?: number; maxScore?: number; error?: string };
     if (!response.ok || data.score === undefined || data.maxScore === undefined) return setError(data.error || 'Не удалось сдать работу.');
     setResult({ score: data.score, maxScore: data.maxScore }); sessionStorage.removeItem(`physez-attempt-${attemptId}`);

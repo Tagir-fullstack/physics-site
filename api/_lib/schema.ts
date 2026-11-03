@@ -373,6 +373,26 @@ export const classStudents = pgTable(
   })
 )
 
+export const educationProfiles = pgTable('education_profiles', {
+  userId: varchar('user_id', { length: 128 }).primaryKey(),
+  role: varchar('role', { length: 16 }).notNull(),
+  universityId: varchar('university_id', { length: 80 }).notNull(),
+  institution: varchar('institution', { length: 255 }).notNull(),
+  displayName: varchar('display_name', { length: 200 }).notNull(),
+  firstName: varchar('first_name', { length: 60 }).notNull(),
+  lastName: varchar('last_name', { length: 60 }).notNull(),
+  groupName: varchar('group_name', { length: 60 }),
+  teacherStatus: varchar('teacher_status', { length: 16 }).notNull().default('pending'),
+  department: varchar('department', { length: 160 }),
+  verificationNote: varchar('verification_note', { length: 500 }),
+  reviewedBy: varchar('reviewed_by', { length: 128 }),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  defaultClassId: uuid('default_class_id').references(() => teacherClasses.id, { onDelete: 'set null' }),
+  teacherUserId: varchar('teacher_user_id', { length: 128 }),
+  classStudentId: uuid('class_student_id').references(() => classStudents.id, { onDelete: 'set null' }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('education_directory_idx').on(t.universityId, t.role), check('education_role_check', sql`${t.role} in ('student','teacher')`)])
+
 export const teacherTests = pgTable(
   'teacher_tests',
   {

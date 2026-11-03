@@ -6,7 +6,6 @@ import { Analytics } from '@vercel/analytics/react'
 import './i18n'
 import './index.css'
 import App from './App.tsx'
-import PasswordConfirmation from './components/auth/PasswordConfirmation'
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -18,7 +17,16 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ClerkProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
-      localization={{ ...ruRU, socialButtonsBlockButton: 'Продолжить с {{provider|titleize}}' }}
+      signUpUrl="/register"
+      signInUrl="/sign-in"
+      signInFallbackRedirectUrl="/account"
+      signUpFallbackRedirectUrl="/account"
+      localization={{
+        ...ruRU,
+        socialButtonsBlockButton: 'Продолжить с {{provider|titleize}}',
+        signIn: { ...ruRU.signIn, start: { ...ruRU.signIn?.start, title: 'С возвращением', titleCombined: 'С возвращением', subtitle: 'Войдите, чтобы продолжить обучение.' } },
+        signUp: { ...ruRU.signUp, start: { ...ruRU.signUp?.start, title: 'Создайте аккаунт', titleCombined: 'Создайте аккаунт', subtitle: 'Сохраняйте задания и результаты в Physez.', subtitleCombined: 'Сохраняйте задания и результаты в Physez.' } },
+      }}
       appearance={{
         variables: {
           colorPrimary: '#FC6255',
@@ -62,7 +70,6 @@ createRoot(document.getElementById('root')!).render(
       }}
     >
       <App />
-      <PasswordConfirmation />
       <Analytics />
     </ClerkProvider>
   </StrictMode>,

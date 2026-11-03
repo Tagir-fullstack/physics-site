@@ -1,4 +1,5 @@
-import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
+import { Link } from 'react-router-dom';
 import UserMenu from './UserMenu';
 
 interface AuthButtonProps {
@@ -50,9 +51,7 @@ export default function AuthButton({
         </div>
       </SignedIn>
       <SignedOut>
-        <SignInButton mode="modal">
-          <button className="auth-login-btn">Войти</button>
-        </SignInButton>
+        <Link className="auth-login-btn" to="/sign-in">Войти</Link>
       </SignedOut>
     </>
   );
