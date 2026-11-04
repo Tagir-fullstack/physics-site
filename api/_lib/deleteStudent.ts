@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { eq } from 'drizzle-orm'
 import { db, databaseSql as sql, schema } from './db.js'
 import { deleteStudentLogin, isAdmin, type ClerkUser } from './auth.js'
+import { isAccountRevoked, revokeAccount } from './accountRevocation.js'
 import { sameOrigin } from './studentProfile.js'
 
 export async function deleteStudent(req: VercelRequest, res: VercelResponse, account: ClerkUser | null, body: Record<string, unknown>) {
@@ -20,7 +21,7 @@ export async function deleteStudent(req: VercelRequest, res: VercelResponse, acc
     const [billing] = await sql`select exists(select 1 from billing_orders where user_id=${userId} and status in ('created','pending','dispatching','unknown','requires_action')) as busy`
     if (billing.busy) return res.status(409).json({ error: 'Сначала дождитесь завершения текущего платежа студента.' })
     // Disable renewal before removing the login. A retry also handles an already deleted Clerk user.
-    try { await deleteStudentLogin(userId, () => sql`update billing_subscriptions set auto_renew=false, card_cipher=null, cancel_version=cancel_version+1 where user_id=${userId}`) }
+    try { await deleteStudentLogin(userId, () => sql`update billing_subscriptions set auto_renew=false, card_cipher=null, cancel_version=cancel_version+1 where user_id=${userId}`, await isAccountRevoked(userId)); await revokeAccount(userId) }
     catch { return res.status(503).json({ error: 'Не удалось удалить связанный аккаунт входа. Профиль сохранён; повторите позже. Защищённые аккаунты здесь не удаляются.' }) }
   }
   // Exact account keys only: never infer ownership from a matching surname or group.

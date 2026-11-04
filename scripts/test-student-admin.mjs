@@ -55,6 +55,7 @@ try {
  create table billing_subscriptions(user_id text primary key,auto_renew boolean default true,card_cipher text,cancel_version int default 0);
  create table billing_orders(user_id text references billing_subscriptions(user_id),status text);
  `)
+ await psql(await readFile('scripts/sql/account-revocation.sql','utf8'))
  await psql(await readFile('scripts/sql/education-profiles.sql','utf8'))
  await psql(await readFile('scripts/sql/teacher-verification.sql','utf8'))
  const add=async(id)=> (await psql(`insert into student_profiles(clerk_id,last_name,first_name,student_group,identity_key,recovery_hash) values(${literal(id)},'Тестовый','Студент','B062',${literal('key-'+id)},repeat('0',64)) returning id`)).trim()
@@ -79,7 +80,7 @@ try {
  assert.equal((await call(student,'admin',deletion)).status,409)
  await psql(`update billing_orders set status='paid' where user_id='studentA'`)
  const removed=await call(student,'admin',deletion)
- assert.equal(removed.status,200,JSON.stringify(removed.payload));assert.deepEqual(removedLogins,['studentA'])
+ assert.equal(removed.status,200,JSON.stringify(removed.payload));assert.deepEqual(removedLogins,['studentA']);assert.equal((await psql("select count(*) from revoked_clerk_accounts where user_id='studentA'")).trim(),'1')
  for(const table of ['oberbeck_variants','student_recovery_links','comments','billing_orders','billing_subscriptions','education_profiles'])assert.equal((await psql(`select count(*) from ${table}`)).trim(),'0',table+' cleaned')
  for(const table of ['class_students','assessment_attempts','assessment_participants','teacher_test_attempts'])assert.equal((await psql(`select count(*) from ${table}`)).trim(),'1',table+' unrelated student remains')
  assert.equal((await psql(`select count(*) from student_profiles where id='${b}'`)).trim(),'1')

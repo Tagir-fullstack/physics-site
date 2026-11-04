@@ -2,6 +2,7 @@ import './env.js'
 import { createPublicKey } from 'node:crypto'
 import { createClerkClient, verifyToken } from '@clerk/backend'
 import type { VercelRequest } from '@vercel/node'
+import { isAccountRevoked } from './accountRevocation.js'
 import { billingHasPremium } from './billing/store.js'
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY
@@ -117,6 +118,8 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
     return null
   }
 
+  if (await isAccountRevoked(userId)) return null
+
   if (
     adminUserIds.includes(userId) ||
     adminUserIdSuffixes.some((suffix) => userId.endsWith(suffix))
@@ -136,7 +139,7 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
       accessRole: user.publicMetadata.accessRole === 'admin' ? 'admin' : 'user',
     }
   } catch (error) {
-    if (error && typeof error === 'object' && 'status' in error && error.status === 404) return null
+    console.warn('Clerk metadata unavailable for verified session', { status: error && typeof error === 'object' && 'status' in error ? error.status : 'unknown' })
     // A verified session must remain usable if Clerk's user API is temporarily unavailable.
     return { userId, email: '', isPremium: await billingHasPremium(userId) }
   }
@@ -162,12 +165,13 @@ export async function requireAdmin(req: VercelRequest) {
 }
 
 // Resolve the target independently of the caller before destructive student cleanup.
-export async function deleteStudentLogin(userId: string, beforeDelete: () => Promise<unknown>) {
+export async function deleteStudentLogin(userId: string, beforeDelete: () => Promise<unknown>, alreadyRevoked = false) {
   if (isAdmin({ userId, email: '', isPremium: false })) throw Error('Защищённый аккаунт нельзя удалить из списка студентов.')
   if (!clerk) throw Error('Удаление аккаунта недоступно: Clerk не настроен.')
+  if (CLERK_PUBLISHABLE_KEY?.startsWith('pk_live_') !== CLERK_SECRET_KEY?.startsWith('sk_live_') && CLERK_PUBLISHABLE_KEY) throw Error('Ключи Clerk относятся к разным окружениям.')
   let target
   try { target = await clerk.users.getUser(userId) }
-  catch (e) { if (e && typeof e === 'object' && 'status' in e && e.status === 404) { await beforeDelete(); return }; throw e }
+  catch (e) { if (alreadyRevoked && e && typeof e === 'object' && 'status' in e && e.status === 404) { await beforeDelete(); return }; throw e }
   const emails = target.emailAddresses.map(e => e.emailAddress.toLowerCase())
   if (emails.some(email => isAdmin({ userId, email, isPremium: false })) || target.publicMetadata.accessRole === 'admin' || target.publicMetadata.role === 'admin' || target.publicMetadata.role === 'teacher') throw Error('Защищённый аккаунт нельзя удалить из списка студентов.')
   await beforeDelete()

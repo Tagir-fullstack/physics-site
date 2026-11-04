@@ -95,6 +95,11 @@ export const commentStatusEnum = pgEnum('comment_status', [
   'rejected',
 ])
 
+export const revokedClerkAccounts = pgTable('revoked_clerk_accounts', {
+  userId: varchar('user_id', { length: 128 }).primaryKey(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const studentProfiles = pgTable('student_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
   variantNumber: serial('variant_number').notNull().unique(),
