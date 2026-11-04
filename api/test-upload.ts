@@ -1,3 +1,4 @@
+import { educationOwner } from './_lib/educationOwner.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { canTeach } from './_lib/education.js'
 import busboy from 'busboy'
@@ -43,7 +44,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (!hasDatabaseConfig) return res.status(503).json({ error: 'База данных не подключена.' })
-  const user = await getClerkUser(req)
+  const session = await getClerkUser(req)
+  const user = session ? await educationOwner(session) : null
   if (!user) return res.status(401).json({ error: 'Войдите в аккаунт преподавателя.' })
   if (!hasPremiumAccess(user)) return res.status(403).json({ error: 'Загрузка тестов доступна только с PRO.' })
   if (!await canTeach(user)) return res.status(403).json({ error: 'Дождитесь подтверждения преподавателя администратором.' })

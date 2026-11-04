@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, isNull } from 'drizzle-orm'
 import { db, schema } from './_lib/db.js'
 import { getClerkUser, isAdmin } from './_lib/auth.js'
 import { bodyOf, currentStudent, publicProfile, sameOrigin } from './_lib/studentProfile.js'
@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!row) return res.status(404).json({ error: 'Вариант не найден.' })
         return res.status(200).json({ id: row.variant.id, code: row.variant.code, student: publicProfile(row.student), parameters: row.variant.parameters, expected: expectedOberbeckTables(row.variant.parameters as OberbeckVariant) })
       }
-      const rows = await query.orderBy(desc(schema.oberbeckVariants.createdAt))
+      const rows = await query.where(isNull(schema.studentProfiles.mergedInto)).orderBy(desc(schema.oberbeckVariants.createdAt))
       return res.status(200).json({ variants: rows.map(r => ({ id: r.variant.id, code: r.variant.code, student: publicProfile(r.student), parameters: r.variant.parameters, createdAt: r.variant.createdAt })) })
     }
     const profile = await currentStudent(req)

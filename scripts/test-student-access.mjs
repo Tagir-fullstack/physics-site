@@ -40,7 +40,7 @@ async function call(body, {id,token,method,origin}={}) {
 await psql('create schema '+namespace)
 try {
  await psql(await readFile('scripts/sql/oberbeck-student-variants.sql','utf8'))
- await psql('alter table student_profiles add column clerk_id varchar(64) unique;alter table student_profiles add column variant_number serial unique not null')
+ await psql('alter table student_profiles add column clerk_id varchar(64) unique;alter table student_profiles add column variant_number serial unique not null;alter table student_profiles add column merged_into uuid')
  await psql(await readFile('scripts/sql/student-recovery-links.sql','utf8'))
  const student={lastName:'Тестовый',firstName:'Студент',group:'B062'}
  const created=await call({action:'create',student})

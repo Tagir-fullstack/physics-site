@@ -1,8 +1,9 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, databaseSql, hasDatabaseConfig, schema } from './db.js'
 import { getClerkUser, isAdmin, type ClerkUser } from './auth.js'
+import { educationOwner } from './educationOwner.js'
 import { validateEducation } from '../../src/lib/education.js'
 
 const clean = (v: unknown) => typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, 255) : ''
@@ -15,7 +16,7 @@ async function directory(universityId: string, institution: string) {
     .from(schema.educationProfiles)
     .innerJoin(schema.teacherClasses, and(eq(schema.educationProfiles.defaultClassId, schema.teacherClasses.id), eq(schema.teacherClasses.ownerClerkId, schema.educationProfiles.userId), eq(schema.teacherClasses.archived, false)))
     .where(and(
-      eq(schema.educationProfiles.role, 'teacher'), eq(schema.educationProfiles.teacherStatus, 'approved'), eq(schema.educationProfiles.universityId, universityId),
+      isNull(schema.educationProfiles.mergedIntoUserId), eq(schema.educationProfiles.role, 'teacher'), eq(schema.educationProfiles.teacherStatus, 'approved'), eq(schema.educationProfiles.universityId, universityId),
       universityId === 'other' ? sql`lower(${schema.educationProfiles.institution}) = lower(${institution})` : undefined,
     )).orderBy(schema.educationProfiles.displayName)
 }
@@ -27,7 +28,8 @@ export async function handleEducation(req: VercelRequest, res: VercelResponse) {
       if (!universityId || (universityId === 'other' && institution.length < 3)) return res.status(200).json({ teachers: [] })
       return res.status(200).json({ teachers: await directory(universityId, institution) })
     }
-    const user = await getClerkUser(req)
+    const session = await getClerkUser(req)
+    const user = session ? await educationOwner(session) : null
     if (!user) return res.status(401).json({ error: 'Сначала создайте аккаунт или войдите.' })
     if (req.query.education === 'reviews') {
       if (!isAdmin(user)) return res.status(403).json({ error: 'Подтверждение преподавателей доступно только администратору.' })
@@ -100,6 +102,7 @@ export async function isRegisteredStudent(userId: string) {
 
 export async function canTeach(user: ClerkUser) {
   if (isAdmin(user)) return true
+  user = await educationOwner(user)
   const [profile] = await db.select({ role: schema.educationProfiles.role, status: schema.educationProfiles.teacherStatus }).from(schema.educationProfiles).where(eq(schema.educationProfiles.userId, user.userId)).limit(1)
   return profile?.role === 'teacher' && profile.status === 'approved'
 }

@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { eq } from 'drizzle-orm'
 import { db, schema } from './_lib/db.js'
-import { bodyOf, currentStudent, hash, identityFrom, profileForToken, publicProfile, sameOrigin, setProfileCookie, tokenOf, PROFILE_COOKIE, linkStudentAccount } from './_lib/studentProfile.js'
+import { bodyOf, accountOwnsProfile, currentStudent, hash, identityFrom, profileForToken, publicProfile, sameOrigin, setProfileCookie, tokenOf, PROFILE_COOKIE, linkStudentAccount } from './_lib/studentProfile.js'
 import { getClerkUser, isAdmin } from './_lib/auth.js'
 import { findStudentRecovery, redeemStudentRecovery, issueStudentRecovery } from './_lib/studentRecovery.js'
 import { deleteStudent } from './_lib/deleteStudent.js'
@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (body.action === 'previewRecovery' || body.action === 'redeemRecovery') {
       const recovery = await findStudentRecovery(body.token)
       if (!recovery) return res.status(410).json({ error: 'Ссылка недействительна, уже использована или срок её действия истёк. Попросите преподавателя выдать новую.' })
-      if (account && (recovery.student.clerkId && recovery.student.clerkId !== account.userId || profile?.clerkId === account.userId && profile.id !== recovery.student.id)) return res.status(409).json({ error: 'Сейчас открыт другой аккаунт. Выйдите из него и снова откройте ссылку преподавателя.' })
+      if (account && (recovery.student.clerkId && !await accountOwnsProfile(account.userId,recovery.student.id) || profile && await accountOwnsProfile(account.userId,profile.id) && profile.id !== recovery.student.id)) return res.status(409).json({ error: 'Сейчас открыт другой аккаунт. Выйдите из него и снова откройте ссылку преподавателя.' })
       if (body.action === 'previewRecovery') {
         const [variant] = await db.select({ code: schema.oberbeckVariants.code }).from(schema.oberbeckVariants).where(eq(schema.oberbeckVariants.studentId, recovery.student.id)).limit(1)
         return res.status(200).json({ profile: publicProfile(recovery.student), variantCode: variant?.code ?? null, expiresAt: recovery.link.expiresAt.toISOString() })
@@ -55,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (typeof body.code === 'string' && /^OB-/i.test(body.code.trim())) return res.status(400).json({ error: 'Это номер варианта, а не личный код. Войдите через ранее связанный аккаунт Google или попросите преподавателя прислать ссылку восстановления.' })
       const recovered = await profileForToken(body.code)
       if (!recovered) return res.status(401).json({ error: 'Код восстановления не подходит.' })
-      if (account && (recovered.clerkId && recovered.clerkId !== account.userId || profile?.clerkId === account.userId && profile.id !== recovered.id)) return res.status(409).json({ error: 'Этот профиль относится к другому аккаунту. Выйдите из текущего аккаунта перед восстановлением.' })
+      if (account && (recovered.clerkId && !await accountOwnsProfile(account.userId,recovered.id) || profile && await accountOwnsProfile(account.userId,profile.id) && profile.id !== recovered.id)) return res.status(409).json({ error: 'Этот профиль относится к другому аккаунту. Выйдите из текущего аккаунта перед восстановлением.' })
       setProfileCookie(req, res, body.code as string)
       return res.status(200).json({ profile: publicProfile(recovered) })
     }

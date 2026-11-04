@@ -41,7 +41,8 @@ export async function redeemStudentRecovery(token: unknown, accountId?: string) 
       where id = ${row.link.id}::uuid and token_hash = ${row.link.tokenHash}
         and redeemed_at is null and revoked_at is null and expires_at > now()
         and exists (select 1 from student_profiles where id = ${row.student.id}::uuid
-          and (${accountId ?? null}::text is null or clerk_id is null or clerk_id = ${accountId ?? null}))
+          and (${accountId ?? null}::text is null or clerk_id is null or clerk_id = ${accountId ?? null}
+            or exists(select 1 from student_profiles alias where alias.clerk_id=${accountId ?? null} and alias.merged_into=${row.student.id}::uuid)))
       returning student_id
     ) update student_profiles set recovery_hash = ${newHash}, updated_at = now()
       where id in (select student_id from consumed) returning id`,

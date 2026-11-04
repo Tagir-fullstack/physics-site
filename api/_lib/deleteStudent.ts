@@ -10,6 +10,7 @@ export async function deleteStudent(req: VercelRequest, res: VercelResponse, acc
   if (!sameOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
   if (typeof body.studentId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(body.studentId)) return res.status(400).json({ error: 'Выберите студента.' })
   const [student] = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.id, body.studentId)).limit(1)
+  if (student?.mergedInto) return res.status(409).json({ error: 'Профиль объединён. Откройте его основной вариант.' })
   if (!student) return res.status(404).json({ error: 'Профиль уже удалён или не найден.' })
   if (body.confirmation !== `УДАЛИТЬ ${student.variantNumber}`) return res.status(400).json({ error: 'Введите подтверждение с номером выбранного студента.' })
   const userId = student.clerkId

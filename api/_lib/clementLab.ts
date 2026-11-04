@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, isNull } from 'drizzle-orm'
 import { db, schema } from './db.js'
 import { getClerkUser, isAdmin, type ClerkUser } from './auth.js'
 import { currentStudent, publicProfile } from './studentProfile.js'
@@ -23,7 +23,7 @@ export async function clementLab(req: VercelRequest, res: VercelResponse) {
       const variant = clementVariant(student.variantNumber)
       return res.status(200).json({ student: publicProfile(student), variant, expected: clementExpected(variant) })
     }
-    const students = await db.select({ id: schema.studentProfiles.id, lastName: schema.studentProfiles.lastName, firstName: schema.studentProfiles.firstName, group: schema.studentProfiles.group, variantNumber: schema.studentProfiles.variantNumber }).from(schema.studentProfiles).orderBy(desc(schema.studentProfiles.createdAt))
+    const students = await db.select({ id: schema.studentProfiles.id, lastName: schema.studentProfiles.lastName, firstName: schema.studentProfiles.firstName, group: schema.studentProfiles.group, variantNumber: schema.studentProfiles.variantNumber }).from(schema.studentProfiles).where(isNull(schema.studentProfiles.mergedInto)).orderBy(desc(schema.studentProfiles.createdAt))
     return res.status(200).json({ students })
   }
   if (req.query.view) return res.status(400).json({ error: 'Неизвестный вид данных.' })

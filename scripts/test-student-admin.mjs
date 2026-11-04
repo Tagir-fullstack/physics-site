@@ -58,6 +58,7 @@ try {
  await psql(await readFile('scripts/sql/account-revocation.sql','utf8'))
  await psql(await readFile('scripts/sql/education-profiles.sql','utf8'))
  await psql(await readFile('scripts/sql/teacher-verification.sql','utf8'))
+ await psql(await readFile('scripts/sql/profile-merge.sql','utf8'))
  const add=async(id)=> (await psql(`insert into student_profiles(clerk_id,last_name,first_name,student_group,identity_key,recovery_hash) values(${literal(id)},'Тестовый','Студент','B062',${literal('key-'+id)},repeat('0',64)) returning id`)).trim()
  const a=await add('studentA'),b=await add('studentB'),self=await add('admin'),teacher=await add('staff'),guest=await add(null)
  const number=Number((await psql(`select variant_number from student_profiles where id='${a}'`)).trim())

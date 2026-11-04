@@ -32,21 +32,36 @@ export async function profileForToken(token: unknown) {
   const [id, secret] = token.split('.')
   const [profile] = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.id, id)).limit(1)
   if (!profile || !timingSafeEqual(Buffer.from(profile.recoveryHash, 'hex'), Buffer.from(hash(secret), 'hex'))) return null
-  return profile
+  return canonicalStudent(profile)
 }
 export const tokenOf = (req: VercelRequest) => req.cookies?.[PROFILE_COOKIE]
+export async function canonicalStudent(profile: typeof schema.studentProfiles.$inferSelect) {
+  if (!profile.mergedInto) return profile
+  const [target] = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.id, profile.mergedInto)).limit(1)
+  if (!target || target.mergedInto) throw Error('Invalid student profile merge')
+  return target
+}
+export async function profileForAccount(clerkId: string) {
+  const [profile] = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.clerkId, clerkId)).limit(1)
+  return profile ? canonicalStudent(profile) : null
+}
+export async function accountOwnsProfile(clerkId: string, profileId: string) {
+  return (await profileForAccount(clerkId))?.id === profileId
+}
 export async function currentStudent(req: VercelRequest, account?: ClerkUser | null) {
   const user = account === undefined ? await getClerkUser(req) : account
   if (user) {
-    const [linked] = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.clerkId, user.userId)).limit(1)
+    const linked = await profileForAccount(user.userId)
     if (linked) return linked
   }
   const guest = await profileForToken(tokenOf(req))
-  if (guest?.clerkId && user && guest.clerkId !== user.userId) return null
+  if (guest?.clerkId && user && !await accountOwnsProfile(user.userId,guest.id)) return null
   return guest
 }
 export async function linkStudentAccount(id: string, clerkId: string) {
-  const [linked] = await db.update(schema.studentProfiles).set({ clerkId, updatedAt: new Date() }).where(and(eq(schema.studentProfiles.id, id), or(isNull(schema.studentProfiles.clerkId), eq(schema.studentProfiles.clerkId, clerkId)))).returning()
+  const existing = await profileForAccount(clerkId)
+  if (existing) return existing.id === id ? existing : null
+  const [linked] = await db.update(schema.studentProfiles).set({ clerkId, updatedAt: new Date() }).where(and(eq(schema.studentProfiles.id, id), isNull(schema.studentProfiles.mergedInto), or(isNull(schema.studentProfiles.clerkId), eq(schema.studentProfiles.clerkId, clerkId)))).returning()
   return linked ?? null
 }
 export function setProfileCookie(req: VercelRequest, res: VercelResponse, token: string) {

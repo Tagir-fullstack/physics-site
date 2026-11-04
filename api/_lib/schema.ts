@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  type AnyPgColumn,
   pgTable,
   pgEnum,
   serial,
@@ -103,6 +104,7 @@ export const revokedClerkAccounts = pgTable('revoked_clerk_accounts', {
 export const studentProfiles = pgTable('student_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
   variantNumber: serial('variant_number').notNull().unique(),
+  mergedInto: uuid('merged_into').references((): AnyPgColumn => studentProfiles.id),
   clerkId: varchar('clerk_id', { length: 64 }).unique(),
   lastName: varchar('last_name', { length: 60 }).notNull(),
   firstName: varchar('first_name', { length: 60 }).notNull(),
@@ -394,6 +396,7 @@ export const educationProfiles = pgTable('education_profiles', {
   reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
   defaultClassId: uuid('default_class_id').references(() => teacherClasses.id, { onDelete: 'set null' }),
   teacherUserId: varchar('teacher_user_id', { length: 128 }),
+  mergedIntoUserId: varchar('merged_into_user_id', { length: 128 }).references((): AnyPgColumn => educationProfiles.userId),
   classStudentId: uuid('class_student_id').references(() => classStudents.id, { onDelete: 'set null' }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [index('education_directory_idx').on(t.universityId, t.role), check('education_role_check', sql`${t.role} in ('student','teacher')`)])
