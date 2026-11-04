@@ -5,6 +5,7 @@ import { db, schema } from './_lib/db.js'
 import { bodyOf, currentStudent, hash, identityFrom, profileForToken, publicProfile, sameOrigin, setProfileCookie, tokenOf, PROFILE_COOKIE, linkStudentAccount } from './_lib/studentProfile.js'
 import { getClerkUser, isAdmin } from './_lib/auth.js'
 import { findStudentRecovery, redeemStudentRecovery, issueStudentRecovery } from './_lib/studentRecovery.js'
+import { deleteStudent } from './_lib/deleteStudent.js'
 import { clementLab } from './_lib/clementLab.js'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
@@ -17,6 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
     if (!sameOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
     const body = await bodyOf(req)
+    if (body.action === 'deleteStudent') return await deleteStudent(req, res, account, body)
     if (body.action === 'issueRecovery') {
       if (!isAdmin(account)) return res.status(403).json({ error: 'Выдавать ссылки восстановления может только администратор.' })
       if (typeof body.studentId !== 'string' || !/^[a-f0-9-]{36}$/i.test(body.studentId)) return res.status(400).json({ error: 'Выберите профиль студента.' })

@@ -21,16 +21,16 @@
 /* At contact both balls hang vertically and their edges meet. Motion transfers
    to the other ball only after contact, then back on the return swing. */
 @keyframes lab-collision-left {
-  0%, 10% { transform: rotate(28deg); animation-timing-function: ease-in; }
-  30% { transform: rotate(0); }
-  70% { transform: rotate(0); animation-timing-function: ease-out; }
-  90%, 100% { transform: rotate(28deg); }
-}
-@keyframes lab-collision-right {
   0% { transform: rotate(0); }
   30% { transform: rotate(0); animation-timing-function: ease-out; }
-  50% { transform: rotate(-28deg); animation-timing-function: ease-in; }
+  50% { transform: rotate(28deg); animation-timing-function: ease-in; }
   70%, 100% { transform: rotate(0); }
+}
+@keyframes lab-collision-right {
+  0%, 10% { transform: rotate(-28deg); animation-timing-function: ease-in; }
+  30% { transform: rotate(0); }
+  70% { transform: rotate(0); animation-timing-function: ease-out; }
+  90%, 100% { transform: rotate(-28deg); }
 }
 @media (prefers-reduced-motion: reduce) { .labs-illustration .lab-motion { animation: none !important; } }
 .a11y-reduced-motion .labs-illustration .lab-motion { animation: none !important; }

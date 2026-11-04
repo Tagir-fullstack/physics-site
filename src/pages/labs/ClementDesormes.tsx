@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import StudentIdentityForm from '../../components/StudentIdentityForm'
+import LabToast from '../../components/LabToast'
+import ClementManualControls from '../../components/ClementManualControls'
+import { clementVariantKey } from '../../lib/clementManual'
 import { useAuth } from '../../context/AuthContext'
 import { studentRequest, useStudentProfile, type StudentProfile } from '../../lib/studentProfile'
 import { AIR_GAMMA, CLEMENT_TIMES, STABILIZATION_SECONDS, WATER_HEAD_PA, clementAction, clementGamma, clementReading, freshClement, stepClement, type ClementAction, type ClementState, type ClementVariant } from '../../lib/clementDesormes'
@@ -88,9 +91,9 @@ function ResultsPlot({ notebook }: { notebook: Notebook }) {
   </svg>
 }
 
-function Experiment({ variant, student, canMonitor, canUsePro }: { variant: ClementVariant; student: StudentProfile; canMonitor: boolean; canUsePro: boolean }) {
+function Experiment({ variant, student, canMonitor, canUsePro, custom = false, manualNotebookKey, advancedControls }: { variant: ClementVariant; student: StudentProfile; canMonitor: boolean; canUsePro: boolean; custom?: boolean; manualNotebookKey?: string; advancedControls?: ReactNode }) {
   const { user } = useAuth()
-  const storageKey = `physez-clement-v1:${student.id}:${variant.number}`
+  const storageKey = manualNotebookKey || `physez-clement-v1:${student.id}:${variant.number}`
   const [state, setState] = useState(() => freshClement(variant))
   const live = useRef(state)
   const [mobileLayout, setMobileLayout] = useState(() => window.matchMedia('(max-width: 960px)').matches)
@@ -98,8 +101,10 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
   const [zoom, setZoom] = useState(false)
   const [rowIndex, setRowIndex] = useState(0)
   const [notebook, setNotebook] = useState(() => loadNotebook(storageKey))
+  const notebookSnapshot = useRef(notebook)
   const [storageError, setStorageError] = useState('')
-  const [notice, setNotice] = useState('')
+  const [notification, setNotification] = useState<{ id: number; message: string } | null>(() => custom ? { id: 0, message: `Условия варианта № ${variant.number} применены. Записи сверки хранятся отдельно.` } : null)
+  const setNotice = (message: string) => setNotification(current => message ? { id: (current?.id ?? 0) + 1, message } : null)
   const pumpHold = useRef<{ element: HTMLButtonElement; pointerId: number } | null>(null)
   const stopPump = useCallback(() => {
     const held = pumpHold.current
@@ -156,12 +161,17 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
     }
   }, [stopPump])
   useEffect(() => {
+    notebookSnapshot.current = notebook
     const timer = window.setTimeout(() => {
       try { localStorage.setItem(storageKey, JSON.stringify(notebook)); setStorageError('') }
       catch { setStorageError('Не удалось сохранить черновик в браузере. Перепишите результаты в тетрадь; с PRO их также можно скачать в CSV.') }
     }, 200)
     return () => window.clearTimeout(timer)
   }, [notebook, storageKey])
+  useEffect(() => () => {
+    try { localStorage.setItem(storageKey, JSON.stringify(notebookSnapshot.current)) }
+    catch { /* The active notebook already reports storage failures. */ }
+  }, [storageKey])
   const reading = clementReading(variant, state)
   const waiting = state.phase === 'settling' || state.phase === 'warming'
   const targetTime = CLEMENT_TIMES[rowIndex]
@@ -193,8 +203,9 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
   const download = () => {
     if (!canUsePro) return
     const lines = [['Метод Клемана—Дезорма', `Вариант ${variant.number}`, `${student.lastName} ${student.firstName}`, student.group], ['t заданное, с', 't факт, с', 'начальный левый, мм', 'начальный правый, мм', 'конечный левый, мм', 'конечный правый, мм', 'H, мм (студент)', 'h′, мм (студент)', 'ln h′ (студент)'], ...notebook.rows.map((r, i) => [CLEMENT_TIMES[i], r.reading?.time ?? '', r.reading?.initialLeft ?? '', r.reading?.initialRight ?? '', r.reading?.left ?? '', r.reading?.right ?? '', r.head, r.final, r.log]), ['Наклон', notebook.slope], ['Пересечение ln h', notebook.intercept], ['h, мм', notebook.extrapolated], ['γ', notebook.gamma], ['ε, %', notebook.error], ...notebook.processes.map((p, i) => [`Процессы: поле ${i + 1}`, p]), ['Вывод', notebook.conclusion]]
+    if (custom) lines.splice(1, 0, ['Режим', 'Ручная сверка'], ['Исходный вариант студента', student.variantNumber ?? ''], ['H, мм воды', variant.targetHead], ['T₀, °C', variant.ambientK - 273.15], ['p₀, кПа', variant.pressurePa / 1000], ['a, с⁻¹', variant.heatLeak])
     const blob = new Blob(['\ufeff' + lines.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = `clement-variant-${variant.number}.csv`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
+    const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = `clement-${custom ? 'manual-' : 'variant-'}${variant.number}.csv`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
   const computedGamma = clementGamma(num(notebook.rows[0].head), num(notebook.extrapolated))
   const liveControls = <div className="cd-live-controls" aria-label="Управление установкой">
@@ -216,16 +227,16 @@ function Experiment({ variant, student, canMonitor, canUsePro }: { variant: Clem
       </div>
   return <main className="atwood-page cd-page"><div className="atwood-container cd-container">
     <header className="atwood-header cd-header"><div className="atwood-eyebrow">ИНТЕРАКТИВНАЯ ЛАБОРАТОРИЯ №5</div><h1>Метод Клемана—Дезорма</h1></header>
+    {notification && <LabToast key={notification.id} message={notification.message}/>}
     <div className="atwood-grid cd-experiment-grid">
       <section className="atwood-card atwood-simulation-card cd-panel cd-apparatus-panel"><div className="atwood-scene-heading cd-panel-title"><h2 className="atwood-card-title"><span>1</span> Схема установки</h2><button type="button" className="cd-zoom" onClick={() => setZoom(z => !z)} aria-pressed={zoom}>{zoom ? 'Вся установка' : 'Увеличить манометр'}</button></div><Apparatus state={state} variant={variant} act={act} zoom={zoom} showReadings={canUsePro}/>{canUsePro && <div className="cd-levels"><span>Левое колено: <b>{f(reading.left)} мм</b></span><span>Правое колено: <b>{f(reading.right)} мм</b></span></div>}{mobileLayout && liveControls}</section>
-      <section className="atwood-card cd-panel cd-controls"><h2 className="atwood-card-title"><span>2</span> Параметры опыта</h2><div className="cd-participant"><span>{student.lastName} {student.firstName} · {student.group}</span><b>Вариант № {variant.number}</b><Link to={user ? '/account' : '/student/profile?from=clement-desormes'}>Мой профиль →</Link></div><div className="cd-conditions"><span>В комнате <b>{f(variant.ambientK - 273.15)} °C</b></span><span>Атмосфера <b>{f(variant.pressurePa / 1000, 2)} кПа</b></span></div>
+      <section className="atwood-card cd-panel cd-controls"><h2 className="atwood-card-title"><span>2</span> Параметры опыта</h2><div className="cd-participant"><span>{student.lastName} {student.firstName} · {student.group}</span><b className="cd-variant-number">Вариант № {variant.number}{custom && <span className="cd-variant-changed">Изменён</span>}</b><Link to={user ? '/account' : '/student/profile?from=clement-desormes'}>Мой профиль →</Link></div>{advancedControls}<div className="cd-conditions"><span>В комнате <b>{f(variant.ambientK - 273.15)} °C</b></span><span>Атмосфера <b>{f(variant.pressurePa / 1000, 2)} кПа</b></span></div>
         <label>Опыт: время открытия К₀<select value={rowIndex} disabled={state.phase !== 'idle'} onChange={e => { setRowIndex(Number(e.target.value)); setNotice('') }}>{CLEMENT_TIMES.map((t, i) => <option value={i} key={t}>{t} с{notebook.rows[i].reading ? ' · записан' : ''}</option>)}</select></label>
 
         {!mobileLayout && liveControls}
         <div className="cd-status" role="status"><b>{phaseLabel}</b><p>{canUsePro ? mobileLayout ? phaseHint.replace('удерживайте «Компрессор»', 'включите компрессор').replace('Отпустите компрессор', 'Остановите компрессор') : phaseHint : basicHint}</p></div>
 
 {canUsePro ? <small className="cd-muted">При выпуске воздуха автоматически ×1. Секундомер показывает время опыта.</small> : <Link className="cd-pro-link" to="/account">Ускорение ×10 доступно с PRO →</Link>}
-        {notice && <p className="cd-notice" role="status">{notice}</p>}
       </section>
     </div>
     {canUsePro ? <>
@@ -249,6 +260,8 @@ export default function ClementDesormes() {
   const [assignment, setAssignment] = useState<{ profile: StudentProfile; variant: ClementVariant; canMonitor: boolean; canUsePro: boolean } | null>(null)
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
+  const [manual, setManual] = useState<{ userId: string; studentId: string; variant: ClementVariant } | null>(null)
+  const [revision, setRevision] = useState(0)
   const id = profile?.id
   useEffect(() => {
     if (!id) return
@@ -257,6 +270,12 @@ export default function ClementDesormes() {
     return () => { live = false }
   }, [id, retry, authFetch])
   if (loading) return <main className="student-page"><section className="student-panel"><p role="status">Загружаем профиль…</p></section></main>
-  if (profile && assignment?.profile.id === profile.id) return <Experiment key={profile.id} variant={assignment.variant} student={profile} canMonitor={assignment.canMonitor} canUsePro={assignment.canUsePro === true}/>
+  if (profile && assignment?.profile.id === profile.id) {
+    const custom = assignment.canUsePro && user && manual?.userId === user.id && manual.studentId === profile.id ? manual.variant : null
+    const current = custom || assignment.variant
+    const notebookKey = custom ? `physez-clement-v1:${profile.id}:manual:${user!.id}:${clementVariantKey(custom)}` : undefined
+    const controls = assignment.canUsePro && user ? <ClementManualControls variant={current} custom={!!custom} onApply={variant => { setManual({ userId: user.id, studentId: profile.id, variant }); setRevision(n => n + 1) }} onReset={() => {setManual(null);setRevision(n => n + 1)}}/> : null
+    return <Experiment key={`${profile.id}:${user?.id}:${notebookKey || 'assigned'}:${revision}`} variant={current} student={profile} canMonitor={assignment.canMonitor} canUsePro={assignment.canUsePro === true} custom={!!custom} manualNotebookKey={notebookKey} advancedControls={controls}/>
+  }
   return <main className="student-page"><section className="student-panel"><span className="cd-eyebrow">ЛАБОРАТОРНАЯ РАБОТА №5</span><h1>Метод Клемана—Дезорма</h1><p>Управляйте компрессором и кранами, снимите показания манометра в пяти опытах и определите показатель адиабаты воздуха по графику.</p><p>Используется ваш постоянный номер варианта. Если профиль уже создан, восстановите его вместо повторной регистрации.</p><Link to={user ? '/account' : '/student/profile?from=clement-desormes'}>Мой профиль и восстановление →</Link>{(error || profileError) && <p role="alert" className="student-error">{error || profileError}</p>}{profileError ? <button type="button" onClick={() => void refresh()}>Повторить загрузку профиля</button> : profile ? <><p role="status">{error ? 'Условия не загружены.' : 'Загружаем индивидуальную установку…'}</p>{error && <button type="button" onClick={() => setRetry(n => n + 1)}>Повторить загрузку условий</button>}</> : <StudentIdentityForm start onComplete={setProfile}/>}</section></main>
 }

@@ -135,7 +135,8 @@ export async function getClerkUser(req: VercelRequest): Promise<ClerkUser | null
       isPremium: premiumFromMetadata(user.publicMetadata, user.privateMetadata) || await billingHasPremium(userId),
       accessRole: user.publicMetadata.accessRole === 'admin' ? 'admin' : 'user',
     }
-  } catch {
+  } catch (error) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 404) return null
     // A verified session must remain usable if Clerk's user API is temporarily unavailable.
     return { userId, email: '', isPremium: await billingHasPremium(userId) }
   }
@@ -158,4 +159,17 @@ export async function requireAdmin(req: VercelRequest) {
   if (!user) return { user: null, error: { status: 401, message: 'Not authenticated' } as const }
   if (!isAdmin(user)) return { user, error: { status: 403, message: 'Admin only' } as const }
   return { user, error: null }
+}
+
+// Resolve the target independently of the caller before destructive student cleanup.
+export async function deleteStudentLogin(userId: string, beforeDelete: () => Promise<unknown>) {
+  if (isAdmin({ userId, email: '', isPremium: false })) throw Error('Защищённый аккаунт нельзя удалить из списка студентов.')
+  if (!clerk) throw Error('Удаление аккаунта недоступно: Clerk не настроен.')
+  let target
+  try { target = await clerk.users.getUser(userId) }
+  catch (e) { if (e && typeof e === 'object' && 'status' in e && e.status === 404) { await beforeDelete(); return }; throw e }
+  const emails = target.emailAddresses.map(e => e.emailAddress.toLowerCase())
+  if (emails.some(email => isAdmin({ userId, email, isPremium: false })) || target.publicMetadata.accessRole === 'admin' || target.publicMetadata.role === 'admin' || target.publicMetadata.role === 'teacher') throw Error('Защищённый аккаунт нельзя удалить из списка студентов.')
+  await beforeDelete()
+  await clerk.users.deleteUser(userId)
 }

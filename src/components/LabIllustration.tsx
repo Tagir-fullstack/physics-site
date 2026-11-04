@@ -3,7 +3,7 @@ import '../styles/lab-illustration.css'
 type Lab = 'atwood' | 'ball-collision' | 'oberbeck' | 'clement-desormes'
 const titles: Record<Lab, string> = { atwood: 'Машина Атвуда: блок, два груза и стойка', 'ball-collision': 'Подвешенные шары и две угловые шкалы', oberbeck: 'Маятник Обербека: крестовина, шкив и подвешенный груз', 'clement-desormes': 'Баллон, компрессор, краны К и К₀ и водяной манометр' }
 
-export default function LabIllustration({ id }: { id: Lab }) {
+export default function LabIllustration({ id, ballColor = 'red' }: { id: Lab; ballColor?: 'blue' | 'red' }) {
   return <svg className="labs-illustration" viewBox={id === 'clement-desormes' ? '35 35 690 485' : '0 0 360 240'} role="img" aria-label={titles[id]} fill="none">
     {id === 'clement-desormes' ? <>
       <g stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
@@ -53,7 +53,7 @@ export default function LabIllustration({ id }: { id: Lab }) {
       </g>
       <g className="lab-motion lab-ball-right">
         <path d="M192 45V157" stroke="currentColor" strokeWidth="1.2"/>
-        <circle cx="192" cy="157" r="12" fill="#fc6255" stroke="#ff9a90" />
+        <circle cx="192" cy="157" r="12" fill={ballColor === 'blue' ? '#4b9cdf' : '#fc6255'} stroke={ballColor === 'blue' ? '#79bdf2' : '#ff9a90'} />
         <circle cx="189" cy="154" r="2" fill="#fff" opacity=".4"/>
         <path d="M188 174H196L192 180Z" fill="currentColor"/>
       </g>

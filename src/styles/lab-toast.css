@@ -1,0 +1,7 @@
+.lab-toast { position:fixed; z-index:1200; top:calc(80px + env(safe-area-inset-top,0px)); right:max(16px,env(safe-area-inset-right,0px)); width:min(360px,calc(100vw - 32px)); box-sizing:border-box; display:flex; align-items:start; gap:12px; padding:14px 16px; background:#20252d; color:#e6edf5; border:1px solid #46576d; border-radius:12px; box-shadow:0 8px 28px rgb(0 0 0 / 20%); font: .9rem/1.45 'Radiant',Arial,sans-serif; animation:lab-toast-in .2s ease-out,lab-toast-out .2s ease-in 4.8s forwards; }
+.lab-toast p { margin:0; flex:1; }
+.lab-toast.lab-toast button[aria-label] { flex:none; padding:0 4px; border:0; background:transparent; color:inherit; font:inherit; font-size:1.25rem; line-height:1; cursor:pointer; }
+.a11y-light-theme .lab-toast { background:#fff; color:#253347; border-color:#b8cce3; }
+@keyframes lab-toast-in { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
+@keyframes lab-toast-out { to { opacity:0; transform:translateX(16px); } }
+@media(prefers-reduced-motion:reduce) { .lab-toast { animation:none; } }

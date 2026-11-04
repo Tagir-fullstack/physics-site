@@ -50,8 +50,10 @@
 .cd-live-controls .cd-speed select { width: 3.5rem; padding: .3rem; font-size: .8rem; }
 .cd-live-controls button { padding: .5rem .6rem; font-size: .88rem; min-height: 40px; }
 .cd-live-controls .cd-valve-buttons { gap: 8px; }
-.cd-live-controls .cd-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: 8px; }
-.cd-live-controls .cd-actions button { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
+.cd-live-controls .cd-actions { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: stretch; gap: 8px; }
+.cd-page .cd-live-controls .cd-actions button { width: 100%; height: auto; min-height: 36px; margin: 0; padding: .35rem .5rem; display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; gap: 5px; font-size: .8rem; line-height: 1.2; white-space: nowrap; }
+.cd-page .cd-live-controls .cd-actions .atwood-pro-badge { flex-shrink: 0; font-size: .55rem; padding: .08rem .2rem; }
+@media (max-width: 960px) { .cd-page .cd-live-controls .cd-actions button { min-height: 44px; } }
 .cd-live-controls .cd-actions .cd-primary { flex: 1; }
 .cd-live-controls .cd-actions button:last-child { flex: 1; }
 .cd-pump-status { grid-column: 1 / -1; display: grid; grid-template-rows: 6px 20px; gap: 4px; height: 30px; }
@@ -163,3 +165,39 @@
 
 .a11y-light-theme .cd-page progress { accent-color: #2169b5; }
 .a11y-light-theme .cd-page .cd-pump.is-pumping { box-shadow: 0 0 0 3px rgb(33 105 181 / 18%); }
+.cd-manual-controls { padding:.8rem 0; margin:.8rem 0; border-top:1px solid var(--cd-line); border-bottom:1px solid var(--cd-line); }
+.cd-manual-controls summary { cursor:pointer; font-family:'CCUltimatum',Arial,sans-serif; }
+.cd-manual-controls p { font-size:.8rem; line-height:1.5; }
+.cd-manual-number, .cd-manual-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; margin:.8rem 0; align-items:end; }
+.cd-manual-controls label { font-size:.8rem; }
+.cd-manual-actions { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:.8rem; }
+.cd-manual-actions button { flex:1 1 140px; }
+
+.cd-reference-table { min-width:850px; }
+.cd-reference-table td, .cd-reference-table th { text-align:center; vertical-align:middle; }
+.cd-reference-table td { white-space:normal; }
+.ob-manual-number { display:flex; align-items:end; flex-wrap:wrap; gap:.7rem; margin:.75rem 0; }
+.ob-manual-number label { flex:1 1 150px; }
+.cd-expected-dialog { --cd-line:#435064; --cd-muted:#adb8c8; width:min(1100px,calc(100vw - 2rem)); }
+.cd-reference-table :is(td,th) { border:1px solid var(--cd-line,#435064); }
+.cd-expected-dialog .cd-manual-controls label { display:grid; gap:.35rem; min-width:0; }
+.cd-expected-dialog .cd-manual-controls input { width:100%; min-width:0; box-sizing:border-box; padding:.55rem; background:rgb(0 0 0 / 15%); color:inherit; border:1px solid var(--cd-line); border-radius:6px; font:inherit; }
+.cd-expected-dialog .cd-manual-controls button { padding:.55rem; }
+.a11y-light-theme .cd-expected-dialog { --cd-line:#bcc8d8; --cd-muted:#526174; }
+.a11y-light-theme .cd-expected-dialog .cd-manual-controls input { background:#fff; }
+
+/* Keep the desktop setup inside its fixed viewport row when the form expands. */
+@media(min-width:961px) {
+  .cd-experiment-grid > .cd-controls { overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+  .cd-controls > * { flex-shrink:0; }
+}
+.cd-variant-number { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem; }
+.cd-variant-changed { display:inline-block; padding:.1rem .4rem; border:1px solid #6588b0; border-radius:5px; color:#9ac6fa; background:rgb(74 144 226 / 10%); font: .7rem/1.4 'Radiant',Arial,sans-serif; white-space:nowrap; }
+.a11y-light-theme .cd-variant-changed { color:#2169b5; border-color:#a3c1e4; background:#edf4fc; }
+.cd-manual-number { grid-template-columns:minmax(0,1fr) auto; }
+.cd-page .cd-manual-number input, .cd-expected-dialog .cd-manual-number input { height:2.6rem; }
+.cd-page .cd-manual-number button, .cd-expected-dialog .cd-manual-number button { height:2.6rem; min-height:0; padding:.4rem .6rem; font-size:.75rem; line-height:1.2; white-space:nowrap; }
+@media(max-width:360px) { .cd-manual-number { grid-template-columns:minmax(0,1fr); } }
+.cd-manual-controls summary .cd-manual-help { display:inline-grid; place-items:center; width:1.15rem; height:1.15rem; min-height:0; margin-left:.4rem; padding:0; border:1px solid #8396ad; border-radius:50%; background:transparent; color:inherit; font:.75rem/1 Arial,sans-serif; vertical-align:middle; }
+.cd-manual-tooltip { position:fixed; inset:auto; margin:0; width:min(320px,calc(100vw - 24px)); box-sizing:border-box; padding:14px 16px; border:1px solid #46576d; border-radius:10px; background:#20252d; color:#e6edf5; box-shadow:0 8px 28px rgb(0 0 0 / 22%); font:.9rem/1.5 'Radiant',Arial,sans-serif; }
+.a11y-light-theme .cd-manual-tooltip { background:#fff; color:#253347; border-color:#b8cce3; }

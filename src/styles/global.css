@@ -1,5 +1,5 @@
 :root {
-  --site-background-dot: #ffffff0c;
+  --site-background-dot: #ffffff11;
   --bg-primary: #0a0a0a;
   --bg-secondary: #111111;
   --bg-card: #111111;
@@ -14,7 +14,7 @@
 }
 
 /* Shared page texture; cards, inputs and experiment scenes keep their surfaces. */
-.a11y-light-theme { --site-background-dot: #20334314; }
+.a11y-light-theme { --site-background-dot: #2033431a; }
 #root .site-page-content,
 #root .site-page-content > :first-child,
 #root .site-page-content main {

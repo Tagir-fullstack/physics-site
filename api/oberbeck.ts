@@ -21,6 +21,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const recovery = await issueStudentRecovery(variant.studentId, user!.userId)
       return res.status(201).json({ ...recovery, variantId: variant.id, variantCode: variant.code })
     }
+    if (req.method === 'GET' && req.query.view === 'lookup') {
+      if (!isAdmin(await getClerkUser(req))) return res.status(403).json({ error: 'Загружать варианты студентов может только администратор.' })
+      const number = Number(req.query.number)
+      if (!Number.isSafeInteger(number) || number < 1) return res.status(400).json({ error: 'Введите целый положительный номер варианта.' })
+      const [row] = await db.select({ parameters: schema.oberbeckVariants.parameters }).from(schema.oberbeckVariants).innerJoin(schema.studentProfiles, eq(schema.oberbeckVariants.studentId, schema.studentProfiles.id)).where(eq(schema.studentProfiles.variantNumber, number)).limit(1)
+      if (!row) return res.status(404).json({ error: 'У этого номера ещё нет варианта Обербека.' })
+      return res.status(200).json({ parameters: row.parameters })
+    }
     if (req.method === 'GET' && ['list', 'expected'].includes(String(req.query.view))) {
       if (!isAdmin(await getClerkUser(req))) return res.status(403).json({ error: 'Доступ к вариантам разрешён только администратору.' })
       const query = db.select({ variant: schema.oberbeckVariants, student: schema.studentProfiles }).from(schema.oberbeckVariants).innerJoin(schema.studentProfiles, eq(schema.oberbeckVariants.studentId, schema.studentProfiles.id))

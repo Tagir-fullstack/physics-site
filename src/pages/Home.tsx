@@ -1,4 +1,4 @@
-import { type CSSProperties } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import RandomAtomModel from '../components/RandomAtomModel'
@@ -79,7 +79,7 @@ function LabShowcase() {
     </div>
     <div className="home-lab-preview" {...slides.visibility}>
       <div className="home-lab-art home-crossfade" tabIndex={0} {...slides.interaction}>
-        {LABS.map((lab, i) => <div key={lab.id} data-active={i === slides.active} aria-hidden={i !== slides.active}><LabIllustration id={lab.id} /></div>)}
+        {LABS.map((lab, i) => <div key={lab.id} data-active={i === slides.active} aria-hidden={i !== slides.active}><LabIllustration id={lab.id} ballColor="blue" /></div>)}
       </div>
       <div className="home-crossfade">
         {LABS.map((lab, i) => <div key={lab.id} className="home-preview-caption" data-active={i === slides.active} aria-hidden={i !== slides.active} inert={i !== slides.active}><Link to={lab.route}>{t('showcase.labNames.' + lab.id, { defaultValue: lab.title })}</Link><p>{t('showcase.labTopics.' + lab.id, { defaultValue: lab.topic })}</p></div>)}
@@ -111,12 +111,50 @@ function PlanningPreview() {
 export default function Home() {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
+  const cancelScroll = useRef<(() => void) | null>(null)
+  useEffect(() => () => cancelScroll.current?.(), [])
+  const scrollToTopics = () => {
+    cancelScroll.current?.()
+    const target = document.getElementById('course-topics')
+    if (!target) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('a11y-reduced-motion')
+    if (reduced) { target.scrollIntoView({ behavior: 'instant', block: 'center' }); return }
+    const from = window.scrollY
+    const bounds = target.getBoundingClientRect()
+    const headerHeight = document.querySelector('.header')?.getBoundingClientRect().height || 0
+    const destination = Math.max(0, Math.min(document.documentElement.scrollHeight - window.innerHeight, from + bounds.top + bounds.height / 2 - (window.innerHeight + headerHeight) / 2))
+    const started = performance.now()
+    let frame = 0
+    const stop = () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchstart', stop)
+      window.removeEventListener('pointerdown', stop)
+      window.removeEventListener('keydown', onKey)
+      cancelScroll.current = null
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (['Escape', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) stop()
+    }
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - started) / 2400)
+      const eased = progress * progress * progress * (progress * (progress * 6 - 15) + 10)
+      window.scrollTo({ top: from + (destination - from) * eased, behavior: 'instant' })
+      if (progress < 1) frame = requestAnimationFrame(animate)
+      else stop()
+    }
+    cancelScroll.current = stop
+    window.addEventListener('wheel', stop, { passive: true })
+    window.addEventListener('touchstart', stop, { passive: true })
+    window.addEventListener('pointerdown', stop, { passive: true })
+    window.addEventListener('keydown', onKey)
+    frame = requestAnimationFrame(animate)
+  }
   return <main className="home-page" lang={i18n.resolvedLanguage}>
     <section className="home-section home-hero home-feature" aria-labelledby="home-title">
       <div className="home-feature-copy"><span className="home-eyebrow">{t('showcase.heroEyebrow')}</span><h1 id="home-title">{t('showcase.heroTitle')}</h1><p className="home-hero-subtitle">{t('showcase.heroDescription')}</p><a className="home-cta" href="#course-topics" onClick={event => {
         event.preventDefault()
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('a11y-reduced-motion')
-        document.getElementById('course-topics')?.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth', block: 'center' })
+        scrollToTopics()
       }}>{t('common.startLearning')}</a></div>
       <div className="home-atom"><RandomAtomModel /></div>
     </section>

@@ -50,7 +50,7 @@ function Plot({ rows, task, slope, intercept, smallRadius }: { rows: Row[]; task
 export default function OberbeckPendulum({ variant = referenceVariant, variantCode, student }: { variant?: OberbeckVariant; variantCode?: string; student?: StudentProfile }) {
   const { user, isLoading } = useAuth()
   const { authFetch } = useApiClient()
-  const [access, setAccess] = useState<{ userId: string; allowed: boolean; error: string } | null>(null)
+  const [access, setAccess] = useState<{ userId: string; allowed: boolean; canLookup?: boolean; error: string } | null>(null)
   const [accessAttempt, setAccessAttempt] = useState(0)
   const [manual, setManual] = useState<{ userId: string; setup: ManualOberbeckSetup } | null>(null)
   const [revision, setRevision] = useState(0)
@@ -63,7 +63,7 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
     void authFetch('/api/account', { signal: controller.signal }).then(async response => {
       const body = await response.json() as { userId?: string; role?: string; isPremium?: boolean }
       if (!response.ok || body.userId !== userId) throw Error('Не удалось проверить доступ PRO. Повторите проверку.')
-      if (live) setAccess({ userId, allowed: body.isPremium === true || body.role === 'admin' || body.role === 'owner', error: '' })
+      if (live) setAccess({ userId, allowed: body.isPremium === true || body.role === 'admin' || body.role === 'owner', canLookup: body.role === 'admin' || body.role === 'owner', error: '' })
     }).catch(() => { if (live) setAccess({ userId, allowed: false, error: 'Не удалось проверить доступ PRO. Повторите проверку.' }) }).finally(() => window.clearTimeout(timeout))
     return () => { live = false; controller.abort(); window.clearTimeout(timeout) }
   }, [authFetch, isLoading, userId, accessAttempt])
@@ -72,7 +72,7 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
   const custom = isPro && manual && manual.userId === userId ? manual.setup : null
   const current = custom ?? { variant, length: 10 }
   const manualKey = custom ? `manual:${userId}:${variantFingerprint(custom.variant)}:${custom.length}` : undefined
-  const controls = isPro ? <OberbeckManualControls setup={current} custom={!!custom} onApply={setup => { setManual({ userId: userId!, setup }); setRevision(n => n + 1) }} onReset={() => { setManual(null); setRevision(n => n + 1) }} /> : verified && access?.error ? <p className="ob-access-error" role="alert">{access.error} <button type="button" onClick={() => setAccessAttempt(n => n + 1)}>Повторить</button></p> : null
+  const controls = isPro ? <OberbeckManualControls canLookup={access?.canLookup} setup={current} custom={!!custom} onApply={setup => { setManual({ userId: userId!, setup }); setRevision(n => n + 1) }} onReset={() => { setManual(null); setRevision(n => n + 1) }} /> : verified && access?.error ? <p className="ob-access-error" role="alert">{access.error} <button type="button" onClick={() => setAccessAttempt(n => n + 1)}>Повторить</button></p> : null
   return <OberbeckSimulation key={`${manualKey ?? 'assigned'}:${revision}`} variant={current.variant} variantCode={variantCode} student={student} isPro={isPro} accessLoading={isLoading || Boolean(userId && !verified)} advancedControls={controls} custom={!!custom} initialLength={current.length} manualNotebookKey={manualKey} />
 }
 
