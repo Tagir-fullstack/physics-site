@@ -1,6 +1,6 @@
-import { electroVariant, electrodeAt, fieldEstimate, potentialLevels, type ElectroVariant } from './electrostatics'
-import { validElectroNotebook, type ElectroNotebook } from './electrostaticsNotebook'
-import type { StudentProfile } from './studentProfile'
+import { electroVariant, electrodeAt, fieldEstimate, potentialLevels, type ElectroVariant } from './electrostatics.js'
+import { validElectroNotebook, type ElectroNotebook } from './electrostaticsNotebook.js'
+import type { StudentProfile } from './studentProfile.js'
 export type ElectroReviewStatus = 'submitted' | 'accepted' | 'revision'
 export type ElectroProgress = { points: number; lines: number; totalLines: number; axis: number; pairs: number; calculations: number; answered: number; conclusion: boolean }
 export type ElectroSubmission = { id: string; studentId: string; variant: ElectroVariant; notebook: ElectroNotebook; status: ElectroReviewStatus; comment: string; createdAt: string; reviewedAt: string | null; reviewVersion: number; progress: ElectroProgress }

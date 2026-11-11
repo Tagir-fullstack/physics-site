@@ -1,4 +1,4 @@
-import { SHEET, potentialLevels, type ElectroVariant, type Reading } from './electrostatics'
+import { SHEET, potentialLevels, type ElectroVariant, type Reading } from './electrostatics.js'
 export type AxisReading = { x: number; y: number; potential: number }
 export type FieldPair = { a: Reading; b: Reading; answer: string }
 export type ElectroNotebook = { version: 1; points: Reading[]; axis: AxisReading[]; pairs: FieldPair[]; conclusion: string; answers: string[] }
