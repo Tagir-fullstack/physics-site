@@ -114,6 +114,21 @@ export const studentProfiles = pgTable('student_profiles', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
+export const electrostaticsSubmissions = pgTable('electrostatics_submissions', {
+  id: uuid('id').primaryKey(),
+  studentId: uuid('student_id').notNull().references(() => studentProfiles.id, { onDelete: 'cascade' }),
+  variantNumber: integer('variant_number').notNull(),
+  parameters: jsonb('parameters').notNull(),
+  notebook: jsonb('notebook').notNull(),
+  snapshotHash: varchar('snapshot_hash', { length: 64 }).notNull(),
+  status: varchar('status', { length: 16 }).notNull().default('submitted'),
+  reviewComment: text('review_comment').notNull().default(''),
+  reviewedBy: varchar('reviewed_by', { length: 128 }),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  reviewVersion: integer('review_version').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [index('electrostatics_submissions_student_created_idx').on(t.studentId, t.createdAt, t.id), check('electrostatics_status_check', sql`${t.status} in ('submitted','accepted','revision')`)])
+
 export const oberbeckVariants = pgTable('oberbeck_variants', {
   id: uuid('id').primaryKey().defaultRandom(),
   studentId: uuid('student_id').notNull().unique().references(() => studentProfiles.id),

@@ -18,10 +18,12 @@ async function billingSummary(userId: string) {
   const c = billingConfig()
   if (!c.ready) return { mode: c.mode, enabled: false, recurringEnabled: false, reason: c.reason, plans: c.plans, legalVersion: LEGAL_VERSION, subscription: null, orders: [] }
   const environment = c.mode === 'sandbox' ? 'sandbox' : 'production'
-  const [s] = await sql`select *,exists(select 1 from billing_orders o where o.user_id=billing_subscriptions.user_id and o.environment=billing_subscriptions.environment and o.status='paid' and o.grant_starts<=now() and o.grant_ends>now()) as active from billing_subscriptions where user_id=${userId} and environment=${environment}`
+  // A created order has not been sent to ePay; checkoutReady moves it to pending first.
+  await sql`update billing_orders set status='cancelled',updated_at=now() where user_id=${userId} and environment=${environment} and status='created' and created_at<now()-interval '30 minutes'`
+  const [s] = await sql`select *, (select max(o.grant_ends) from billing_orders o where o.user_id=billing_subscriptions.user_id and o.environment=billing_subscriptions.environment and o.status='paid') as confirmed_paid_through, exists(select 1 from billing_orders o where o.user_id=billing_subscriptions.user_id and o.environment=billing_subscriptions.environment and o.status='paid' and o.grant_starts<=now() and o.grant_ends>now()) as active from billing_subscriptions where user_id=${userId} and environment=${environment}`
   const orders = await sql`select id,invoice,plan_id,amount_minor,status,created_at,recurring from billing_orders where user_id=${userId} and environment=${environment} order by created_at desc limit 20`
   return { mode: c.mode, enabled: c.enabled, recurringEnabled: c.recurringEnabled, reason: c.reason, plans: c.plans, legalVersion: LEGAL_VERSION,
-    subscription: s ? { active: s.active === true, paidThrough: s.paid_through, autoRenew: s.auto_renew, planId: s.plan_id, hasCard: Boolean(s.card_cipher) } : null,
+    subscription: s ? { active: s.active === true, paidThrough: s.confirmed_paid_through, autoRenew: s.auto_renew, planId: s.plan_id, hasCard: Boolean(s.card_cipher) } : null,
     orders: orders.map(o => ({ id: o.id, invoice: o.invoice, planId: o.plan_id, amountMinor: o.amount_minor, status: o.status, createdAt: o.created_at, recurring: o.recurring })),
   }
 }
@@ -39,6 +41,7 @@ async function createOrder(userId: string, plan: BillingPlan, recurring: boolean
   const result = await sql.transaction([
     sql`select pg_advisory_xact_lock(hashtext(${'billing:' + userId}))`,
     sql`insert into billing_subscriptions(user_id,environment) values(${userId},${c.mode}) on conflict do nothing`,
+    sql`update billing_orders set status='cancelled',updated_at=now() where user_id=${userId} and environment=${c.mode} and status='created' and created_at<now()-interval '30 minutes'`,
     sql`insert into billing_orders(id,user_id,environment,terminal,plan_id,amount_minor,months,recurring,kind,cycle_key,idempotency_key,callback_hash,cancel_version,legal_version)
       select ${id}::uuid,user_id,environment,${c.terminal},${plan.id},${plan.amountMinor},${plan.months},${recurring},'checkout',${'checkout:' + idempotencyKey},${idempotencyKey}::uuid,${secretHash},cancel_version,${LEGAL_VERSION}
       from billing_subscriptions s where user_id=${userId} and environment=${c.mode} and not auto_renew
@@ -46,7 +49,7 @@ async function createOrder(userId: string, plan: BillingPlan, recurring: boolean
       on conflict do nothing`,
     sql`select * from billing_orders where user_id=${userId} and environment=${c.mode} and idempotency_key=${idempotencyKey}::uuid`,
   ])
-  const order = result[3][0] as BillingOrder | undefined
+  const order = result[4][0] as BillingOrder | undefined
   if (!order) throw Error('PENDING_ORDER_OR_AUTORENEW')
   return order
 }
@@ -82,7 +85,7 @@ async function applyBankPayment(order: BillingOrder, payment: BankPayment) {
     await sql.transaction([
       sql`select pg_advisory_xact_lock(hashtext(${'billing:' + order.user_id}))`,
       sql`update billing_orders set status='refunded',updated_at=now() where id=${order.id}::uuid and transaction_id=${payment.id} and status='paid'`,
-      sql`update billing_subscriptions set auto_renew=false,cancel_version=cancel_version+1,card_cipher=null,updated_at=now() where user_id=${order.user_id} and environment=${order.environment} and exists(select 1 from billing_orders where id=${order.id}::uuid and status='refunded')`,
+      sql`update billing_subscriptions s set auto_renew=false,cancel_version=cancel_version+1,card_cipher=null,paid_through=(select max(o.grant_ends) from billing_orders o where o.user_id=s.user_id and o.environment=s.environment and o.status='paid'),updated_at=now() where s.user_id=${order.user_id} and s.environment=${order.environment} and exists(select 1 from billing_orders where id=${order.id}::uuid and status='refunded')`,
     ])
   } else if (['FAILED', 'REJECT', 'CANCEL', 'CANCEL_OLD'].includes(payment.state)) {
     await sql.transaction([
@@ -126,7 +129,7 @@ async function markDispatch(id: string, status: 'unknown' | 'requires_action' | 
   await sql`update billing_orders set status=${status},updated_at=now() where id=${id}::uuid and status='dispatching'`
 }
 async function pendingOrders(mode: BillingMode) {
-  return await sql`select * from billing_orders where environment=${mode} and (status in ('pending','dispatching','unknown','requires_action') or (status='paid' and grant_ends>now())) and (checked_at is null or checked_at<now()-interval '30 seconds') order by checked_at nulls first,created_at limit 3` as BillingOrder[]
+  return await sql`select * from billing_orders where environment=${mode} and (status in ('pending','dispatching','unknown','requires_action') and (checked_at is null or checked_at<now()-interval '30 seconds') or status='paid' and (checked_at is null or checked_at<now()-interval '6 hours')) order by case when status='paid' then 1 else 0 end, checked_at nulls first,created_at limit 3` as BillingOrder[]
 }
 async function dueSubscriptions(mode: BillingMode) {
   return await sql`select user_id from billing_subscriptions where environment=${mode} and auto_renew and paid_through<=now() and card_cipher is not null order by paid_through limit 1` as Array<{ user_id: string }>

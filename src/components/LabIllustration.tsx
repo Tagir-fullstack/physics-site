@@ -1,11 +1,19 @@
 import '../styles/lab-illustration.css'
 
-type Lab = 'atwood' | 'ball-collision' | 'oberbeck' | 'clement-desormes'
-const titles: Record<Lab, string> = { atwood: 'Машина Атвуда: блок, два груза и стойка', 'ball-collision': 'Подвешенные шары и две угловые шкалы', oberbeck: 'Маятник Обербека: крестовина, шкив и подвешенный груз', 'clement-desormes': 'Баллон, компрессор, краны К и К₀ и водяной манометр' }
+type Lab = 'atwood' | 'ball-collision' | 'oberbeck' | 'clement-desormes' | 'electrostatics'
+const titles: Record<Lab, string> = { electrostatics: 'Проводящая пластина, электроды и измерительный зонд', atwood: 'Машина Атвуда: блок, два груза и стойка', 'ball-collision': 'Подвешенные шары и две угловые шкалы', oberbeck: 'Маятник Обербека: крестовина, шкив и подвешенный груз', 'clement-desormes': 'Баллон, компрессор, краны К и К₀ и водяной манометр' }
 
 export default function LabIllustration({ id, ballColor = 'red' }: { id: Lab; ballColor?: 'blue' | 'red' }) {
   return <svg className="labs-illustration" viewBox={id === 'clement-desormes' ? '35 35 690 485' : '0 0 360 240'} role="img" aria-label={titles[id]} fill="none">
-    {id === 'clement-desormes' ? <>
+    {id === 'electrostatics' ? <>
+      <rect x="76" y="18" width="208" height="205" rx="8" stroke="currentColor" opacity=".5"/>
+      {Array.from({length: 10}, (_, i) => <path key={i} d={`M${90+i*20} 30V210M88 ${30+i*20}H272`} stroke="currentColor" opacity=".12"/>)}
+      {[60,85,110,135,160].map((y, i) => <path key={y} d={`M95 ${y}Q180 ${y+15-i*5} 265 ${y}`} stroke="currentColor" strokeDasharray="4 4" opacity=".65"/>)}
+      <rect x="140" y="53" width="80" height="7" rx="2" fill="#fc6255"/>
+      <circle cx="180" cy="178" r="12" fill="#4b9cdf"/>
+      <path d="M180 63V162M175 153L180 162L185 153" stroke="currentColor"/>
+      <circle cx="222" cy="120" r="4" fill="#dca638"/><path d="M225 118L249 93" stroke="currentColor" strokeWidth="2"/>
+    </> : id === 'clement-desormes' ? <>
       <g stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
         <path d="M302 132H338V160H382Q412 160 412 190V432Q412 450 394 450H246Q228 450 228 432V190Q228 160 258 160H302Z"/>
         <rect x="285" y="119" width="70" height="13"/>

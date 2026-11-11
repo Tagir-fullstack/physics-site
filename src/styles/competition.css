@@ -1,0 +1,61 @@
+/* The presentation uses the actual /thesis shell, typography, theme and controls. */
+.konkurs-stage-frame { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:max(96px,9vh) 5vw 72px; }
+.konkurs-root .konkurs-slide { flex:0 1 auto; margin:0; padding:4px 12px 8px; min-width:0; }
+.konkurs-root .konkurs-slide.title-slide { text-align:center; }
+.konkurs-title-facts { width:100%; max-width:1050px; margin:12px auto 0; text-align:left; }
+.konkurs-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.konkurs-root .konkurs-cards h2 { font-size:clamp(22px,2.5vw,34px); margin:12px 0; }
+.konkurs-root .konkurs-cards p { font-size:clamp(17px,1.45vw,22px); line-height:1.5; }
+.konkurs-format { display:flex; flex-wrap:wrap; gap:12px 36px; padding:18px 0; border-top:1px solid var(--t-card-border); color:var(--t-text-secondary); font-size:18px; }
+.konkurs-format strong { color:var(--t-accent); }
+.konkurs-demo-layout { display:grid; grid-template-columns:minmax(200px,.65fr) minmax(0,1.35fr); gap:36px; align-items:center; }
+.konkurs-key-facts { display:grid; gap:28px; }
+.konkurs-key-facts > div { display:grid; gap:8px; border-bottom:1px solid var(--t-card-border); padding-bottom:20px; }
+.konkurs-key-facts strong { font:700 clamp(28px,3vw,44px) 'CCUltimatum',Arial,sans-serif; color:var(--t-accent); }
+.konkurs-key-facts span { color:var(--t-text-secondary); font-size:18px; line-height:1.5; max-width:300px; }
+.konkurs-field { min-width:0; padding:16px; background:var(--t-card); border:1px solid var(--t-card-border); border-radius:14px; }
+.konkurs-demo-tabs { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:12px; }
+.konkurs-demo-tabs button,.konkurs-tools button,.konkurs-notes > button { background:var(--t-controls-bg); color:var(--t-text); border:1px solid var(--t-controls-border); border-radius:8px; font:inherit; padding:7px 12px; cursor:pointer; }
+.konkurs-demo-tabs button[aria-pressed=true] { color:var(--t-accent); border-color:var(--t-accent); }
+.konkurs-demo-tabs > span { margin-left:auto; color:var(--t-text-muted); font-size:13px; }
+.konkurs-root .konkurs-field .es-page { --es-bg:var(--t-bg); --es-panel:var(--t-card); --es-inset:var(--t-card); --es-text:var(--t-text); --es-muted:var(--t-text-muted); --es-border:var(--t-card-border); --es-accent:var(--t-accent-blue); }
+.konkurs-root .konkurs-field .es-panel { padding:0; border:0; background:transparent; margin:0; }
+.konkurs-root .konkurs-field .es-panel-heading h2 { display:none; }
+.konkurs-root .konkurs-field .es-panel-heading { justify-content:flex-end; }
+.konkurs-root .konkurs-field .es-panel-heading label { font-size:13px; }
+.konkurs-root .konkurs-field .es-preview-map { height:clamp(200px,calc(100svh - 510px),390px); aspect-ratio:auto; }
+.konkurs-root .konkurs-field .es-hint { display:none; }
+.konkurs-root .konkurs-field .es-preview-legend { font-size:12px; gap:8px; }
+.konkurs-root .konkurs-caption { color:var(--t-text-muted); font-size:13px; line-height:1.4; }
+.konkurs-field .konkurs-caption { margin-top:10px; }
+.konkurs-labs { display:grid; gap:8px; }
+.konkurs-lab { display:grid; grid-template-columns:32px 100px minmax(0,1fr) 40px; align-items:center; gap:20px; border-bottom:1px solid var(--t-card-border); padding:8px 0; }
+.konkurs-lab-number { color:var(--t-accent); font-size:18px; }
+.konkurs-lab-image { color:var(--t-accent-blue); }
+.konkurs-lab-image .labs-illustration { height:70px; width:100%; }
+.konkurs-lab-image .lab-motion { animation:none !important; }
+.konkurs-root .konkurs-lab h2 { font-size:clamp(20px,2.2vw,30px); margin:0 0 4px; }
+.konkurs-root .konkurs-lab p { font-size:17px; line-height:1.35; }
+.konkurs-lab a { font-size:28px; color:var(--t-accent-blue); text-decoration:none; }
+.konkurs-root .konkurs-one-line { color:var(--t-text-secondary); text-align:center; font-size:clamp(20px,2vw,28px); padding-top:12px; }
+.konkurs-one-line span { color:var(--t-accent); margin:0 16px; }
+.konkurs-comfort { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.konkurs-root .konkurs-comfort h2 { font-size:clamp(20px,2vw,28px); }
+.konkurs-root .konkurs-comfort p { font-size:17px; line-height:1.45; }
+.konkurs-result { display:grid; gap:16px; margin:18px 0; }
+.konkurs-result span { font:700 clamp(28px,3.5vw,48px) 'CCUltimatum',Arial,sans-serif; color:var(--t-accent); }
+.konkurs-root .konkurs-final { max-width:900px; font-size:clamp(18px,1.8vw,26px); }
+.konkurs-links { display:flex; flex-wrap:wrap; gap:16px 32px; margin-top:12px; }
+.konkurs-links a { color:var(--t-accent-blue); font-size:18px; text-decoration:none; }
+.konkurs-root .thesis-controls > .thesis-counter { width:auto; min-width:88px; font-size:18px; border-radius:999px; }
+.konkurs-tools { position:absolute; bottom:16px; right:24px; z-index:20; display:flex; align-items:center; gap:8px; }
+.konkurs-tools button { font-size:13px; padding:6px 10px; min-height:32px; }
+.konkurs-notes { position:absolute; bottom:66px; right:24px; z-index:40; width:min(680px,calc(100% - 48px)); max-height:50vh; overflow-y:auto; padding:22px; border:1px solid var(--t-controls-border); border-radius:14px; background:var(--t-bg); color:var(--t-text); box-shadow:0 10px 40px #0002; }
+.konkurs-notes > button { float:right; font:20px Arial,sans-serif; padding:2px 8px; margin:0 0 8px 16px; }
+.konkurs-notes p { font-size:17px; line-height:1.6; color:var(--t-text-secondary); margin-top:12px; }
+.konkurs-message { position:absolute; bottom:60px; right:24px; font-size:14px; color:var(--t-text-secondary); }
+.konkurs-print { display:none; }
+@media(max-width:900px) { .konkurs-cards { grid-template-columns:1fr; gap:12px; } .konkurs-cards .counter-card { padding:16px 20px; } .konkurs-root .konkurs-cards h2 { margin:8px 0; } .konkurs-demo-layout { grid-template-columns:1fr; gap:18px; } .konkurs-key-facts { grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; } .konkurs-key-facts span { font-size:14px; } .konkurs-key-facts strong { font-size:26px; } .konkurs-key-facts > div { padding-bottom:10px; } .konkurs-comfort { grid-template-columns:repeat(2,minmax(0,1fr)); } .konkurs-root .konkurs-field .es-preview-map { height:320px; } }
+@media(max-width:600px) { .konkurs-stage-frame { padding:94px 16px 68px; } .konkurs-root .thesis-logo { left:14px; top:20px; font-size:24px; gap:5px; } .konkurs-root .thesis-logo .logo-icon { width:28px; height:28px; } .konkurs-root .thesis-controls { top:65px; gap:8px; padding:2px 10px; } .konkurs-root .thesis-controls > button { width:28px; height:28px; } .konkurs-root .thesis-controls > .thesis-counter { font-size:15px; min-width:66px; } .konkurs-root .thesis-a11y-btn { right:14px; top:16px; } .konkurs-stage-frame { padding-top:112px; } .konkurs-title-facts { grid-template-columns:1fr; gap:8px; } .konkurs-title-facts .counter-card { padding:12px 16px; display:flex; gap:16px; align-items:center; } .konkurs-title-facts .value { font-size:25px; } .konkurs-title-facts .sub { margin:0; } .konkurs-root .title-meta { margin-top:10px; gap:16px; } .konkurs-root .title-meta-block .name { font-size:20px; } .konkurs-root .thesis-slide { gap:16px; } .konkurs-root .title-main { font-size:34px; } .konkurs-lab { grid-template-columns:22px minmax(0,1fr) 28px; gap:10px; } .konkurs-lab-image { display:none; } .konkurs-root .konkurs-lab h2 { font-size:22px; } .konkurs-root .konkurs-lab p { font-size:15px; } .konkurs-format { font-size:16px; padding:12px 0; } .konkurs-key-facts { grid-template-columns:1fr; gap:10px; } .konkurs-key-facts > div { grid-template-columns:100px minmax(0,1fr); align-items:center; gap:8px; padding-bottom:8px; } .konkurs-key-facts strong { font-size:22px; } .konkurs-demo-tabs > span { margin:0; width:100%; } .konkurs-field { padding:12px; } .konkurs-comfort { grid-template-columns:1fr; gap:10px; } .konkurs-comfort .counter-card { padding:16px; } .konkurs-tools { right:12px; bottom:12px; gap:5px; } .konkurs-tools button { font-size:12px; padding:5px 8px; } .konkurs-notes { right:12px; bottom:60px; width:calc(100% - 24px); } }
+@media print { @page { size:A4 landscape; margin:12mm; } body { background:white !important; } .konkurs-root { position:static; inset:auto; overflow:visible; background:white !important; --t-text:#14161a; --t-text-secondary:#3d434c; --t-text-muted:#68717c; --t-accent:#d74337; --t-accent-blue:#2563c2; --t-card:#fff; --t-card-border:#d7dce2; color:#14161a; } .konkurs-root > :not(.konkurs-print) { display:none !important; } .konkurs-print { display:block; } .konkurs-print > .thesis-slide { max-height:none; min-height:175mm; width:100%; padding:8mm 0; break-after:page; justify-content:center; gap:6mm; } .konkurs-print > .thesis-slide:last-child { break-after:auto; } .konkurs-print h1 { font-size:30pt; } .konkurs-print h2 { font-size:20pt; } .konkurs-print p { font-size:13pt; } .konkurs-print .konkurs-cards { grid-template-columns:repeat(3,minmax(0,1fr)); } .konkurs-print .konkurs-key-facts { grid-template-columns:1fr; } .konkurs-print-diagram .labs-illustration { height:90mm; width:100%; color:#2563c2; } .konkurs-print .konkurs-lab { padding:2mm 0; } .konkurs-print .konkurs-lab-image .labs-illustration { height:15mm; } .konkurs-print .konkurs-lab h2 { font-size:18pt; } .konkurs-print .konkurs-comfort { grid-template-columns:repeat(3,minmax(0,1fr)); } .site-footer,.header,.cookie-notice { display:none !important; } }
+.contest-presenting .cookie-notice { display:none; }

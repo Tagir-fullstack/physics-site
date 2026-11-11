@@ -42,7 +42,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (['/thesis', '/premium'].includes(location.pathname.replace(/\/$/, ''))) return null;
+  if (['/thesis', '/premium', '/konkurs'].includes(location.pathname.replace(/\/$/, ''))) return null;
 
   // Burger menu handlers
   const openMenu = () => {
@@ -250,6 +250,7 @@ export default function Header() {
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/ball-collision')}><span>Столкновение шаров</span></button>
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/oberbeck')}><span>Маятник Обербека</span></button>
                       <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/clement-desormes')}><span>Метод Клемана—Дезорма</span></button>
+                      <button className="dropdown-item nav-lab-item" onClick={() => handleLinkClick('/labs/electrostatics')}><span>Электростатические поля</span></button>
                     </div>
                   </div>
                 </div>

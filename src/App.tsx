@@ -50,6 +50,7 @@ const OberbeckVariants = lazy(() => import('./pages/OberbeckVariants'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Changelog = lazy(() => import('./pages/Changelog'));
+const Competition = lazy(() => import('./pages/Competition'));
 const Account = lazy(() => import('./pages/Account'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Payments = lazy(() => import('./pages/Payments'));
@@ -65,6 +66,9 @@ const StudentTestRunner = lazy(() => import('./pages/StudentTestRunner'));
 const Thesis = lazy(() => import('./pages/Thesis'));
 const AtwoodMachine = lazy(() => import('./pages/labs/AtwoodMachine'));
 const Labs = lazy(() => import('./pages/Labs'));
+const ElectrostaticsExpected = lazy(() => import('./pages/ElectrostaticsExpected'));
+const ElectrostaticsMonitor = lazy(() => import('./pages/ElectrostaticsMonitor'));
+const Electrostatics = lazy(() => import('./pages/labs/Electrostatics'));
 const ClementDesormes = lazy(() => import('./pages/labs/ClementDesormes'));
 const ClementVariants = lazy(() => import('./pages/ClementVariants'));
 const BallCollision = lazy(() => import('./pages/labs/BallCollision'));
@@ -139,6 +143,7 @@ function App() {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/changelog" element={<Changelog />} />
+                  <Route path="/konkurs" element={<Competition />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/premium" element={<Premium />} />
                   <Route path="/payments" element={<Payments />} />
@@ -160,6 +165,13 @@ function App() {
                   <Route path="/labs/atwood" element={<LabAccessGate><AtwoodMachine /></LabAccessGate>} />
                   <Route path="/labs" element={<Labs />} />
                   <Route path="/labs/oberbeck" element={<LabAccessGate><OberbeckEntry /></LabAccessGate>} />
+                  <Route path="/admin/electrostatics-monitor" element={<ElectrostaticsMonitor />} />
+                  <Route path="/admin/electrostatics-monitor/expected/:studentId" element={<ElectrostaticsExpected />} />
+                  <Route path="/admin/electrostatics-monitor/:id" element={<ElectrostaticsMonitor />} />
+                  <Route path="/teacher/electrostatics-monitor" element={<ElectrostaticsMonitor />} />
+                  <Route path="/teacher/electrostatics-monitor/expected/:studentId" element={<ElectrostaticsExpected />} />
+                  <Route path="/teacher/electrostatics-monitor/:id" element={<ElectrostaticsMonitor />} />
+                  <Route path="/labs/electrostatics" element={<LabAccessGate><Electrostatics /></LabAccessGate>} />
                   <Route path="/labs/clement-desormes" element={<LabAccessGate><ClementDesormes /></LabAccessGate>} />
                   <Route path="/admin/clement-variants" element={<ClementVariants />} />
                   <Route path="/admin/oberbeck-variants" element={<OberbeckVariants />} />

@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, createContext, useCallback, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
 import { useUser, useClerk, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import type {
   AuthContextType,
@@ -36,10 +36,14 @@ function toProfile(user: ReturnType<typeof useUser>['user']): Profile | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isLoaded, user } = useUser();
-  const { signOut: clerkSignOut } = useClerk();
+  const { signOut: clerkSignOut, session } = useClerk();
   const { getToken } = useClerkAuth();
   const [access, setAccess] = useState<{ userId: string; premium: boolean } | null>(null);
   const userId = user?.id;
+  const [previewUsers, setPreviewUsers] = useState<string[]>(() => {
+    try { const value: unknown = JSON.parse(sessionStorage.getItem('physez-basic-preview') || '[]'); return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : []; }
+    catch { return []; }
+  });
   useEffect(() => {
     if (!userId) return;
     let live = true;
@@ -64,6 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId, getToken]);
   const premium = access?.userId === userId && access?.premium === true;
 
+  const isBasicPreview = Boolean(premium && userId && previewUsers.includes(userId));
+  const effectivePremium = premium && !isBasicPreview;
+  const setBasicPreview = useCallback((enabled: boolean) => {
+    if (!userId || !premium) return;
+    setPreviewUsers(previous => {
+      const next = previous.filter(id => id !== userId);
+      if (enabled) next.push(userId);
+      try { sessionStorage.setItem('physez-basic-preview', JSON.stringify(next)); } catch { /* In-memory preview still works. */ }
+      return next;
+    });
+  }, [userId, premium]);
+
   const value = useMemo<AuthContextType>(() => {
     const authUser: AuthUser | null = user
       ? {
@@ -79,11 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile: toProfile(user),
       subscription: null,
       isLoading: !isLoaded,
-      isPremium: premium,
+      isPremium: effectivePremium,
+      canPreviewBasic: premium,
+      isBasicPreview,
+      setBasicPreview,
       signOut: async () => {
-        await clerkSignOut();
+        if (session) await clerkSignOut({ sessionId: session.id });
       },
-      hasFeature: () => premium,
+      hasFeature: () => effectivePremium,
       updateProfile: async (data: Partial<Profile>) => {
         if (!user) throw new Error('Not authenticated');
         const nextMeta: Record<string, unknown> = { ...(user.unsafeMetadata ?? {}) };
@@ -95,9 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await user.reload();
       },
     };
-  }, [isLoaded, user, clerkSignOut, premium]);
+  }, [isLoaded, user, clerkSignOut, session, premium, effectivePremium, isBasicPreview, setBasicPreview]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}><Fragment key={userId ?? 'guest'}>{children}</Fragment></AuthContext.Provider>;
 }
 
 // Context hooks intentionally live beside their provider.

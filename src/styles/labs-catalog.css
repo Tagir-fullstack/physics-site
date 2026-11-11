@@ -58,3 +58,9 @@
 @media(max-width:850px) { .labs-catalog-hero { grid-template-columns: minmax(0,1fr); } .labs-hero-apparatus { display: none; } .labs-catalog-cards { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media(max-width:580px) { .labs-catalog-page { padding-left: 16px; padding-right: 16px; } .labs-catalog-cards, .labs-catalog-guide { grid-template-columns: minmax(0,1fr); } .labs-catalog-hero { border-radius: 14px; } .labs-catalog-hero h1 { font-size: 2.1rem; } .labs-catalog-eyebrow { letter-spacing: .06em; } .labs-catalog-actions a { padding: .6rem .75rem; } .labs-card-art .labs-sketch { height: 150px; } .labs-catalog-list-heading h2 { font-size: 1.6rem; } .labs-catalog-guide { gap: 1rem; } }
 @media(prefers-reduced-motion:reduce) { .labs-catalog-card { transition: none; } .labs-catalog-card:hover { transform: none; } }
+
+.labs-motion-toggle { padding: .7rem .85rem; border: 1px solid var(--labs-line); border-radius: 8px; background: var(--labs-surface); color: var(--labs-text); font: inherit; cursor: pointer; }
+.labs-motion-toggle:focus-visible { outline: 3px solid #8fbdff; outline-offset: 4px; }
+.labs-catalog-page[data-animations="off"] *, .labs-catalog-page[data-animations="off"] *::before, .labs-catalog-page[data-animations="off"] *::after { animation-play-state: paused !important; transition: none !important; }
+.labs-catalog-page[data-animations="off"] .labs-catalog-card:hover { transform: none; }
+.labs-motion-toggle:disabled { cursor: default; opacity: .65; }

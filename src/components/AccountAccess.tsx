@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import EducationAccount from './EducationAccount';
 import { Link } from 'react-router-dom';
 import { useApiClient } from '../lib/apiClient';
 
@@ -51,15 +52,10 @@ export default function AccountAccess({ access }: Props) {
     <div className="account-access-card">
       {access && (
         <>
-          {access.isPremium && <section className="account-workspace-hero">
-            <div className="account-hero-copy">
-              <span className="account-hero-plan">{access.isPremium ? '✦ PHYSEZ PRO · ВАШЕ ПРЕИМУЩЕСТВО' : 'PHYSEZ · БАЗОВЫЙ ДОСТУП'}</span>
-              <h2>{access.isPremium ? <>Ваши занятия.<br/>Новые возможности.</> : <>Физика начинается<br/>с любопытства.</>}</h2>
-              <p>{access.isPremium ? 'От первого опыта до результатов класса — всё под рукой.' : 'Изучайте материалы, запускайте опыты и проверяйте знания.'}</p>
-              <Link className="account-hero-link" to={access.isPremium ? access.role !== 'user' ? '/admin/assessment-monitor' : '/teacher/tests' : '/labs/oberbeck'}>{access.isPremium ? access.role !== 'user' ? 'К результатам студентов' : 'К моим тестам' : 'Открыть лабораторию'} <span aria-hidden="true">↗</span></Link>
-            </div>
+          <section className="account-workspace-hero">
+            <EducationAccount userId={access.userId} appearance="hero" />
             <svg className="account-hero-orbit" width="230" height="230" viewBox="0 0 230 230" fill="none" aria-hidden="true"><circle cx="115" cy="115" r="88" stroke="currentColor" strokeOpacity=".12"/><circle cx="115" cy="115" r="62" stroke="currentColor" strokeOpacity=".15"/><ellipse cx="115" cy="115" rx="95" ry="34" transform="rotate(-35 115 115)" stroke="currentColor" strokeOpacity=".5"/><ellipse cx="115" cy="115" rx="95" ry="34" transform="rotate(35 115 115)" stroke="currentColor" strokeOpacity=".35"/><ellipse cx="115" cy="115" rx="95" ry="34" transform="rotate(90 115 115)" stroke="currentColor" strokeOpacity=".25"/><circle cx="115" cy="115" r="16" fill="currentColor" fillOpacity=".95"/><circle cx="185" cy="57" r="7" fill="currentColor"/><circle cx="42" cy="66" r="5" fill="currentColor" fillOpacity=".65"/><circle cx="114" cy="209" r="5" fill="currentColor" fillOpacity=".8"/></svg>
-          </section>}
+          </section>
           <nav className="account-quick-links" aria-label="Быстрый доступ">
             <Link to="/labs"><span aria-hidden="true">⌁</span> Лаборатория <i aria-hidden="true">↗</i></Link>
             <Link to="/assessment"><span aria-hidden="true">✓</span> Контрольные срезы <i aria-hidden="true">↗</i></Link>

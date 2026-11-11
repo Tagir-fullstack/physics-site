@@ -6,11 +6,13 @@ import { bodyOf, accountOwnsProfile, currentStudent, hash, identityFrom, profile
 import { getClerkUser, isAdmin } from './_lib/auth.js'
 import { findStudentRecovery, redeemStudentRecovery, issueStudentRecovery } from './_lib/studentRecovery.js'
 import { deleteStudent } from './_lib/deleteStudent.js'
+import { electrostaticsLab } from './_lib/electrostaticsLab.js'
 import { clementLab } from './_lib/clementLab.js'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   res.setHeader('Referrer-Policy', 'no-referrer')
   try {
+    if (req.query.lab === 'electrostatics') return await electrostaticsLab(req, res)
     if (req.query.lab === 'clement-desormes') return await clementLab(req, res)
     const account = await getClerkUser(req)
     const profile = await currentStudent(req, account)

@@ -10,7 +10,6 @@ import { useApiClient } from '../lib/apiClient';
 import AccountStudentIdentity, { type ProfileIdentity } from '../components/AccountStudentIdentity';
 import { studentRequest, useStudentProfile } from '../lib/studentProfile';
 import '../styles/account-dashboard.css';
-import EducationAccount from '../components/EducationAccount';
 
 const ACCOUNT_THEMES = [
   { id: 'simple', name: 'Простая' },
@@ -72,7 +71,7 @@ const getExperienceLabel = (experience: number) =>
   EXPERIENCE_OPTIONS.find(option => Number(option.value) === experience)?.label || `${experience} лет`;
 
 export default function Account() {
-  const { user, profile, isLoading, signOut, updateProfile } = useAuth();
+  const { user, profile, isLoading, signOut, updateProfile, isBasicPreview } = useAuth();
   const { user: clerkUser } = useUser();
   const { authFetch } = useApiClient();
   const { profile: workProfile, loading: identityLoading, error: identityError, refresh: refreshIdentity, setProfile: setWorkProfile } = useStudentProfile();
@@ -82,9 +81,10 @@ export default function Account() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [accountAccess, setAccountAccess] = useState<AccountAccessState | null>(null);
+  const [serverAccess, setAccountAccess] = useState<AccountAccessState | null>(null);
   const [accessError, setAccessError] = useState<{ userId: string; attempt: number; message: string } | null>(null);
   const [accessAttempt, setAccessAttempt] = useState(0);
+  const accountAccess = serverAccess && isBasicPreview ? { ...serverAccess, isPremium: false } : serverAccess;
   const userId = user?.id;
   const identity: ProfileIdentity = { lastName: workProfile?.lastName ?? profile?.last_name ?? clerkUser?.lastName ?? '', firstName: workProfile?.firstName ?? profile?.first_name ?? clerkUser?.firstName ?? '', group: workProfile?.group ?? '' };
   const [copiedId, setCopiedId] = useState(false);
@@ -564,8 +564,6 @@ export default function Account() {
           </div>
         )}
 
-        <EducationAccount userId={user.id} />
-        {(accountAccess?.role === 'owner' || accountAccess?.role === 'admin') && <Link className="education-account-action account-review-link" to="/admin/teacher-reviews">Заявки преподавателей →</Link>}
         <div className="account-grid">
           {/* Profile Section - Top Left */}
           <section className="account-section account-profile-section">
@@ -785,6 +783,8 @@ export default function Account() {
               </div>
             )}
           </section>
+
+          {(accountAccess.role === 'owner' || accountAccess.role === 'admin') && <section className="account-section account-review-section"><Link className="education-account-action" to="/admin/teacher-reviews">Заявки преподавателей →</Link></section>}
 
           {/* Logout - spans remaining space or new row on mobile */}
           <section className="account-section account-section-danger">

@@ -58,6 +58,9 @@ export interface AuthState {
 }
 
 export interface AuthContextType extends AuthState {
+  canPreviewBasic: boolean;
+  isBasicPreview: boolean;
+  setBasicPreview: (enabled: boolean) => void;
   signOut: () => Promise<void>;
   hasFeature: (feature: PremiumFeature) => boolean;
   updateProfile: (data: Partial<Profile>) => Promise<void>;

@@ -48,7 +48,7 @@ function Plot({ rows, task, slope, intercept, smallRadius }: { rows: Row[]; task
 }
 
 export default function OberbeckPendulum({ variant = referenceVariant, variantCode, student }: { variant?: OberbeckVariant; variantCode?: string; student?: StudentProfile }) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, isBasicPreview } = useAuth()
   const { authFetch } = useApiClient()
   const [access, setAccess] = useState<{ userId: string; allowed: boolean; canLookup?: boolean; error: string } | null>(null)
   const [accessAttempt, setAccessAttempt] = useState(0)
@@ -68,15 +68,15 @@ export default function OberbeckPendulum({ variant = referenceVariant, variantCo
     return () => { live = false; controller.abort(); window.clearTimeout(timeout) }
   }, [authFetch, isLoading, userId, accessAttempt])
   const verified = !isLoading && !!userId && access?.userId === userId
-  const isPro = Boolean(verified && access?.allowed)
+  const isPro = Boolean(verified && access?.allowed && !isBasicPreview)
   const custom = isPro && manual && manual.userId === userId ? manual.setup : null
   const current = custom ?? { variant, length: 10 }
   const manualKey = custom ? `manual:${userId}:${variantFingerprint(custom.variant)}:${custom.length}` : undefined
   const controls = isPro ? <OberbeckManualControls canLookup={access?.canLookup} setup={current} custom={!!custom} onApply={setup => { setManual({ userId: userId!, setup }); setRevision(n => n + 1) }} onReset={() => { setManual(null); setRevision(n => n + 1) }} /> : verified && access?.error ? <p className="ob-access-error" role="alert">{access.error} <button type="button" onClick={() => setAccessAttempt(n => n + 1)}>Повторить</button></p> : null
-  return <OberbeckSimulation key={`${manualKey ?? 'assigned'}:${revision}`} variant={current.variant} variantCode={variantCode} student={student} isPro={isPro} accessLoading={isLoading || Boolean(userId && !verified)} advancedControls={controls} custom={!!custom} initialLength={current.length} manualNotebookKey={manualKey} />
+  return <OberbeckSimulation key={`${manualKey ?? 'assigned'}:${revision}`} variant={current.variant} variantCode={variantCode} student={student} isPro={isPro} canMonitor={Boolean(verified && access?.canLookup)} accessLoading={isLoading || Boolean(userId && !verified)} advancedControls={controls} custom={!!custom} initialLength={current.length} manualNotebookKey={manualKey} />
 }
 
-function OberbeckSimulation({ variant, variantCode, student, isPro, accessLoading: isLoading, advancedControls, custom, initialLength, manualNotebookKey }: { variant: OberbeckVariant; variantCode?: string; student?: StudentProfile; isPro: boolean; accessLoading: boolean; advancedControls: ReactNode; custom: boolean; initialLength: number; manualNotebookKey?: string }) {
+function OberbeckSimulation({ variant, variantCode, student, isPro, canMonitor, accessLoading: isLoading, advancedControls, custom, initialLength, manualNotebookKey }: { variant: OberbeckVariant; variantCode?: string; student?: StudentProfile; isPro: boolean; canMonitor: boolean; accessLoading: boolean; advancedControls: ReactNode; custom: boolean; initialLength: number; manualNotebookKey?: string }) {
   const { user } = useAuth()
   const { height: HEIGHT, base: BASE, small: SMALL, large: LARGE, radii: RADII } = variant
   const TOTAL = BASE + SMALL + LARGE
@@ -208,9 +208,8 @@ function OberbeckSimulation({ variant, variantCode, student, isPro, accessLoadin
         <div className="ob-desktop-run-controls">{timeReadout}</div>
       </aside>
     </section>
-    {!isPro && <div className="atwood-pro-heading"><span className="atwood-pro-badge">PRO</span><span>Инструменты работы</span></div>}
     {!isPro && advancedControls}
-    {!isPro && <section className="atwood-card atwood-pro-locked" aria-busy={isLoading}><span className="atwood-pro-badge">PRO</span><div><h2>{isLoading ? 'Проверяем доступ…' : 'Полная лабораторная с PRO'}</h2><p>Задания, таблицы, графики, обработка погрешностей и скачивание работы доступны по подписке PRO. Установка доступна всем.</p></div>{!isLoading && <Link className="atwood-secondary" to="/account">Моя подписка</Link>}</section>}
+    {!isPro && <section className="atwood-card ob-pro-locked" aria-label="Обработка работы доступна с PRO" aria-busy={isLoading}><span className="atwood-pro-badge">PRO</span><div><h2>{isLoading ? 'Проверяем доступ…' : 'Теория и обработка результатов'}</h2><p>Задания, электронные таблицы, запись отсчётов, графики, расчёты погрешностей, вывод и скачивание работы доступны с PRO.</p><p>Бесплатно можно проводить опыты и записывать измерения в тетрадь. Существующие черновики сохраняются.</p></div>{!isLoading && <Link className="ob-pro-link" to="/account">Подробнее о PRO →</Link>}</section>}
     {isPro && <>
     <section className="atwood-card ob-advanced-tools" aria-label="Настройки и сверка опыта">
       {advancedControls}
@@ -235,5 +234,6 @@ function OberbeckSimulation({ variant, variantCode, student, isPro, accessLoadin
     <details className="atwood-card ob-model"><summary>О модели установки</summary><p>Высота, радиусы и массы подвешенных грузов соответствуют вашему индивидуальному варианту. Инерция установки одинакова для вариантов и оценена по двум исходным измерениям: 18,5 с для платформы 92,7 г на радиусе 10 мм при высоте 0,5 м (принято l = 10 см) и 6,7 с для массы 245,93 г на радиусе 17,5 мм при l = 12 см. Масса цилиндров и инерция крестовины оценены по этим точкам, а не измерены на приборе. Трение и проскальзывание отдельно не моделируются. Каждый запуск получает независимое случайное отклонение времени до ±0,5% вокруг расчётного значения (треугольное распределение). Это учебная имитация разброса, а не воспроизведение всех ошибок реального прибора. Запись времени в таблицу округляется до 0,01 с; дополнительные цифры секундомера не означают большую точность.</p></details>
     <footer className="ob-footer"><span>{storageError ? 'Автосохранение недоступно. Сохраните свои результаты перед закрытием.' : 'Черновик сохраняется в этом браузере на данном устройстве.'}</span>{isPro && <button className="atwood-secondary" onClick={download}>Скачать работу ↓</button>}</footer>
     </>}
+    <nav className="atwood-card ob-footer-nav" aria-label="Навигация лабораторной"><Link to="/labs">← Все лабораторные</Link>{canMonitor && <Link to="/admin/oberbeck-variants">Мониторинг маятника Обербека →</Link>}</nav>
   </div></main>
 }

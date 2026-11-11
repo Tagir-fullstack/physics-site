@@ -255,3 +255,17 @@
 .account-review-link { margin: 0 0 18px; color: #79afea; }
 .a11y-light-theme .education-account p { color: #566172; }
 .a11y-light-theme .education-account a { color: #2169b5 !important; }
+
+/* Learning details live inside the existing banner. */
+.account-dashboard .education-account-hero { margin: 0; min-width: 0; flex: 1; }
+.account-dashboard .education-account-hero .account-section-heading { align-items: flex-start; flex-wrap: wrap; gap: .75rem; margin-bottom: .75rem; }
+.account-dashboard .education-account-hero .account-section-heading > div > span { color: inherit; font-size: .65rem; }
+.account-dashboard .education-account-hero p { max-width: 560px; margin: .4rem 0; }
+.account-dashboard .education-account-hero .education-edit-link { color: inherit; font-size: .8rem; text-underline-offset: 3px; }
+.account-dashboard .education-account-hero .account-hero-link { margin-top: .9rem; }
+.account-dashboard .education-account-hero a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.a11y-light-theme .account-dashboard .education-account-hero .education-edit-link { color: #fff !important; }
+.a11y-light-theme .account-dashboard[data-account-theme="simple"] .education-account-hero .education-edit-link,
+.a11y-light-theme .account-dashboard.account-tier-basic .education-account-hero .education-edit-link { color: #465263 !important; }
+.a11y-light-theme .account-dashboard .education-account-hero .account-hero-link { color: #253957 !important; }
+.account-page.account-dashboard .account-review-section { grid-column: 1 / -1; background: var(--dash-surface); border-color: var(--dash-border); }

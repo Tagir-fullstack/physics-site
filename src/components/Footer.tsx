@@ -11,7 +11,7 @@ export default function Footer() {
   const location = useLocation();
 
   // Тест, презентация и отдельная страница тарифов используют свой макет.
-  if (isQuizActive || ['/thesis', '/premium'].includes(location.pathname.replace(/\/$/, ''))) {
+  if (isQuizActive || ['/thesis', '/premium', '/konkurs'].includes(location.pathname.replace(/\/$/, ''))) {
     return null;
   }
 

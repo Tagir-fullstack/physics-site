@@ -89,7 +89,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
           if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
         }
         // На /thesis тема уже переключается собственным обработчиком слайдов
-        if (window.location.pathname === '/thesis') return;
+        if (['/thesis', '/konkurs'].includes(window.location.pathname.replace(/\/$/, ''))) return;
       }
 
       e.preventDefault();

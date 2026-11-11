@@ -101,6 +101,8 @@ export default function Teacher() {
             </Link>
           )}
 
+          <Link to="/teacher/electrostatics-monitor" style={{ display: 'block', backgroundColor: cardBg, border: cardBorder, borderRadius: 16, padding: '1.25rem', color: textPrimary, textDecoration: 'none' }}>Электростатические поля · результаты студентов →</Link>
+
           <div style={{ backgroundColor: cardBg, border: cardBorder, borderRadius: 16, padding: '2rem 1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🛠</div>
             <h2 style={{ color: textPrimary, marginTop: 0, marginBottom: '0.75rem', fontSize: '1.3rem' }}>

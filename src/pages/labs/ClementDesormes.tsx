@@ -98,6 +98,8 @@ function Experiment({ variant, student, canMonitor, canUsePro, custom = false, m
   const live = useRef(state)
   const [mobileLayout, setMobileLayout] = useState(() => window.matchMedia('(max-width: 960px)').matches)
   const [speed, setSpeed] = useState(1)
+  const speedOptions = canUsePro ? [1, 2, 10, 20] : [1, 2, 5]
+  const playbackSpeed = speedOptions.includes(speed) ? speed : 1
   const [zoom, setZoom] = useState(false)
   const [rowIndex, setRowIndex] = useState(0)
   const [notebook, setNotebook] = useState(() => loadNotebook(storageKey))
@@ -134,13 +136,13 @@ function Experiment({ variant, student, canMonitor, canUsePro, custom = false, m
   useEffect(() => {
     let frame: number, previous = performance.now()
     const tick = (now: number) => {
-      const multiplier = live.current.phase === 'venting' ? 1 : canUsePro ? speed : Math.min(speed, 5)
+      const multiplier = live.current.phase === 'venting' ? 1 : playbackSpeed
       const next = stepClement(variant, live.current, (now - previous) / 1000 * multiplier)
       previous = now; live.current = next; setState(next); frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [variant, speed, canUsePro])
+  }, [variant, playbackSpeed])
   useEffect(() => {
     const released = (event: PointerEvent) => { if (pumpHold.current?.pointerId === event.pointerId) stopPump() }
     const hidden = () => { if (document.hidden) stopPump() }
@@ -210,7 +212,7 @@ function Experiment({ variant, student, canMonitor, canUsePro, custom = false, m
   const computedGamma = clementGamma(num(notebook.rows[0].head), num(notebook.extrapolated))
   const liveControls = <div className="cd-live-controls" aria-label="Управление установкой">
         <div className="cd-clock"><span>{state.phase === 'venting' || state.ventTime ? 'Кран открыт' : 'Ожидание'}</span><strong>{f(state.phase === 'venting' || state.ventTime ? state.ventTime : waiting ? Math.min(80, state.elapsed) : 0, 2)} с</strong></div>
-        <label className="cd-speed"><span>Скорость</span><select aria-label="Скорость показа" value={canUsePro ? speed : Math.min(speed, 5)} disabled={state.phase === 'venting' || state.pumping} onChange={e => { const next = Number(e.target.value); if ([1, 2, 5, ...(canUsePro ? [10] : [])].includes(next)) setSpeed(next) }}>{[1, 2, 5, 10].map(s => <option key={s} value={s} disabled={!canUsePro && s > 5}>×{s}{s > 5 ? ' · PRO' : ''}</option>)}</select></label>
+        <label className="cd-speed"><span>Скорость</span><select aria-label="Скорость показа" value={playbackSpeed} disabled={state.phase === 'venting' || state.pumping} onChange={e => { const next = Number(e.target.value); if (speedOptions.includes(next)) setSpeed(next) }}>{(canUsePro ? speedOptions : [1, 2, 5, 10, 20]).map(s => <option key={s} value={s} disabled={!canUsePro && s > 5}>×{s}{s > 5 ? ' · PRO' : ''}</option>)}</select></label>
         <div className="cd-valve-buttons"><button type="button" aria-pressed={state.inletOpen} disabled={state.outletOpen || !['idle', 'pumping'].includes(state.phase)} onClick={() => act('inlet')}>К · {state.inletOpen ? 'открыт' : 'закрыт'}</button><button type="button" aria-pressed={state.outletOpen} disabled={state.phase !== 'ready' && !(state.phase === 'venting' && state.ventTime >= 1)} onClick={() => act('outlet')}>К₀ · {state.outletOpen ? 'открыт' : 'закрыт'}</button></div>
         <button type="button" className={`cd-primary cd-pump${state.pumping ? ' is-pumping' : ''}`} disabled={!state.inletOpen || state.outletOpen || !['idle', 'pumping'].includes(state.phase)} onPointerDown={e => {
           if (mobileLayout || !e.isPrimary || e.button !== 0) return
@@ -236,7 +238,7 @@ function Experiment({ variant, student, canMonitor, canUsePro, custom = false, m
         {!mobileLayout && liveControls}
         <div className="cd-status" role="status"><b>{phaseLabel}</b><p>{canUsePro ? mobileLayout ? phaseHint.replace('удерживайте «Компрессор»', 'включите компрессор').replace('Отпустите компрессор', 'Остановите компрессор') : phaseHint : basicHint}</p></div>
 
-{canUsePro ? <small className="cd-muted">При выпуске воздуха автоматически ×1. Секундомер показывает время опыта.</small> : <Link className="cd-pro-link" to="/account">Ускорение ×10 доступно с PRO →</Link>}
+{canUsePro ? <small className="cd-muted">При выпуске воздуха автоматически ×1. Секундомер показывает время опыта.</small> : <Link className="cd-pro-link" to="/account">Ускорение ×10 и ×20 доступно с PRO →</Link>}
       </section>
     </div>
     {canUsePro ? <>
@@ -255,7 +257,7 @@ function Experiment({ variant, student, canMonitor, canUsePro, custom = false, m
 }
 
 export default function ClementDesormes() {
-  const { user } = useAuth()
+  const { user, isBasicPreview } = useAuth()
   const { profile, loading, error: profileError, refresh, setProfile, authFetch } = useStudentProfile()
   const [assignment, setAssignment] = useState<{ profile: StudentProfile; variant: ClementVariant; canMonitor: boolean; canUsePro: boolean } | null>(null)
   const [error, setError] = useState('')
@@ -270,12 +272,13 @@ export default function ClementDesormes() {
     return () => { live = false }
   }, [id, retry, authFetch])
   if (loading) return <main className="student-page"><section className="student-panel"><p role="status">Загружаем профиль…</p></section></main>
+  const canUsePro = Boolean(assignment?.canUsePro && !isBasicPreview)
   if (profile && assignment?.profile.id === profile.id) {
-    const custom = assignment.canUsePro && user && manual?.userId === user.id && manual.studentId === profile.id ? manual.variant : null
+    const custom = canUsePro && user && manual?.userId === user.id && manual.studentId === profile.id ? manual.variant : null
     const current = custom || assignment.variant
     const notebookKey = custom ? `physez-clement-v1:${profile.id}:manual:${user!.id}:${clementVariantKey(custom)}` : undefined
-    const controls = assignment.canUsePro && user ? <ClementManualControls variant={current} custom={!!custom} onApply={variant => { setManual({ userId: user.id, studentId: profile.id, variant }); setRevision(n => n + 1) }} onReset={() => {setManual(null);setRevision(n => n + 1)}}/> : null
-    return <Experiment key={`${profile.id}:${user?.id}:${notebookKey || 'assigned'}:${revision}`} variant={current} student={profile} canMonitor={assignment.canMonitor} canUsePro={assignment.canUsePro === true} custom={!!custom} manualNotebookKey={notebookKey} advancedControls={controls}/>
+    const controls = canUsePro && user ? <ClementManualControls variant={current} custom={!!custom} onApply={variant => { setManual({ userId: user.id, studentId: profile.id, variant }); setRevision(n => n + 1) }} onReset={() => {setManual(null);setRevision(n => n + 1)}}/> : null
+    return <Experiment key={`${profile.id}:${user?.id}:${notebookKey || 'assigned'}:${revision}`} variant={current} student={profile} canMonitor={assignment.canMonitor} canUsePro={canUsePro} custom={!!custom} manualNotebookKey={notebookKey} advancedControls={controls}/>
   }
   return <main className="student-page"><section className="student-panel"><span className="cd-eyebrow">ЛАБОРАТОРНАЯ РАБОТА №5</span><h1>Метод Клемана—Дезорма</h1><p>Управляйте компрессором и кранами, снимите показания манометра в пяти опытах и определите показатель адиабаты воздуха по графику.</p><p>Используется ваш постоянный номер варианта. Если профиль уже создан, восстановите его вместо повторной регистрации.</p><Link to={user ? '/account' : '/student/profile?from=clement-desormes'}>Мой профиль и восстановление →</Link>{(error || profileError) && <p role="alert" className="student-error">{error || profileError}</p>}{profileError ? <button type="button" onClick={() => void refresh()}>Повторить загрузку профиля</button> : profile ? <><p role="status">{error ? 'Условия не загружены.' : 'Загружаем индивидуальную установку…'}</p>{error && <button type="button" onClick={() => setRetry(n => n + 1)}>Повторить загрузку условий</button>}</> : <StudentIdentityForm start onComplete={setProfile}/>}</section></main>
 }

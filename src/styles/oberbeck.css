@@ -116,3 +116,19 @@
 .a11y-light-theme .oberbeck-page .ob-weight { --weight-color: #2169b5; }
 .a11y-light-theme .oberbeck-page .ob-weight:has(input:checked) { border-color: #2169b5; background: #edf4fc; }
 .a11y-light-theme .oberbeck-page input[type=range] { accent-color: #2169b5; }
+
+/* Compact PRO card: aligned heading/link and full-width explanatory rows. */
+.oberbeck-page .ob-pro-locked { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:.5rem 1rem; margin-bottom:1rem; }
+.ob-pro-locked > div { display:contents; }
+.ob-pro-locked > .atwood-pro-badge { align-self:center; }
+.ob-pro-locked h2 { grid-column:2; align-self:center; font:700 1.15rem 'CCUltimatum',Arial,sans-serif; margin:0; }
+.ob-pro-locked p { grid-column:2 / -1; color:var(--ob-muted); font-size:.9rem; line-height:1.5; margin:.15rem 0 0; }
+.oberbeck-page .ob-pro-link { grid-column:3; grid-row:1; align-self:center; font-size:.8rem; text-decoration:none; color:#4a90e2; white-space:nowrap; }
+.oberbeck-page .ob-footer-nav { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.8rem 1.5rem; margin-top:1rem; font-size:.85rem; }
+.ob-footer-nav a { color:#4a90e2; text-decoration:none; }
+.a11y-light-theme .oberbeck-page :is(.ob-pro-link,.ob-footer-nav a) { color:#2169b5; }
+@media(max-width:600px) {
+  .oberbeck-page .ob-pro-locked { grid-template-columns:auto minmax(0,1fr); gap:.65rem .8rem; }
+  .ob-pro-locked p { grid-column:1 / -1; }
+  .oberbeck-page .ob-pro-link { grid-column:1 / -1; grid-row:auto; justify-self:start; }
+}
