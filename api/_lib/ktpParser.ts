@@ -1,3 +1,4 @@
+import { validateOfficeArchive } from './officeArchive.js'
 import mammoth from 'mammoth'
 import { parse as parseHtml } from 'node-html-parser'
 
@@ -265,6 +266,7 @@ function isHeaderRow(row: Cell[]): boolean {
 }
 
 export async function parseKtpDocx(buffer: Buffer): Promise<ParsedKtp> {
+  validateOfficeArchive(buffer, 'docx')
   const { value: html } = await mammoth.convertToHtml({ buffer })
   const root = parseHtml(html)
   const tables = root.querySelectorAll('table')

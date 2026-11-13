@@ -259,3 +259,7 @@
 @media(max-width:600px) and (orientation:portrait) {
   .es-bench > .es-orientation-hint,.es-immersive .es-bench > .es-orientation-hint { display:block; }
 }
+
+.es-monitor-search-field { position:relative; }
+.es-monitor-search-field input { padding-right:2rem; }
+.es-monitor-page .es-monitor-clear { position:absolute; top:50%; right:3px; transform:translateY(-50%); border:0; background:transparent; color:inherit; min-width:30px; min-height:30px; padding:0; font:20px Arial,sans-serif; cursor:pointer; }

@@ -1,3 +1,4 @@
+import { sameRequestOrigin, readLimitedJson, RequestBodyError } from './_lib/requestSecurity.js'
 import { isAssessmentGroup, normalizeMonitorGroup } from '../src/lib/monitorGrading.js'
 import { createHash, randomBytes } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -37,19 +38,7 @@ const shuffle = <T>(items: T[]) => {
   }
   return result
 }
-async function bodyOf(req: VercelRequest) {
-  if (req.body && typeof req.body === 'object') return req.body as Record<string, unknown>
-  if (typeof req.body === 'string') {
-    try { return JSON.parse(req.body) as Record<string, unknown> } catch { return {} }
-  }
-  const raw = await new Promise<string>((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)))
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
-    req.on('error', reject)
-  })
-  try { return raw ? JSON.parse(raw) as Record<string, unknown> : {} } catch { return {} }
-}
+
 const publicQuestions = (questions: VariantQuestion[]) => questions.map((question) => ({
   id: question.id, orderNo: question.orderNo, section: question.section, difficulty: question.difficulty,
   kind: question.kind, prompt: question.prompt, points: question.points,
@@ -109,8 +98,11 @@ function isCorrect(question: VariantQuestion, answer: unknown) {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
+  if (req.method !== 'GET' && !sameRequestOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
   if (!hasDatabaseConfig) return res.status(503).json({ error: 'База данных не подключена.' })
-  const body = await bodyOf(req)
+  let body: Record<string, unknown>
+  try { body = req.method === 'GET' ? {} : await readLimitedJson(req) }
+  catch (error) { return res.status(error instanceof RequestBodyError ? error.status : 400).json({ error: 'Неверный или слишком большой запрос.' }) }
 
   if (req.method === 'POST' && body.action === 'join') {
     const account = await getClerkUser(req)

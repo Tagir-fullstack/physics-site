@@ -1,3 +1,4 @@
+import { sameRequestOrigin } from './requestSecurity.js'
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { and, eq, isNull, or } from 'drizzle-orm'
@@ -21,12 +22,7 @@ export async function bodyOf(req: VercelRequest): Promise<Record<string, unknown
   const body = typeof raw === 'string' ? JSON.parse(raw) : raw
   return body && typeof body === 'object' && !Array.isArray(body) ? body : {}
 }
-export function sameOrigin(req: VercelRequest) {
-  if (req.headers['sec-fetch-site'] === 'cross-site') return false
-  const origin = req.headers.origin
-  if (!origin) return true // Non-browser clients still require the private session token.
-  try { return new URL(origin).host === req.headers.host } catch { return false }
-}
+export const sameOrigin = sameRequestOrigin
 export async function profileForToken(token: unknown) {
   if (typeof token !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.[A-Za-z0-9_-]{32}$/.test(token)) return null
   const [id, secret] = token.split('.')

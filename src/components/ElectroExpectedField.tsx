@@ -31,7 +31,6 @@ export default function ElectroExpectedField({variant}:{variant:ElectroVariant})
         {lines.map((path,i)=><path key={i} d={path} className="es-field-line" markerEnd="url(#es-expected-arrow)"/>)}</g><ElectroCoordinates/><g transform="matrix(0 1 1 0 0 0)"><Electrodes variant={variant}/>
       </g>
       {electrodes(variant).map((e,i)=><text className="es-expected-potential" key={i} x={e.y+6} y={e.x-5}>{e.potential?`+${variant.voltage}`:'0'} В</text>)}
-      <text x="240" y="190" textAnchor="end">x, мм → · y, мм ↑</text>
     </svg></div>
     <div className="es-preview-legend">{levels.map((level,i)=><span key={level} style={{color:colours[i%colours.length]}}>{level} В</span>)}</div>
     <p className="es-hint">Это эталон назначенного варианта, а не измерения студента. Число точек, их расположение и погрешность в работе студента могут отличаться.</p>

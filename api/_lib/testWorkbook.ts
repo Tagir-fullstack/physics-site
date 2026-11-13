@@ -1,3 +1,4 @@
+import { validateOfficeArchive } from './officeArchive.js'
 import ExcelJS from 'exceljs'
 import { evaluateFormula, generateVariables } from './safeFormula.js'
 
@@ -49,6 +50,7 @@ const boolOf = (value: string, fallback: boolean) => {
 const numberOf = (value: string) => Number(value.replace(',', '.'))
 
 export async function parseTestWorkbook(buffer: Buffer): Promise<ParsedTestWorkbook> {
+  validateOfficeArchive(buffer, 'xlsx')
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer)
   const settingsSheet = workbook.getWorksheet('Настройки') || workbook.worksheets[0]

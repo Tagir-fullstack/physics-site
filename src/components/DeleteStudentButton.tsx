@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import MonitorActionIcon from './MonitorActionIcon'
 import { useApiClient } from '../lib/apiClient'
 import { studentRequest, type StudentProfile } from '../lib/studentProfile'
 
-export default function DeleteStudentButton({ student, onDeleted }: { student: StudentProfile; onDeleted: (id: string) => void }) {
+export default function DeleteStudentButton({ student, onDeleted, iconOnly = false }: { student: StudentProfile; onDeleted: (id: string) => void; iconOnly?: boolean }) {
   const { authFetch } = useApiClient()
   const [open, setOpen] = useState(false)
   const [confirmation, setConfirmation] = useState('')
@@ -19,7 +20,7 @@ export default function DeleteStudentButton({ student, onDeleted }: { student: S
     finally { setBusy(false) }
   }
   return <>
-    <button type="button" className="monitor-row-open student-delete-button" onClick={() => { setConfirmation(''); setError(''); setOpen(true) }}>Удалить аккаунт</button>
+    <button type="button" className={`monitor-row-open student-delete-button${iconOnly ? ' monitor-icon-action' : ''}`} aria-label={iconOnly ? 'Удалить аккаунт' : undefined} title={iconOnly ? 'Удалить аккаунт' : undefined} onClick={() => { setConfirmation(''); setError(''); setOpen(true) }}>{iconOnly ? <MonitorActionIcon action="delete"/> : 'Удалить аккаунт'}</button>
     {open && <dialog ref={dialog} className="student-delete-dialog" aria-labelledby={`delete-title-${student.id}`} onCancel={e => { if (busy) e.preventDefault(); else setOpen(false) }}>
       <h2 id={`delete-title-${student.id}`}>Удалить аккаунт студента?</h2>
       <p><b>{student.lastName} {student.firstName}</b> · {student.group || 'Без группы'} · вариант № {student.variantNumber}</p>

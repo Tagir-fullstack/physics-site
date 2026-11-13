@@ -345,3 +345,32 @@
 .student-delete-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; margin-top:20px; }
 .a11y-light-theme .student-delete-dialog { background:#fff; color:#222; }
 .a11y-light-theme .student-delete-dialog input { background:#f4f4f4; }
+
+/* Shared compact student-variant monitors: Clement–Desormes and electrostatics. */
+.monitor-page--variants .monitor-toolbar { align-items: flex-end; gap: .75rem; padding: .5rem 0 .65rem; }
+.monitor-page--variants .monitor-search,
+.monitor-page--variants .monitor-table-tools label { display: flex; flex-direction: column; align-items: stretch; gap: .25rem; font-size: .85rem; line-height: 1.2; }
+.monitor-page--variants .monitor-table-tools { align-items: flex-end; gap: .75rem; }
+.monitor-page--variants .monitor-toolbar :is(input, select) { box-sizing: border-box; height: 36px; margin: 0; padding: .35rem .65rem; font: inherit; font-size: .85rem; }
+.monitor-page--variants .monitor-table-tools > span { align-self: center; padding-top: 1.25rem; }
+.monitor-page--variants .monitor-table { min-width: 560px; }
+.monitor-page--variants .monitor-table th:first-child { width: 48%; }
+.monitor-page--variants .monitor-table th:nth-child(2) { width: 15%; }
+.monitor-page--variants .monitor-table th:nth-child(3) { width: 15%; }
+.monitor-page--variants .monitor-table :is(th, td) { padding: .2rem .6rem; }
+.monitor-page--variants .monitor-icon-actions { display: flex; align-items: center; gap: .5rem; }
+.monitor-page .monitor-icon-action { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; width: 32px; height: 32px; box-sizing: border-box; padding: 0; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #70acf0; cursor: pointer; text-decoration: none; }
+.monitor-page .monitor-icon-action.student-delete-button { color: #fc6255; }
+.monitor-page .monitor-icon-action:hover { background: rgba(74,144,226,.1); border-color: currentColor; }
+.monitor-page .monitor-icon-action:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.monitor-page .monitor-icon-action:disabled { opacity: .5; cursor: wait; }
+.monitor-page .monitor-icon-action svg { flex: none; }
+.a11y-light-theme .monitor-page .monitor-icon-action { color: #286fb6; }
+.a11y-light-theme .monitor-page .monitor-icon-action.student-delete-button { color: #c83b30; }
+@media (pointer: coarse) {
+  .monitor-page .monitor-icon-action { width: 44px; height: 44px; flex-basis: 44px; }
+}
+@media (max-width: 600px) {
+  .monitor-page--variants .monitor-table-tools { flex-wrap: wrap; }
+  .monitor-page--variants .monitor-table-tools > span { padding-top: 0; }
+}

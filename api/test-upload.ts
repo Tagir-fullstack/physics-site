@@ -1,3 +1,4 @@
+import { sameRequestOrigin, readLimitedBody, RequestBodyError } from './_lib/requestSecurity.js'
 import { educationOwner } from './_lib/educationOwner.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { canTeach } from './_lib/education.js'
@@ -9,27 +10,21 @@ import { parseTestWorkbook } from './_lib/testWorkbook.js'
 
 export const config = { api: { bodyParser: false } }
 
-function readRawBody(req: VercelRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)))
-    req.on('end', () => resolve(Buffer.concat(chunks)))
-    req.on('error', reject)
-  })
-}
-
 async function uploadedFile(req: VercelRequest) {
-  const raw = await readRawBody(req)
+  const raw = await readLimitedBody(req, 2 * 1024 * 1024 + 64 * 1024)
   return new Promise<{ buffer: Buffer; filename: string }>((resolve, reject) => {
     const chunks: Buffer[] = []
     let filename = ''
     let limitReached = false
-    const parser = busboy({ headers: req.headers, defParamCharset: 'utf8', limits: { files: 1, fileSize: 2 * 1024 * 1024 } })
+    const parser = busboy({ headers: req.headers, defParamCharset: 'utf8', limits: { files: 1, fields: 8, parts: 9, fieldSize: 4096, fileSize: 2 * 1024 * 1024 } })
     parser.on('file', (_name, stream, info) => {
       filename = info.filename
       stream.on('limit', () => { limitReached = true })
       stream.on('data', (chunk: Buffer) => chunks.push(chunk))
     })
+    parser.on('filesLimit', () => { limitReached = true })
+    parser.on('partsLimit', () => { limitReached = true })
+    parser.on('fieldsLimit', () => { limitReached = true })
     parser.on('error', reject)
     parser.on('close', () => {
       if (limitReached) return reject(new Error('Файл больше 2 МБ.'))
@@ -43,6 +38,7 @@ async function uploadedFile(req: VercelRequest) {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (!sameRequestOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
   if (!hasDatabaseConfig) return res.status(503).json({ error: 'База данных не подключена.' })
   const session = await getClerkUser(req)
   const user = session ? await educationOwner(session) : null
@@ -82,6 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(201).json({ id: test.id, title: test.title, questions: parsed.questions.length })
   } catch (error) {
     console.error('[test-upload]', error)
-    return res.status(422).json({ error: error instanceof Error ? error.message : 'Не удалось прочитать шаблон.' })
+    return res.status(error instanceof RequestBodyError ? error.status : 422).json({ error: error instanceof RequestBodyError ? error.message : 'Не удалось прочитать шаблон XLSX. Проверьте формат и размер файла.' })
   }
 }

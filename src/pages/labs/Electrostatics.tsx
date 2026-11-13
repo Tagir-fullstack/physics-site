@@ -93,7 +93,7 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
   }
   const record = () => {
     if (!isPremium) return
-    if (!ready) { setNotice('Включите питание и проверьте зондом оба электрода.'); return }
+    if (!power) { setNotice('Включите питание перед записью точки.'); return }
     if (onElectrode !== null) { setNotice('Ищите точки в проводящем слое, вне электродов.'); return }
     if (Math.abs(reading - level) > tolerance + 1e-8) { setNotice(`Найдите ${fmt(level)} В с допуском ±${fmt(tolerance)} В.`); return }
     if (selected.some(p => Math.hypot(p.x - probe.x, p.y - probe.y) < 3)) { setNotice('Эта точка уже записана или слишком близка к другой. Распределяйте точки по всей линии.'); return }
@@ -101,7 +101,7 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
     setNotebook(n => ({ ...n, points: [...n.points, { ...probe, potential: reading, level }] })); setNotice(`Точка ${selected.length + 1} для ${fmt(level)} В записана.`)
   }
   const axisRecord = () => {
-    if (!ready || Math.abs(probe.x - 90) > .5) { setNotice('Для графика установите y = 0 мм и включите проверенную установку.'); return }
+    if (!power || Math.abs(probe.x - 90) > .5) { setNotice('Для графика установите y = 0 мм и включите питание.'); return }
     if (notebook.axis.length >= 100 || notebook.axis.some(p => Math.abs(p.y - probe.y) < 1)) { setNotice('Такая точка оси уже есть или достигнут предел 100 отсчётов.'); return }
     setNotebook(n => ({ ...n, axis: [...n.axis, { ...probe, potential: reading }] })); setNotice('Отсчёт добавлен в график φ(r).')
   }
@@ -140,7 +140,7 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
         <Electrodes variant={v}/>
         {isPremium && levels.map((l, i) => { const ps = notebook.points.filter(p => p.level === l); return <g key={l} fill={colours[i % colours.length]}>{join && measuredEdges[i]?.map(([a, b], edge) => <line key={edge} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colours[i % colours.length]} strokeWidth=".7"/>)}{ps.map((p, n) => <circle key={n} cx={p.x} cy={p.y} r="1.4"><title>{fmt(l)} В; ({fmt(toDisplayPoint(p).x)}; {fmt(toDisplayPoint(p).y)}) мм</title></circle>)}{ps[0] && <text transform="matrix(0 1 1 0 0 0)" x={ps[0].y + 2} y={ps[0].x - 2}>{fmt(l)} В</text>}</g> })}
         <g className="es-probe" pointerEvents="none"><circle cx={probe.x} cy={probe.y} r="3"/><path d={`M${probe.x - 5} ${probe.y}H${probe.x + 5}M${probe.x} ${probe.y - 5}V${probe.y + 5}`}/></g>
-        </g><text x="240" y="190" textAnchor="end">x, мм → · y, мм ↑</text>
+        </g>
       </svg></div>
       <div className={`es-map-readout${isPremium ? '' : ' es-map-readout-basic'}`}>{isPremium && <span className="es-probe-coordinates">Зонд: x = <span>{fmt(toDisplayPoint(probe).x)}</span> · y = <span>{fmt(toDisplayPoint(probe).y)}</span> мм</span>}{isPremium && <output>{power ? fmt(reading) + ' В' : 'Питание выключено'}</output>}<span>Сетка 5 мм</span></div>
       <p className="es-hint es-orientation-hint">На телефоне удобнее работать в альбомной ориентации.</p>
@@ -148,13 +148,14 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
     <aside className="es-panel es-controls" aria-label="Параметры опыта"><SectionTitle step="2">Параметры опыта</SectionTitle>
       <div className="es-assignment"><strong>{practice ? 'Тренировка' : 'Вариант'} № {v.number}</strong><span>{variantDescription(v)}</span><small>{student.lastName} {student.firstName} · {student.group}</small></div>{variantControls}
       <button className={power ? 'es-primary' : ''} onClick={() => { setPower(!power); if (!power) { const e = electrodeAt(v, probe); if (e !== null) setChecks(old => old.includes(e) ? old : [...old, e]) } }}>Сеть: {power ? 'включена' : 'выключена'}</button>
-      <Meter value={reading} on={power} digital={isPremium}/><div className="es-parameter-summary"><span>Источник <strong>{v.voltage} В</strong></span><span>Шаг Δφ <strong>{v.interval} В</strong></span></div>
+      <Meter value={reading} on={power} digital={isPremium}/><div className="es-parameter-summary"><span>Источник <strong>{v.voltage} В</strong></span><span>Шаг Δφ <strong>2 В</strong></span></div>
       {isPremium && <div className="es-coordinates">{(['x', 'y'] as const).map(axis => <label key={axis}>{axis}, мм<input type="number" step="0.5" min={axis === 'x' ? -120 : -90} max={axis === 'x' ? 120 : 90} value={toDisplayPoint(probe)[axis]} onChange={e => { if (e.target.value !== '' && Number.isFinite(e.target.valueAsNumber)) move(toModelPoint({ ...toDisplayPoint(probe), [axis]: e.target.valueAsNumber })) }}/></label>)}</div>}
       {isPremium && <>
       <label>Искомый потенциал<select value={level} onChange={e => setLevel(Number(e.target.value))}>{levels.map(l => <option key={l} value={l}>{fmt(l)} В · {notebook.points.filter(p => p.level === l).length}/7 точек</option>)}</select></label>
-      <div className="es-line-progress"><span>{Math.min(selected.length, 7)} из 7 точек для {fmt(level)} В</span><progress max="7" value={Math.min(selected.length, 7)} aria-label={`Точек для линии ${level} В`}/></div><button className="es-primary" onClick={record} disabled={!power}>Записать точку {fmt(level)} В</button><p className="es-hint">Допуск ±0,1 В. На одной линии нужно не меньше 7 разнесённых точек.</p>
-      <div className="es-button-row"><button onClick={() => move({ x: 90, y: probe.y })}>Зонд на ось y = 0</button><button onClick={axisRecord} disabled={!power}>В график φ(r)</button></div>
+      <div className="es-line-progress"><span>{Math.min(selected.length, 7)} из 7 точек для {fmt(level)} В</span><progress max="7" value={Math.min(selected.length, 7)} aria-label={`Точек для линии ${level} В`}/></div><button className="es-primary" onClick={record} disabled={!power}>Записать точку {fmt(level)} В</button>
       <p className="es-notice" role="status">{notice || (!power ? 'Включите питание, затем проверьте потенциалы электродов.' : ready ? 'Найдите точки выбранного потенциала.' : 'Проверьте электроды 0 В и U.')}</p>
+      <p className="es-hint">Допуск ±0,1 В. На одной линии нужно не меньше 7 разнесённых точек.</p>
+      <div className="es-button-row"><button onClick={() => move({ x: 90, y: probe.y })}>Зонд на ось y = 0</button><button onClick={axisRecord} disabled={!power}>В график φ(r)</button></div>
       <details className="es-display-options"><summary>Отображение поля</summary>      <div className="es-options"><label><input type="checkbox" checked={join} onChange={e => setJoin(e.target.checked)}/> Соединить соседние измеренные точки</label><label><input type="checkbox" checked={reference} onChange={e => setReference(e.target.checked)}/> Эталонные эквипотенциали</label><label><input type="checkbox" checked={showField} onChange={e => setShowField(e.target.checked)}/> Эталонные силовые линии</label></div>
       {(reference || showField) && <p className="es-hint">Справочная численная модель — не ваши измерения. При экспорте карты эти линии тоже попадут в рисунок.</p>}
 </details>

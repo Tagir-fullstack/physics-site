@@ -1,3 +1,4 @@
+import { sameRequestOrigin, readLimitedJson, RequestBodyError } from '../_lib/requestSecurity.js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { eq, asc } from 'drizzle-orm'
 import { db, schema } from '../_lib/db.js'
@@ -23,29 +24,9 @@ type MetaInput = {
   totalHours?: number | null
 }
 
-function readBody(req: VercelRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (c: Buffer | string) => {
-      chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c))
-    })
-    req.on('end', () => resolve(Buffer.concat(chunks)))
-    req.on('error', reject)
-  })
-}
-
-async function parseJson(req: VercelRequest): Promise<unknown> {
-  if (req.body && typeof req.body === 'object') return req.body
-  const raw = await readBody(req)
-  if (raw.length === 0) return {}
-  try {
-    return JSON.parse(raw.toString('utf8'))
-  } catch {
-    return {}
-  }
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'no-store')
+  if (req.method !== 'GET' && !sameRequestOrigin(req)) return res.status(403).json({ error: 'Запрос с другого сайта запрещён.' })
   const { id } = req.query
   if (typeof id !== 'string') return res.status(400).json({ error: 'Invalid id' })
 
@@ -67,7 +48,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const [existing] = await db.select().from(schema.ktp).where(eq(schema.ktp.id, id)).limit(1)
     if (!existing) return res.status(404).json({ error: 'Not found' })
 
-    const body = (await parseJson(req)) as { meta?: MetaInput; lessons?: LessonInput[] }
+    let body: { meta?: MetaInput; lessons?: LessonInput[] }
+    try { body = await readLimitedJson(req, 512 * 1024) }
+    catch (error) { return res.status(error instanceof RequestBodyError ? error.status : 400).json({ error: 'Неверный или слишком большой запрос.' }) }
 
     if (body.meta && typeof body.meta === 'object') {
       const m = body.meta

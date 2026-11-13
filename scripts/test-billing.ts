@@ -64,7 +64,7 @@ try {
   process.env.BILLING_MODE = 'disabled'
   async function endpoint(query: string, method: string, user = false, body: unknown = {}) {
     let status = 200, result: Record<string, unknown> = {}
-    const req = { query: { billing: query }, method, headers: { host: 'physez.com', origin: 'https://physez.com', authorization: 'Bearer fixture-session' }, body } as unknown as VercelRequest
+    const req = { query: { billing: query }, method, headers: { host: 'physez.com', origin: 'https://physez.com', 'x-forwarded-proto': 'https', authorization: 'Bearer fixture-session' }, body } as unknown as VercelRequest
     const res = { setHeader() {}, status(code: number) { status = code; return this }, json(data: Record<string, unknown>) { result = data; return this } } as unknown as VercelResponse
     await handleBilling(req, res, async () => user ? { userId: 'user_one', email: '', isPremium: false } : null)
     return { status, result }
