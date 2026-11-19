@@ -56,7 +56,7 @@ export function measuredNeighborEdges(grid: FieldGrid, level: number, points: re
     group.sort((a, b) => a.along - b.along || a.point.x - b.point.x || a.point.y - b.point.y)
     if (group.length < 2) return
     const candidates = group.slice(1).map((p, i) => ({ a: group[i], b: p, gap: p.along - group[i].along }))
-    const component = components[ci], total = cumulative[ci].at(-1)!
+    const component = components[ci], total = cumulative[ci][cumulative[ci].length - 1]
     if (component.closed && group.length >= 3) candidates.push({ a: group[group.length - 1], b: group[0], gap: total - group[group.length - 1].along + group[0].along })
     const gaps = candidates.map(c => c.gap).filter(g => g > 1e-5).sort((a, b) => a - b)
     const typical = gaps[Math.floor((gaps.length - 1) / 2)] ?? 0

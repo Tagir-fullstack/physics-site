@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && npm run check:server && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test:platform:e2e": "node --env-file=.env.local scripts/e2e-test-platform.mjs"
+    "test:platform:e2e": "node --env-file=.env.local scripts/e2e-test-platform.mjs",
+    "check:server": "tsc -p tsconfig.api.json"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0",
