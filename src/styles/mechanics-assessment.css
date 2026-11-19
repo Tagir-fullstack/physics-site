@@ -1,3 +1,5 @@
+@import "./assessment-theme.css";
+
 .assessment-shell {
   min-height: calc(100vh - 90px);
   padding: calc(var(--dropdown-top, 62px) + 1rem) max(1.5rem, 5vw) 5rem;
@@ -30,7 +32,7 @@
 
 .assessment-kicker {
   display: block;
-  color: #4a90e2;
+  color: var(--assessment-accent);
   font-family: 'CCUltimatum', Arial, sans-serif;
   font-size: 0.95rem;
   letter-spacing: 0.11em;
@@ -136,7 +138,7 @@
 }
 
 .assessment-language button.active {
-  background: #4a90e2;
+  background: var(--assessment-accent);
   color: #fff;
 }
 
@@ -181,7 +183,7 @@
 
 .assessment-student-summary {
   margin: -0.25rem 0 1.5rem;
-  color: #4a90e2;
+  color: var(--assessment-accent);
 }
 
 .assessment-loading {
@@ -272,7 +274,7 @@
 }
 
 .assessment-timer strong {
-  color: #4a90e2;
+  color: var(--assessment-accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -326,7 +328,7 @@
   display: grid;
   place-items: center;
   border-right: 1px solid #303030;
-  background: linear-gradient(180deg, rgba(252, 98, 85, 0.1), transparent);
+  background: linear-gradient(180deg, rgba(var(--assessment-rgb), 0.1), transparent);
   color: #fc6255;
   font-family: 'CCUltimatum', Arial, sans-serif;
   font-size: 2rem;
@@ -379,8 +381,8 @@
 }
 
 .assessment-input-wrap:focus-within {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.14);
+  border-color: var(--assessment-accent);
+  box-shadow: 0 0 0 3px rgba(var(--assessment-rgb), 0.14);
 }
 
 .assessment-input-wrap input {
@@ -596,10 +598,10 @@
 
 .assessment-calculator-toggle {
   padding: 0.8rem 1.1rem;
-  border: 1px solid #4a90e2;
+  border: 1px solid var(--assessment-accent);
   border-radius: 999px;
   background: #151515;
-  color: #77adf0;
+  color: var(--assessment-tint);
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
@@ -667,12 +669,12 @@
 }
 
 .assessment-calculator-keys .operator {
-  color: #77adf0;
+  color: var(--assessment-tint);
 }
 
 .assessment-calculator-keys .equals {
   grid-row: span 2;
-  background: #4a90e2;
+  background: var(--assessment-accent);
   color: #fff;
 }
 
@@ -697,7 +699,7 @@
 .a11y-light-theme .assessment-kicker,
 .a11y-light-theme .assessment-timer strong,
 .a11y-light-theme .assessment-student-summary {
-  color: #276fbd !important;
+  color: var(--assessment-accent) !important;
 }
 
 .a11y-light-theme .assessment-intro-lead,
@@ -742,7 +744,7 @@
 }
 
 .a11y-light-theme .assessment-language button.active {
-  background: #367fc9 !important;
+  background: var(--assessment-solid) !important;
   color: #fff !important;
 }
 
@@ -774,7 +776,7 @@
 
 .a11y-light-theme .assessment-task-number {
   border-color: #c8cbd0 !important;
-  background: linear-gradient(180deg, rgba(252, 98, 85, 0.13), rgba(252, 98, 85, 0.025)) !important;
+  background: linear-gradient(180deg, rgba(var(--assessment-rgb), 0.13), rgba(var(--assessment-rgb), 0.025)) !important;
 }
 
 .a11y-light-theme .assessment-task-level {
@@ -861,9 +863,9 @@
 }
 
 .a11y-light-theme .assessment-calculator-toggle {
-  border-color: #276fbd !important;
+  border-color: var(--assessment-accent) !important;
   background: #fff !important;
-  color: #276fbd !important;
+  color: var(--assessment-accent) !important;
   box-shadow: 0 10px 26px rgba(22, 34, 48, 0.2) !important;
 }
 
@@ -899,12 +901,12 @@
 }
 
 .a11y-light-theme .assessment-calculator-keys .operator {
-  color: #276fbd !important;
+  color: var(--assessment-accent) !important;
 }
 
 .a11y-light-theme .assessment-calculator-keys .equals {
-  border-color: #276fbd !important;
-  background: #367fc9 !important;
+  border-color: var(--assessment-accent) !important;
+  background: var(--assessment-solid) !important;
   color: #fff !important;
 }
 
@@ -1027,7 +1029,7 @@
   .assessment-fullscreen-button { display: none; }
 }
 
-.assessment-policy-note { padding: .8rem 1rem; border-left: 2px solid #4a90e2; background: rgba(74,144,226,.05); color: #aaa; font-size: .85rem; line-height: 1.5; }
+.assessment-policy-note { padding: .8rem 1rem; border-left: 2px solid var(--assessment-accent); background: rgba(var(--assessment-rgb), .05); color: #aaa; font-size: .85rem; line-height: 1.5; }
 .assessment-policy-note p { margin: .4rem 0; }
 .assessment-entry .assessment-policy-note { margin: 1rem 0 0; }
 .a11y-light-theme .assessment-policy-note { color: #4f555d; }
@@ -1045,24 +1047,24 @@
 .assessment-entry-grid > div { min-width: 0; }
 .assessment-entry h1 { margin: .65rem 0 .5rem; font-size: clamp(2.25rem, 4vw, 3.25rem); line-height: 1.1; }
 .assessment-entry .assessment-kicker { font-size: .8rem; letter-spacing: .07em; }
-.assessment-entry-meta { color: #4a90e2; margin: 0 0 1.25rem; font-size: .95rem; }
+.assessment-entry-meta { color: var(--assessment-accent); margin: 0 0 1.25rem; font-size: .95rem; }
 .assessment-entry .assessment-intro-lead { margin: 0; font-size: 1rem; line-height: 1.5; }
 .assessment-entry .assessment-rules { grid-template-columns: 1fr; gap: 0; margin: 1.5rem 0 0; }
 .assessment-entry .assessment-rules div { min-height: 0; padding: .7rem 0; gap: .75rem; border: 0; border-top: 1px solid #303030; border-radius: 0; background: transparent; font-size: .9rem; line-height: 1.45; }
-.assessment-entry .assessment-rules strong { color: #4a90e2; font-size: .8rem; flex-shrink: 0; }
+.assessment-entry .assessment-rules strong { color: var(--assessment-accent); font-size: .8rem; flex-shrink: 0; }
 .assessment-entry-form { border-left: 1px solid #303030; padding-left: 2.5rem; }
 .assessment-entry-form h2 { margin: 0 0 1.5rem; font-size: 1.3rem; }
 .assessment-entry .assessment-student-form { grid-template-columns: 1fr; gap: 1rem; }
 .assessment-entry .assessment-student-form label:last-child { grid-column: auto; }
 .assessment-entry .assessment-student-form input { border-radius: 8px; padding: .8rem .9rem; }
-.assessment-entry-form > .assessment-primary { width: 100%; margin-top: 1.5rem; border-radius: 8px; border-color: #2866b0; background: #2866b0; }
-.assessment-entry-form > .assessment-primary:hover { background: #3279c9; transform: none; }
+.assessment-entry-form > .assessment-primary { width: 100%; margin-top: 1.5rem; border-radius: 8px; border-color: var(--assessment-solid); background: var(--assessment-solid); }
+.assessment-entry-form > .assessment-primary:hover { background: var(--assessment-hover); transform: none; }
 .assessment-entry-form > .assessment-primary:disabled { cursor: not-allowed; }
 .assessment-entry-form > small { display: block; margin-top: .85rem; color: #999; line-height: 1.4; font-size: .8rem; }
 .a11y-light-theme .assessment-entry { box-shadow: none !important; }
 .a11y-light-theme .assessment-entry .assessment-rules div { background: transparent !important; }
 .a11y-light-theme .assessment-entry-meta,
-.a11y-light-theme .assessment-entry .assessment-rules strong { color: #276fbd !important; }
+.a11y-light-theme .assessment-entry .assessment-rules strong { color: var(--assessment-accent) !important; }
 .a11y-light-theme .assessment-entry-form { border-color: #c8cbd0; }
 .a11y-light-theme .assessment-entry-form > small { color: #566171; }
 @media (max-width: 720px) {
@@ -1077,8 +1079,8 @@
 .assessment-options { border: 0; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; }
 .assessment-options legend { margin-bottom: 12px; font-size: 16px; }
 .assessment-options label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-color, #737c8c); border-radius: 8px; cursor: pointer; }
-.assessment-options input[type="checkbox"] { flex: 0 0 auto; width: 20px; height: 20px; margin: 2px 0 0; accent-color: #4285df; }
-.assessment-options label:has(input:checked) { border-color: #4285df; background: rgb(66 133 223 / 10%); }
+.assessment-options input[type="checkbox"] { flex: 0 0 auto; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--assessment-accent); }
+.assessment-options label:has(input:checked) { border-color: var(--assessment-accent); background: rgba(var(--assessment-rgb), .1); }
 .assessment-molecule { display: block; width: min(100%, 340px); height: auto; margin: 12px 0 20px; color: inherit; }
 .assessment-molecule .molecule-atoms { fill: #18202c; }
 .a11y-light-theme .assessment-molecule .molecule-atoms { fill: #edf2f7; }
@@ -1088,12 +1090,31 @@
   gap: .5rem;
   margin-top: 1.5rem;
   padding: 1.1rem 1rem;
-  border: 1px solid #426fa5;
+  border: 1px solid var(--assessment-border);
   border-radius: 12px;
-  background: #17283e;
-  color: #c5defc;
+  background: var(--assessment-wash);
+  color: var(--assessment-tint);
 }
 .assessment-release-date > span { font-size: .95rem; }
-.assessment-release-date > time { font-size: clamp(1.5rem, 5vw, 2.25rem); font-weight: 700; line-height: 1.25; color: #9dcbff; }
-.a11y-light-theme .assessment-release-date { background: #edf5ff !important; border-color: #92bced; color: #254c7a !important; }
-.a11y-light-theme .assessment-release-date > time { color: #2166af !important; }
+.assessment-release-date > time { font-size: clamp(1.5rem, 5vw, 2.25rem); font-weight: 700; line-height: 1.25; color: var(--assessment-accent); }
+.a11y-light-theme .assessment-release-date { background: var(--assessment-wash) !important; border-color: var(--assessment-border); color: var(--assessment-accent) !important; }
+.a11y-light-theme .assessment-release-date > time { color: var(--assessment-accent) !important; }
+
+/* Filled assessment controls need dark text on yellow in both themes. */
+.assessment-shell .assessment-primary,
+.assessment-shell .assessment-topbar > button,
+.assessment-shell .assessment-language button.active,
+.assessment-shell .assessment-calculator-keys .equals {
+  border-color: var(--assessment-solid) !important;
+  background: var(--assessment-solid) !important;
+  color: var(--assessment-on-solid) !important;
+}
+.assessment-shell .assessment-primary:not(:disabled):hover,
+.assessment-shell .assessment-topbar > button:not(:disabled):hover { background: var(--assessment-hover) !important; }
+
+.assessment-shell .assessment-task-number,
+.a11y-light-theme .assessment-shell .assessment-task-number,
+.assessment-shell .assessment-rules strong,
+.a11y-light-theme .assessment-shell .assessment-rules strong { color: var(--assessment-accent) !important; }
+
+.assessment-shell .assessment-timer:not(.urgent) strong { color: var(--assessment-accent) !important; }

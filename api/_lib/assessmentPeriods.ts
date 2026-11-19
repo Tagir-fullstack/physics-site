@@ -57,5 +57,5 @@ export const rotationQuery = (expectedKey: string, key: string, name: string, te
       returning key
     )
     insert into assessment_periods (key, test_id, name, active, max_points_tenths)
-    select ${key}, ${testId}, ${name}, true, ${testId === 'midterm' ? 80 : 20} from previous returning key
+    select ${key}, ${testId}, ${name}, true, ${testId === 'molecular' ? 40 : testId === 'midterm' ? 80 : 20} from previous returning key
   `

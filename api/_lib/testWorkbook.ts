@@ -66,7 +66,7 @@ export async function parseTestWorkbook(buffer: Buffer): Promise<ParsedTestWorkb
 
   const title = settings.get('название') || settings.get('title') || ''
   if (title.length < 3) throw new Error('В настройках укажите название теста.')
-  const durationMinutes = Math.round(numberOf(settings.get('время, мин') || '30'))
+  const durationMinutes = Math.round(numberOf(settings.get('время, мин') || '50'))
   if (!Number.isFinite(durationMinutes) || durationMinutes < 5 || durationMinutes > 240) {
     throw new Error('Время теста должно быть от 5 до 240 минут.')
   }
@@ -150,7 +150,7 @@ export async function createTestTemplate() {
     ['Название', 'Контрольная работа по физике', 'Обязательное поле'],
     ['Описание', 'Введите краткое описание', 'Показывается ученикам'],
     ['Язык', 'ru', 'ru, kk или both'],
-    ['Время, мин', 30, 'От 5 до 240'],
+    ['Время, мин', 50, 'От 5 до 240'],
     ['Калькулятор', 'да', 'да или нет'],
     ['Перемешивать вопросы', 'да', 'да или нет'],
   ])

@@ -44,7 +44,7 @@ type SubmittedResponse = PenaltyInfo & {
   taskMaxScores?: number[];
   taskLabels?: string[];
   review?: Array<{
-    id: string; title: string; text: string;
+    id: string; title: string; text: string; solution?: string;
     fields: Array<{ id: string; label: string; unit: string; submitted: string | number | null; expected: string | number; correct: boolean }>;
   }>;
   submittedAt: string;
@@ -67,7 +67,7 @@ const COPY = {
     late: 'Время истекло до отправки: результат не засчитан.', saved: 'Ответы проверены и результат сохранён.',
     group: 'группа', task: 'Задача', correct: 'Верно', incorrect: 'Неверно', variant: 'Вариант',
     eventsRecorded: 'Зафиксировано событий', sources: 'Источники заданий после сдачи',
-    kicker: 'Контрольный срез', introTitle: 'Механика', introMeta: '3 задачи · 30 минут', formTitle: 'Данные участника',
+    kicker: 'Контрольный срез', introTitle: 'Механика', introMeta: '3 задачи · 50 минут', formTitle: 'Данные участника',
     introLead: 'У каждого участника — свой вариант. Укажите имя, фамилию и группу, чтобы начать. Регистрация не требуется.',
     lastName: 'Фамилия', firstName: 'Имя', groupLabel: 'Группа', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'В062',
     rules: ['Подготовьте бумагу и ручку. Калькулятор встроен в работу.', 'Не покидайте вкладку и полноэкранный режим.', 'Копирование, вставка и печать блокируются и фиксируются.', 'Введите только числа, единицы уже указаны рядом.', 'Отключите автоблокировку и переход экрана в сон на время работы. Таймер продолжает идти, даже если экран заблокирован.'],
@@ -94,7 +94,7 @@ const COPY = {
     late: 'Жіберу уақыты өтіп кетті: нәтиже есептелмеді.', saved: 'Жауаптар тексеріліп, нәтиже сақталды.',
     group: 'тобы', task: 'Есеп', correct: 'Дұрыс', incorrect: 'Қате', variant: 'Нұсқа',
     eventsRecorded: 'Тіркелген оқиғалар', sources: 'Тапсырғаннан кейінгі есептердің дереккөздері',
-    kicker: 'Бақылау жұмысы', introTitle: 'Механика', introMeta: '3 есеп · 30 минут', formTitle: 'Қатысушы деректері',
+    kicker: 'Бақылау жұмысы', introTitle: 'Механика', introMeta: '3 есеп · 50 минут', formTitle: 'Қатысушы деректері',
     introLead: 'Әр қатысушыға жеке нұсқа беріледі. Бастау үшін атыңызды, тегіңізді және тобыңызды енгізіңіз. Тіркелу қажет емес.',
     lastName: 'Тегі', firstName: 'Аты', groupLabel: 'Тобы', lastNamePlaceholder: 'Иванов', firstNamePlaceholder: 'Иван', groupPlaceholder: 'В062',
     rules: ['Қағаз бен қалам дайындаңыз. Калькулятор жұмысқа кіріктірілген.', 'Қойындыдан және толық экран режимінен шықпаңыз.', 'Көшіру, қою және басып шығару бұғатталып, тіркеледі.', 'Тек сандарды енгізіңіз, өлшем бірліктері жанында көрсетілген.', 'Жұмыс кезінде экранның автоматты құлыпталуын және ұйқы режимін өшіріңіз. Экран құлыпталса да, уақыт санағы жалғасады.'],
@@ -292,12 +292,13 @@ function AssessmentLanguageSwitch({
   );
 }
 
-export default function MechanicsAssessment({ assessment = 'mechanics' }: { assessment?: 'mechanics' | 'midterm' }) {
-  return <AssessmentSessionGate endpoint={assessment === 'midterm' ? '/api/midterm-assessment' : '/api/mechanics-assessment'}>{props => <AssessmentRunner key={assessment} assessment={assessment} {...props} />}</AssessmentSessionGate>;
+export default function MechanicsAssessment({ assessment = 'mechanics' }: { assessment?: 'mechanics' | 'midterm' | 'molecular' }) {
+  return <AssessmentSessionGate title={assessment === 'molecular' ? { ru: 'Молекулярная физика', kk: 'Молекулалық физика' } : undefined} endpoint={assessment === 'molecular' ? '/api/molecular-assessment' : assessment === 'midterm' ? '/api/midterm-assessment' : '/api/mechanics-assessment'}>{props => <AssessmentRunner key={assessment} assessment={assessment} {...props} />}</AssessmentSessionGate>;
 }
-function AssessmentRunner({ assessment = 'mechanics', practice = false, participantStudent, sessionDeadline }: { assessment?: 'mechanics' | 'midterm' } & SessionRunnerProps) {
+function AssessmentRunner({ assessment = 'mechanics', practice = false, participantStudent, sessionDeadline }: { assessment?: 'mechanics' | 'midterm' | 'molecular' } & SessionRunnerProps) {
   const midterm = assessment === 'midterm';
-  const endpoint = midterm ? '/api/midterm-assessment' : '/api/mechanics-assessment';
+  const molecular = assessment === 'molecular';
+  const endpoint = molecular ? '/api/molecular-assessment' : midterm ? '/api/midterm-assessment' : '/api/mechanics-assessment';
   const { user, isLoading: authLoading } = useAuth();
   const { authFetch: baseFetch } = useApiClient();
   const authFetch = useCallback((input: string, init: RequestInit = {}) => {
@@ -312,13 +313,18 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
     introMeta: language === 'kk' ? '3 теория + 4 есеп · 50 минут · 8 балл' : '3 теории + 4 задачи · 50 минут · 8 баллов',
     heading: language === 'kk' ? '3 теориялық сұрақ және 4 есеп' : '3 вопроса теории и 4 задачи',
     headingLead: language === 'kk' ? 'Есептерге сандық жауап жазыңыз. Теорияда барлық дұрыс жауаптарды белгілеңіз. Есептің әр дұрыс өрісіне ішінара балл беріледі; теорияда тек толық дұрыс жиын есептеледі. Барлығы — 8 балл. Сандарды жүздікке дейін дөңгелектеңіз.' : 'В задачах введите числа, в теории отметьте все верные ответы. За верные поля задач начисляются частичные баллы; в теории засчитывается только точный набор. Всего — 8 баллов. Числа округляйте до сотых.',
+  } : molecular ? { ...COPY[language],
+    introTitle: language === 'kk' ? 'Молекулалық физика' : 'Молекулярная физика',
+    introMeta: language === 'kk' ? '8 есеп · 50 минут · 4 балл' : '8 задач · 50 минут · 4 балла',
+    heading: language === 'kk' ? 'Молекулалық физика' : 'Молекулярная физика',
+    headingLead: language === 'kk' ? '8 есеп: қарапайымнан күрделіге дейін. Тек сан енгізіңіз; өлшем бірлігі өрісте көрсетілген. Дәлдік: кемінде 3 мәнді цифр, тексеру рұқсаты — 1% немесе 0,005. Барлығы — 4 балл.' : '8 задач от простых к сложным. Вводите только число в указанной единице, не менее 3 значащих цифр. Допуск проверки — 1% или 0,005. Всего — 4 балла.',
   } : COPY[language];
   const [data, setData] = useState<AssessmentResponse | null>(null);
   const [student, setStudent] = useState<StudentIdentity>(() => participantStudent ?? savedStudent());
   const studentRef = useRef<StudentIdentity>(student);
   const [answers, setAnswers] = useState<Answers>({});
   const answersRef = useRef<Answers>({});
-  const [remaining, setRemaining] = useState((midterm ? 50 : 30) * 60);
+  const [remaining, setRemaining] = useState(50 * 60);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [restarting, setRestarting] = useState(false);
@@ -622,6 +628,7 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
         <span className="assessment-kicker">{copy.finalGrade}</span>
         <h1>{data.policyVersion === 1 ? `${data.finalPercent ?? 0}%` : `${data.score} ${copy.scoreJoin} ${data.maxScore}`}</h1>
         {midterm && <p>{copy.finalGrade}: <strong>{Math.round((data.finalPercent ?? data.score / data.maxScore * 100) * .8) / 10} / 8</strong></p>}
+        {molecular && <p>{copy.finalGrade}: <strong>{Math.round((data.finalPercent ?? data.score / data.maxScore * 100) * data.maxScore) / 100} / {data.maxScore}</strong></p>}
         {data.policyVersion === 1 && <p>{data.score} {copy.scoreJoin} {data.maxScore} · {language === 'kk' ? 'балл' : 'баллов'}</p>}
         <p>{data.late ? copy.late : copy.saved}</p>
         {data.policyVersion === 1 && <div className="assessment-policy-note"><p>{copy.deduction}: {data.penaltyPoints ?? 0} п. п.</p>{data.waiverReason && <p>{copy.penaltyWaived}: {data.waiverReason}</p>}</div>}
@@ -645,7 +652,8 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
           <span className="assessment-kicker">{copy.completed}</span>
           <h1>{submitted.policyVersion === 1 ? `${submitted.finalPercent ?? 0}%` : `${submitted.score} ${copy.scoreJoin} ${submitted.maxScore}`}</h1>
           {midterm && <p>{copy.finalGrade}: <strong>{Math.round((submitted.finalPercent ?? submitted.score / 8 * 100) * .8) / 10} / 8</strong></p>}
-          {submitted.policyVersion === 1 && <p>{submitted.score} {copy.scoreJoin} {submitted.maxScore} · {midterm ? (language === 'kk' ? 'балл' : 'баллов') : copy.task.toLocaleLowerCase()}</p>}
+          {molecular && <p>{copy.finalGrade}: <strong>{Math.round((submitted.finalPercent ?? submitted.score / submitted.maxScore * 100) * submitted.maxScore) / 100} / {submitted.maxScore}</strong></p>}
+          {submitted.policyVersion === 1 && <p>{submitted.score} {copy.scoreJoin} {submitted.maxScore} · {midterm || molecular ? (language === 'kk' ? 'балл' : 'баллов') : copy.task.toLocaleLowerCase()}</p>}
           <p className="assessment-result-lead">
             {submitted.late ? copy.late : copy.saved}
           </p>
@@ -678,6 +686,7 @@ function AssessmentRunner({ assessment = 'mechanics', practice = false, particip
                   ? (language === 'kk' ? 'Сіздің жауабыңыз дұрыс' : 'Ваш ответ правильный')
                   : <><span>{language === 'kk' ? 'Дұрыс жауап' : 'Правильный ответ'}: </span>{typeof field.expected === 'number' ? field.expected.toLocaleString(language === 'kk' ? 'kk-KZ' : 'ru-RU', { maximumFractionDigits: 6 }) : field.expected}{field.unit && ` ${field.unit}`}</>}</dd>
               </div>)}</dl>
+              {task.solution && <p className="assessment-worked-solution"><strong>{language === 'kk' ? 'Шешуі: ' : 'Решение: '}</strong>{task.solution}</p>}
             </article>)}
           </section>}
           <div className="assessment-result-meta">

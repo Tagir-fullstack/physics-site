@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -20,6 +20,18 @@ try {
   const progress = electroProgress(emptyElectroNotebook(), electroVariant(24, 'runtime-fixture'))
   assert.equal(progress.points, 0)
   assert.ok(progress.totalLines >= 11)
+  await mkdir(join(directory,'api','_lib'),{recursive:true})
+  await mkdir(join(directory,'src','lib'),{recursive:true})
+  await writeFile(join(directory,'src','lib','electrostatics.js'),await readFile(join(directory,'electrostatics.js')))
+  for(const name of ['electrostaticsModel','electrostaticsNeighbors']) {
+    const source=await readFile(new URL(`../api/_lib/${name}.ts`,import.meta.url),'utf8')
+    await writeFile(join(directory,'api','_lib',`${name}.js`),ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText)
+  }
+  const {solveElectrostatic,voltmeter}=await import(pathToFileURL(join(directory,'api','_lib','electrostaticsModel.js')).href)
+  const {measuredNeighborEdges}=await import(pathToFileURL(join(directory,'api','_lib','electrostaticsNeighbors.js')).href)
+  const variant=electroVariant(24,'native-fixture'),grid=solveElectrostatic(variant)
+  assert.ok(grid.converged);assert.ok(Number.isFinite(voltmeter(grid,variant,{x:90,y:120})))
+  assert.deepEqual(measuredNeighborEdges(grid,3,[]),[])
   console.log('PASS: electrostatics server modules load with native Node ESM resolution and calculate notebook progress')
 } finally {
   await rm(directory, { recursive: true, force: true })

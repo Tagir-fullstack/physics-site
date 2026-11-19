@@ -25,19 +25,23 @@ import {
 
 import { createMidtermVariant, gradeMidterm, midtermTasks, reviewMidterm, midtermFingerprint, type MidtermVariant } from './_lib/midtermAssessment.js'
 
-export function createAssessmentHandler(testId: 'mechanics' | 'midterm' = 'mechanics') {
+import { createMolecularVariant, gradeMolecular, molecularTasks, reviewMolecular, molecularFingerprint, type MolecularVariant } from './_lib/molecularAssessment.js'
+
+export function createAssessmentHandler(testId: 'mechanics' | 'midterm' | 'molecular' = 'mechanics') {
 const midterm = testId === 'midterm'
-const ASSESSMENT_KEY = midterm ? 'midterm-cut-v1' : MECHANICS_KEY
-const ASSESSMENT_DURATION_MS = midterm ? 50 * 60_000 : MECHANICS_DURATION
-const maxScore = midterm ? 8 : 3
-const scale = midterm ? 100 : 1
-type MechanicsVariant = LegacyVariant | MidtermVariant
+const molecular = testId === 'molecular'
+const ASSESSMENT_KEY = molecular ? 'molecular-cut-v1' : midterm ? 'midterm-cut-v1' : MECHANICS_KEY
+const ASSESSMENT_DURATION_MS = MECHANICS_DURATION
+const maxScore = molecular ? 4 : midterm ? 8 : 3
+const scale = molecular || midterm ? 100 : 1
+type MechanicsVariant = LegacyVariant | MidtermVariant | MolecularVariant
 const isMidterm = (v: MechanicsVariant): v is MidtermVariant => 'kind' in v && v.kind === 'midterm-v1'
-const createVariant = (): MechanicsVariant => midterm ? createMidtermVariant() : createMechanics()
-const gradeVariant = (v: MechanicsVariant, a: Answers) => isMidterm(v) ? gradeMidterm(v, a) : gradeMechanics(v, a)
-const publicTasks = (v: MechanicsVariant, l: AssessmentLanguage = 'ru') => isMidterm(v) ? midtermTasks(v, l) : mechanicsTasks(v, l)
-const reviewVariant = (v: MechanicsVariant, a: Answers, l: AssessmentLanguage = 'ru') => isMidterm(v) ? reviewMidterm(v, a, l) : reviewMechanics(v, a, l)
-const variantFingerprint = (v: MechanicsVariant) => isMidterm(v) ? midtermFingerprint(v) : mechanicsFingerprint(v)
+const isMolecular = (v: MechanicsVariant): v is MolecularVariant => 'kind' in v && v.kind === 'molecular-v1'
+const createVariant = (): MechanicsVariant => molecular ? createMolecularVariant() : midterm ? createMidtermVariant() : createMechanics()
+const gradeVariant = (v: MechanicsVariant, a: Answers) => isMolecular(v) ? gradeMolecular(v, a) : isMidterm(v) ? gradeMidterm(v, a) : gradeMechanics(v, a)
+const publicTasks = (v: MechanicsVariant, l: AssessmentLanguage = 'ru') => isMolecular(v) ? molecularTasks(v, l) : isMidterm(v) ? midtermTasks(v, l) : mechanicsTasks(v, l)
+const reviewVariant = (v: MechanicsVariant, a: Answers, l: AssessmentLanguage = 'ru') => isMolecular(v) ? reviewMolecular(v, a, l) : isMidterm(v) ? reviewMidterm(v, a, l) : reviewMechanics(v, a, l)
+const variantFingerprint = (v: MechanicsVariant) => isMolecular(v) ? molecularFingerprint(v) : isMidterm(v) ? midtermFingerprint(v) : mechanicsFingerprint(v)
 const storedScore = (score: number | null) => score === null ? null : score / scale
 const currentPeriod = () => getCurrentPeriod(testId)
 const selectedPeriod = (key?: string) => getSelectedPeriod(key, testId)
@@ -168,7 +172,7 @@ async function responseFor(
   if (attempt.submittedAt) {
     const result = gradeVariant(variant, (attempt.answers ?? {}) as Answers)
     const late = attempt.submittedAt.getTime() > attempt.expiresAt.getTime() + 30_000
-    const weightedReview = isMidterm(variant) ? reviewMidterm(variant, (attempt.answers ?? {}) as Answers, language) : null
+    const weightedReview = isMolecular(variant) ? reviewMolecular(variant, (attempt.answers ?? {}) as Answers, language) : isMidterm(variant) ? reviewMidterm(variant, (attempt.answers ?? {}) as Answers, language) : null
     const studentReview = weightedReview ?? reviewVariant(variant, (attempt.answers ?? {}) as Answers, language)
     return {
       status: 'submitted' as const,
@@ -178,7 +182,7 @@ async function responseFor(
       correctness: late ? emptyCorrectness(variant) : result.correctness,
       // Students receive answer keys only after submission AND the configured release date.
       review: studentReview.tasks.map(task => ({
-        id: task.id, title: task.title, text: task.text,
+        id: task.id, title: task.title, text: task.text, ...('solution' in task ? { solution: task.solution } : {}),
         fields: studentReview.fields.filter(field => field.taskId === task.id).map(field => ({
           id: field.fieldId, label: field.label, unit: field.unit,
           submitted: field.submitted, expected: field.expected, correct: field.correct,
@@ -192,7 +196,7 @@ async function responseFor(
       submittedAt: attempt.submittedAt.toISOString(),
       late,
       violationsCount: Array.isArray(attempt.violations) ? attempt.violations.length : 0,
-      sources: midterm ? ['№ 1.19', isMidterm(variant) && 'mass' in variant.blocks ? '№ 2.5' : '№ 2.4', ...(isMidterm(variant) && variant.revision === 3 ? [] : ['№ 1.33']), '№ 2.34', '№ 3.5 (АБ₂); теория — лекции 1–6'] : ['№ 1.1', '№ 2.6', '№ 2.41'],
+      sources: molecular ? ['§ 8: № 8.1–8.10, 8.21, 8.43; § 9: № 9.1, 9.11, 9.14, 9.25–9.28 (индивидуальные условия)'] : midterm ? ['№ 1.19', isMidterm(variant) && 'mass' in variant.blocks ? '№ 2.5' : '№ 2.4', ...(isMidterm(variant) && variant.revision === 3 ? [] : ['№ 1.33']), '№ 2.34', '№ 3.5 (АБ₂); теория — лекции 1–6'] : ['№ 1.1', '№ 2.6', '№ 2.41'],
       canRestart,
     }
   }
@@ -454,8 +458,8 @@ async function handleRequest(req: VercelRequest, res: VercelResponse) {
   if (body.action === 'restart') {
     if (!canRestartAssessment(testId, user)) {
       return res.status(403).json({
-        error: midterm
-          ? (language === 'kk' ? 'Қайта өту тек әкімшіге қолжетімді.' : 'Повторный запуск рубежного среза доступен только администратору.')
+        error: midterm || molecular
+          ? (language === 'kk' ? 'Қайта өту тек әкімшіге қолжетімді.' : 'Повторный запуск этой работы доступен только администратору.')
           : (language === 'kk' ? 'Қайта өту тек PRO пайдаланушыларына қолжетімді.' : 'Повторный запуск доступен только пользователям PRO.'),
       })
     }

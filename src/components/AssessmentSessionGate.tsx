@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import StaticDeBroglie from './StaticDeBroglie'
 import { useAuth } from '../context/AuthContext'
 import { useApiClient } from '../lib/apiClient'
 import { ASSESSMENT_GROUPS } from '../lib/monitorGrading'
@@ -8,7 +9,7 @@ import '../styles/assessment-sessions.css'
 type Student = { lastName: string; firstName: string; group: string; variantNumber?: number }
 type Entry = { mode: 'session' | 'legacy'; phase: 'code' | 'waiting' | 'pending' | 'rejected' | 'closed' | 'active'; canPractice: boolean; serverNow: string; revealAt: string | null; released: boolean; participantId?: string; student?: Student; session?: { id: string; name: string; startsAt: string; endsAt: string }; error?: string }
 export type SessionRunnerProps = { practice?: boolean; participantStudent?: Student; sessionDeadline?: { expiresAt: string; serverNow: string } }
-export default function AssessmentSessionGate({ endpoint, children }: { endpoint: string; children: (props: SessionRunnerProps) => ReactNode }) {
+export default function AssessmentSessionGate({ endpoint, title, children }: { endpoint: string; title?: { ru: string; kk: string }; children: (props: SessionRunnerProps) => ReactNode }) {
   const { isLoading } = useAuth()
   const { profile } = useStudentProfile()
   const { authFetch } = useApiClient()
@@ -38,9 +39,19 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
   if (entry && entry.mode !== 'session') return children({})
   if (entry?.phase === 'active') return <div key={`${entry.participantId}:${entry.released}`}>{children({ participantStudent: entry.student, sessionDeadline: entry.session ? { expiresAt: entry.session.endsAt, serverNow: entry.serverNow } : undefined })}</div>
   const date = (value: string) => new Date(value).toLocaleString(kk ? 'kk-KZ' : 'ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-  return <main className="exam-entry-page"><section className="exam-entry-card" lang={kk ? 'kk' : 'ru'}>
+  const releaseInfo = <div className="exam-entry-release"><h2>{kk ? 'Дұрыс жауаптар және талдау' : 'Правильные ответы и разбор'}</h2><p>{kk ? 'Қорытынды балл жұмысты тапсырғаннан кейін бірден көрінеді. Жауаптар мен талдау оқытушы белгілеген уақытта ашылады.' : 'Итоговый балл виден сразу после сдачи. Ответы и разбор откроются в срок, указанный преподавателем.'}</p>{entry?.revealAt ? <time dateTime={entry.revealAt}>{date(entry.revealAt)}</time> : <p>{kk ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Дату открытия назначит преподаватель.'}</p>}</div>
+  const split = entry?.phase === 'code'
+  const subject = title?.[language] ?? (endpoint.includes('midterm') ? (kk ? 'Аралық бақылау' : 'Рубежный срез') : (kk ? 'Механика' : 'Механика'))
+  return <main className={split ? 'exam-entry-page exam-entry-page--initial' : 'exam-entry-page'}>{split && <div className="exam-entry-atom-backdrop" aria-hidden="true"><StaticDeBroglie /></div>}<div className={split ? 'exam-entry-layout exam-entry-layout--split' : 'exam-entry-layout'}>
+    {split && <aside className="exam-entry-intro" lang={kk ? 'kk' : 'ru'}>
+      <span className="assessment-kicker">{kk ? 'Бақылау жұмысы' : 'Контрольный срез'}</span>
+      <h2>{subject}</h2>
+      <p>{kk ? 'Оқытушы берген кодты енгізіңіз. Жеке тапсырмалар ортақ старт кезінде ашылады.' : 'Введите код от преподавателя. Индивидуальные задания откроются в момент общего старта.'}</p>
+      {releaseInfo}
+    </aside>}
+    <section className="exam-entry-card" lang={kk ? 'kk' : 'ru'}>
     <div className="exam-entry-header">
-      <span className="assessment-kicker">{kk ? 'Аралық бақылау' : 'Контрольный срез'}</span>
+      <span className="assessment-kicker">{split ? (kk ? 'Сеансқа кіру' : 'Вход по коду') : title ? title[language] : kk ? 'Аралық бақылау' : 'Контрольный срез'}</span>
       <div className="exam-entry-language" role="group" aria-label={kk ? 'Тілді таңдау' : 'Выбор языка'}><button type="button" aria-pressed={!kk} onClick={() => switchLanguage('ru')}>Русский</button><button type="button" aria-pressed={kk} onClick={() => switchLanguage('kk')}>Қазақша</button></div>
     </div>
     <h1>{entry?.phase === 'pending' ? (kk ? 'Рұқсат күтілуде' : 'Ожидание допуска') : entry?.phase === 'waiting' ? (kk ? 'Күту залы' : 'Зал ожидания') : entry?.phase === 'closed' ? (kk ? 'Сеанс аяқталды' : 'Сеанс завершён') : entry?.phase === 'rejected' ? (kk ? 'Рұқсат берілмеді' : 'Допуск отклонён') : (kk ? 'Сеансқа кіру' : 'Вход в сеанс')}</h1>
@@ -75,7 +86,7 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
         finally { setBusy(false) }
       }}><label>{kk ? 'Жаңа сеанс коды' : 'Код нового сеанса'}<input name="code" required minLength={6} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder={kk ? 'Мысалы: 482915' : 'Например: 482915'} /></label><button disabled={busy}>{busy ? '…' : (kk ? 'Басқа сеансқа кіру' : 'Войти в другой сеанс')}</button></form>
     </section>}
-    {entry?.phase === 'code' && <><p>{kk ? 'Аудиториядағы оқытушыдан сеанс кодын алыңыз. Стартқа дейін тапсырмалар көрсетілмейді. ОП/топ қатысушыларды бөлу үшін қолданылмайды.' : 'Получите код сеанса у преподавателя в аудитории. До старта задания скрыты. В одном сеансе могут участвовать студенты разных ОП и групп.'}</p>
+    {entry?.phase === 'code' && <>
       <form onSubmit={async event => {
         event.preventDefault(); if (busy) return
         const fields = new FormData(event.currentTarget), student = { lastName: String(fields.get('lastName')), firstName: String(fields.get('firstName')), group: String(fields.get('group')) }
@@ -88,7 +99,7 @@ export default function AssessmentSessionGate({ endpoint, children }: { endpoint
         } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось войти.') }
         finally { setBusy(false) }
       }}><label>{kk ? 'Сеанс коды' : 'Код сеанса'}<input name="code" required minLength={6} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder={kk ? 'Мысалы: 482915' : 'Например: 482915'} /></label><label>{kk ? 'Тегі' : 'Фамилия'}<input name="lastName" defaultValue={profile?.lastName} readOnly={!!profile} required minLength={2} maxLength={60} autoComplete="family-name" /></label><label>{kk ? 'Аты' : 'Имя'}<input name="firstName" defaultValue={profile?.firstName} readOnly={!!profile} required minLength={2} maxLength={60} autoComplete="given-name" /></label><label>{kk ? 'ОП / топ' : 'ОП / группа'}<select key={profile?.group ?? 'empty'} name="group" disabled={!!profile} required defaultValue={profile?.group ?? ''}><option value="" disabled>{kk ? 'ОП таңдаңыз' : 'Выберите ОП'}</option>{ASSESSMENT_GROUPS.map(group => <option key={group} value={group}>{group}</option>)}</select>{profile && <input type="hidden" name="group" value={profile.group} />}</label><button disabled={busy}>{busy ? '…' : (kk ? 'Кіру / рұқсат сұрау' : 'Войти / запросить допуск')}</button></form></>}
-    <div className="exam-entry-release"><h2>{kk ? 'Дұрыс жауаптар және талдау' : 'Правильные ответы и разбор'}</h2><p>{kk ? 'Қорытынды балл жұмысты тапсырғаннан кейін бірден көрінеді. Жауаптар мен талдау оқытушы белгілеген уақытта ашылады.' : 'Итоговый балл виден сразу после сдачи. Ответы и разбор откроются в срок, указанный преподавателем.'}</p>{entry?.revealAt ? <time dateTime={entry.revealAt}>{date(entry.revealAt)}</time> : <p>{kk ? 'Оқытушы ашылатын күнді кейінірек белгілейді.' : 'Дату открытия назначит преподаватель.'}</p>}</div>
+    {entry?.phase !== 'code' && releaseInfo}
     {entry?.canPractice && <button type="button" className="exam-entry-practice" onClick={() => setPractice(true)}>{kk ? 'Әкімшінің тест режимі' : 'Тестовый запуск администратора'}</button>}
-  </section></main>
+  </section></div></main>
 }

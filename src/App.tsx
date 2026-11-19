@@ -178,6 +178,7 @@ function App() {
                   <Route path="/labs/ball-collision" element={<LabAccessGate><BallCollision /></LabAccessGate>} />
                   <Route path="/assessment/mechanics" element={<MechanicsAssessment />} />
                   <Route path="/assessment" element={<AssessmentIndex />} />
+                  <Route path="/assessment/molecular" element={<MechanicsAssessment key="molecular" assessment="molecular" />} />
                   <Route path="/assessment/midterm" element={<MechanicsAssessment key="midterm" assessment="midterm" />} />
                   <Route path="/admin/assessment-monitor" element={<AssessmentMonitorIndex />} />
                   <Route path="/admin/assessment-monitor/:testId" element={<AssessmentMonitor />} />

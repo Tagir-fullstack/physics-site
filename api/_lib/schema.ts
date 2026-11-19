@@ -12,6 +12,8 @@ import {
   uuid,
   integer,
   smallint,
+  doublePrecision,
+  date,
   index,
   uniqueIndex,
   primaryKey,
@@ -425,7 +427,7 @@ export const teacherTests = pgTable(
     description: text('description'),
     language: varchar('language', { length: 8 }).notNull().default('ru'),
     status: varchar('status', { length: 20 }).notNull().default('draft'),
-    durationMinutes: smallint('duration_minutes').notNull().default(30),
+    durationMinutes: smallint('duration_minutes').notNull().default(50),
     calculatorAllowed: boolean('calculator_allowed').notNull().default(true),
     shuffleQuestions: boolean('shuffle_questions').notNull().default(false),
     version: integer('version').notNull().default(1),
@@ -518,3 +520,15 @@ export type TeacherTest = typeof teacherTests.$inferSelect
 export type TestQuestion = typeof testQuestions.$inferSelect
 export type TestAssignment = typeof testAssignments.$inferSelect
 export type TeacherTestAttempt = typeof teacherTestAttempts.$inferSelect
+
+// Shared cross-instance instrument quota; migration: setup-electrostatics-instrument.mjs.
+export const electrostaticsInstrumentQuotas = pgTable('electrostatics_instrument_quotas', {
+  identityHash: varchar('identity_hash', {length:64}).primaryKey(),
+  tokens: doublePrecision('tokens').notNull(),
+  updatedAt: timestamp('updated_at', {withTimezone:true}).notNull(),
+  day: date('day').notNull(),
+  measurements: integer('measurements').notNull(),
+}, table=>[
+  check('electrostatics_instrument_quotas_tokens_check',sql`${table.tokens} >= 0 and ${table.tokens} <= 12`),
+  check('electrostatics_instrument_quotas_measurements_check',sql`${table.measurements} between 0 and 5000`),
+])

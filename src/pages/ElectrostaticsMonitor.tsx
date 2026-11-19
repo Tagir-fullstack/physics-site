@@ -1,3 +1,4 @@
+import type { ElectroEdges } from '../lib/electrostaticsInstrument'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -12,7 +13,7 @@ import '../styles/assessment-monitor.css'
 import '../styles/electrostatics.css'
 const endpoint='/api/student-profile?lab=electrostatics'
 type List={students:ElectroMonitorRow[];hasMore:boolean}
-type Detail={student:StudentProfile;submission:ElectroSubmission;history?:Array<{id:string;createdAt:string;status:ElectroSubmission['status']}>}
+type Detail={measuredEdges:ElectroEdges;student:StudentProfile;submission:ElectroSubmission;history?:Array<{id:string;createdAt:string;status:ElectroSubmission['status']}>}
 function Review({work,onSaved}:{work:ElectroSubmission;onSaved:(work:ElectroSubmission)=>void}) {
   const {authFetch}=useApiClient()
   const [status,setStatus]=useState(work.status),[comment,setComment]=useState(work.comment),[busy,setBusy]=useState(false),[error,setError]=useState('')
@@ -86,7 +87,7 @@ export default function ElectrostaticsMonitor() {
     {data&&'submission'in data&&<>
       <section className="monitor-panel"><h2>{data.student.lastName} {data.student.firstName} · {data.student.group}</h2><p>Вариант №{data.submission.variant.number} · {variantDescription(data.submission.variant)} · {data.submission.variant.voltage} В</p><p><b>{ELECTRO_STATUS[data.submission.status]}</b> · {new Date(data.submission.createdAt).toLocaleString('ru-RU')}</p><p>{data.submission.progress.lines}/{data.submission.progress.totalLines} линий · {data.submission.progress.calculations}/{data.submission.progress.pairs} расчётов · {data.submission.progress.answered}/9 ответов</p>{data.history&&data.history.length>1&&<label>Предыдущие отправки<select value={data.submission.id} onChange={e=>navigate(`${base}/${e.target.value}`)}>{data.history.map(h=><option key={h.id} value={h.id}>{new Date(h.createdAt).toLocaleString('ru-RU')} · {ELECTRO_STATUS[h.status]}</option>)}</select></label>}<button className="monitor-export" onClick={()=>setRetry(n=>n+1)}>Обновить работу</button></section>
       <Review key={`${data.submission.id}:${data.submission.reviewVersion}`} work={data.submission} onSaved={work=>setResult(current=>current?.key===requestKey?{...current,data:{...data,submission:work,history:data.history?.map(h=>h.id===work.id?{...h,status:work.status}:h)}}:current)}/>
-      <ElectroResultsPreview key={data.submission.id} variant={data.submission.variant} notebook={data.submission.notebook}/>
+      <ElectroResultsPreview key={data.submission.id} variant={data.submission.variant} notebook={data.submission.notebook} edges={data.measuredEdges}/>
     </>}
   </div></main>
 }

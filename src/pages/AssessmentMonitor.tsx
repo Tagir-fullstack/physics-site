@@ -43,7 +43,7 @@ type ReviewField = {
   taskId: string; taskTitle: string; fieldId: string; label: string; unit: string;
   submitted: string | number | null; expected: number | string; tolerance: string; correct: boolean; points?: number;
 };
-type ReviewTask = { id: string; order: number; title: string; text: string };
+type ReviewTask = { id: string; order: number; title: string; text: string; solution?: string };
 type AttemptDetail = Partial<PenaltySummary> & {
   id: string; student: Student | null; variantCode: string; startedAt: string; expiresAt: string;
   submittedAt: string | null; score: number | null; maxScore: number; archived: boolean;
@@ -107,7 +107,7 @@ export default function AssessmentMonitor() {
   const [periodName, setPeriodName] = useState('');
   const [creatingPeriod, setCreatingPeriod] = useState(false);
   const period = selectedKey ? catalog?.periods.find(p => p.key === selectedKey && p.testId === testId) : catalog?.periods.find(p => p.testId === testId && p.active);
-  const maxPoints = (period?.maxPointsTenths ?? (testId === 'midterm' ? 80 : 20)) / 10;
+  const maxPoints = (period?.maxPointsTenths ?? (testId === 'molecular' ? 40 : testId === 'midterm' ? 80 : 20)) / 10;
   const gradeFor = (attempt: Attempt) => monitorGrade(attempt.score, attempt.maxScore, maxPoints, attempt.finalPercent);
   const focusEditor = useCallback((node: HTMLFormElement | null) => {
     if (!node) return;
@@ -333,11 +333,11 @@ export default function AssessmentMonitor() {
   };
 
   if (authLoading || (loading && !attempts.length)) {
-    return <main className="monitor-page"><div className="monitor-loading">Загружаем мониторинг…</div></main>;
+    return <main className="monitor-page monitor-page--tests"><div className="monitor-loading">Загружаем мониторинг…</div></main>;
   }
 
   return (
-    <main className="monitor-page monitor-page--compact">
+    <main className="monitor-page monitor-page--compact monitor-page--tests">
       <div className="monitor-container">
         <header className="monitor-header">
           <div>
@@ -466,6 +466,7 @@ export default function AssessmentMonitor() {
                           </div>
                         ))}
                       </div>
+                      {task.solution && <p><strong>Решение: </strong>{task.solution}</p>}
                     </article>
                   ))}
                 </div>

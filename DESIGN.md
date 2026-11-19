@@ -11,3 +11,12 @@ This records existing choices and the explicit reference supplied on 2026-11-13;
 - Reuse DeleteStudentButton and its named/typed confirmation; do not implement another deletion dialog. Recovery uses the existing private, one-time server-issued link. Never show an old account's recovery link after account switching.
 
 Clement–Desormes and electrostatics share `monitor-page--variants`: stacked filter labels, equal 36px controls aligned at the bottom, compact rows and inline outline action icons. Icons retain accessible names, hover titles, keyboard focus and 44px targets on coarse pointers. `MonitorActionIcon` owns these symbols; `DeleteStudentButton` retains its existing confirmation through the optional icon-only variant.
+
+Molecular physics assessment reuses `MechanicsAssessment`, `AssessmentSessionGate`, `AssessmentSessionManager` and their existing CSS, exactly like the midterm. No parallel assessment UI or altered brand. Eight numeric tasks use field units and visible fractional points; solutions appear in the existing submitted review after server-authorized release. New sessions and test templates default to 50 minutes; persisted deadlines remain authoritative.
+
+Control assessments use the shared amber tokens in `src/styles/assessment-theme.css`: yellow solid controls with dark text, amber accents in dark mode and dark gold text in light mode. Apply this to exam entry, waiting room, runner, results and test monitoring. Laboratory accents remain blue; the mixed admin catalog scopes amber only to assessment cards. Red/green semantic statuses remain unchanged.
+
+Exam code entry follows the existing account sign-in composition: a concise subject/release summary at left and a compact form card at right. Names share a row on desktop; stack the layout on narrow screens. Waiting/admission and active-test behavior remain in the shared gate and runner.
+
+
+Electrostatics preserves the existing lab layout and analogue Basic meter. Probe measurements are asynchronous; show pending/error status beside the meter and disable recording until a fresh reading arrives. Reference controls are offered only when the server authorizes a teacher/admin. No client solver or fallback.

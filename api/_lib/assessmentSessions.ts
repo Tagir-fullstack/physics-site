@@ -9,7 +9,7 @@ import { currentPeriod, selectedPeriod } from './assessmentPeriods.js'
 import type { AssessmentLanguage, StudentIdentity } from './mechanicsAssessment.js'
 import { isAssessmentGroup } from '../../src/lib/monitorGrading.js'
 
-type TestId = 'mechanics' | 'midterm'
+type TestId = 'mechanics' | 'midterm' | 'molecular'
 type Session = typeof schema.assessmentSessions.$inferSelect
 type Member = typeof schema.assessmentParticipants.$inferSelect
 type Attempt = typeof schema.assessmentAttempts.$inferSelect
@@ -33,7 +33,7 @@ function setCookie(res: VercelResponse, testId: TestId, id: string, secret: stri
 }
 export async function accessSettings(periodKey: string, testId: TestId) {
   const [row] = await db.select().from(schema.assessmentAccessSettings).where(eq(schema.assessmentAccessSettings.periodKey, periodKey)).limit(1)
-  return { sessionsRequired: row?.sessionsRequired ?? testId === 'midterm', revealAt: row?.revealAt ?? null }
+  return { sessionsRequired: row?.sessionsRequired ?? (testId === 'midterm' || testId === 'molecular'), revealAt: row?.revealAt ?? null }
 }
 export async function attemptRelease(attempt: Attempt, testId: TestId) {
   const key = attempt.assessmentKey.replace(/-archive-.+$/, '').replace(/-s-.+$/, '')

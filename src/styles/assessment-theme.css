@@ -1,0 +1,26 @@
+/* Control assessments use amber; laboratory accents keep their own blue palette. */
+:root {
+  --assessment-accent: #f5bb32;
+  --assessment-solid: #f5bb32;
+  --assessment-on-solid: #231b08;
+  --assessment-hover: #ffd365;
+  --assessment-wash: #302816;
+  --assessment-border: #766136;
+  --assessment-tint: #f4d785;
+  --assessment-rgb: 245, 187, 50;
+}
+.a11y-light-theme {
+  --assessment-accent: #805b0b;
+  --assessment-wash: #fff5d9;
+  --assessment-border: #c5a454;
+  --assessment-tint: #805b0b;
+}
+.monitor-page--tests,
+.monitor-test-card--assessment,
+.monitor-page--assessment-catalog > .monitor-container > .monitor-header,
+.monitor-page--assessment-catalog .monitor-catalog-navigation {
+  --monitor-accent: var(--assessment-accent);
+  --monitor-tint: var(--assessment-tint);
+  --monitor-wash: var(--assessment-wash);
+  --monitor-rgb: var(--assessment-rgb);
+}

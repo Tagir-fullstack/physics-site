@@ -23,14 +23,14 @@ export default function AssessmentMonitorIndex() {
     }).catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось загрузить список.') })
     return () => { cancelled = true }
   }, [authFetch, isLoading])
-  return <main className="monitor-page monitor-page--narrow monitor-page--catalog"><div className="monitor-container">
+  return <main className="monitor-page monitor-page--narrow monitor-page--catalog monitor-page--assessment-catalog"><div className="monitor-container">
     <header className="monitor-header"><div><span className="monitor-kicker">Панель администратора</span><h1>Контрольные срезы</h1><p>Выберите работу и учебный период для мониторинга.</p></div><Link className="monitor-export" to="/account">В кабинет</Link></header>
     {error && <div className="monitor-error">{error}</div>}
     {!catalog && !error && <p>Загружаем список срезов…</p>}
     {catalog && <AssessmentCatalogRail id="monitor-catalog-rail" label="Работы для мониторинга"><section className="monitor-test-card"><div className="monitor-test-heading"><div><span className="monitor-kicker">Лабораторная №3</span><h2>Маятник Обербека</h2><p>Индивидуальные варианты и ожидаемые таблицы.</p></div><Link className="monitor-export" to="/admin/oberbeck-variants">Открыть варианты →</Link></div></section><section className="monitor-test-card"><div className="monitor-test-heading"><div><span className="monitor-kicker">Лабораторная №5</span><h2>Метод Клемана—Дезорма</h2><p>Условия установки и ожидаемые показания манометра по постоянному номеру варианта.</p></div><Link className="monitor-export" to="/admin/clement-variants">Открыть варианты →</Link></div></section><section className="monitor-test-card"><div className="monitor-test-heading"><div><span className="monitor-kicker">Лабораторная №6</span><h2>Электростатические поля</h2><p>Измерения, графики, расчёты и ответы студентов.</p></div><Link className="monitor-export" to="/admin/electrostatics-monitor">Результаты студентов →</Link></div></section>{catalog.tests.map(test => {
       const periods = catalog.periods.filter(p => p.testId === test.id)
       const active = periods.find(p => p.active)
-      return <section className="monitor-test-card" key={test.id}><div className="monitor-test-heading"><div><span className="monitor-kicker">Контрольный срез</span><h2>{test.name}</h2><p>{test.description}</p></div>{active && <Link className="monitor-export" to={`/admin/assessment-monitor/${test.id}?period=${encodeURIComponent(active.key)}`}>Открыть мониторинг →</Link>}</div>
+      return <section className="monitor-test-card monitor-test-card--assessment" key={test.id}><div className="monitor-test-heading"><div><span className="monitor-kicker">Контрольный срез</span><h2>{test.name}</h2><p>{test.description}</p></div>{active && <Link className="monitor-export" to={`/admin/assessment-monitor/${test.id}?period=${encodeURIComponent(active.key)}`}>Открыть мониторинг →</Link>}</div>
         <h3>Сохранённые периоды</h3><div className="monitor-period-list">{periods.map(p => <Link key={p.key} to={`/admin/assessment-monitor/${test.id}?period=${encodeURIComponent(p.key)}`}><span>{p.name} <small>{p.active ? 'Текущий' : 'Архив'}</small></span><span>{p.attemptsCount} работ →</span></Link>)}</div>
       </section>
     })}</AssessmentCatalogRail>}

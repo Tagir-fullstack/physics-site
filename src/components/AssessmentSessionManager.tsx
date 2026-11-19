@@ -9,7 +9,7 @@ type Payload = { sessions: ExamSession[]; sessionsRequired: boolean; revealAt: s
 const localInput = (value: string | number) => { const d = new Date(value); return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16) }
 const date = (value: string) => new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-export default function AssessmentSessionManager({ endpoint, period, testId, active }: { endpoint: string; period: string; testId: string; active: boolean }) {
+export default function AssessmentSessionManager({ endpoint, period, active }: { endpoint: string; period: string; testId: string; active: boolean }) {
   const { authFetch } = useApiClient()
   const [data, setData] = useState<Payload | null>(null)
   const [error, setError] = useState('')
@@ -63,7 +63,7 @@ export default function AssessmentSessionManager({ endpoint, period, testId, act
     {creating && <form className="exam-create-form" onSubmit={event => {
       event.preventDefault(); const fields = new FormData(event.currentTarget)
       void action({ action: 'createSession', name: String(fields.get('name')), opensAt: new Date(String(fields.get('opensAt'))).toISOString(), startsAt: new Date(String(fields.get('startsAt'))).toISOString(), durationMinutes: Number(fields.get('durationMinutes')) })
-    }}><label>Название потока<input name="name" required minLength={2} maxLength={120} placeholder="Например: поток Физика · понедельник" /></label><SessionDateTimeInput label="Открыть вход в зал" name="opensAt" required defaultValue={localInput(Date.now())} shortcuts={[{ label: 'Сейчас', value: () => Date.now() }]} /><SessionDateTimeInput label="Общий старт" name="startsAt" required defaultValue={localInput(Date.now() + 10 * 60_000)} /><label>Длительность, минут<input name="durationMinutes" type="number" min={1} max={180} required defaultValue={testId === 'midterm' ? 50 : 30} /></label><p>Часовой пояс: {Intl.DateTimeFormat().resolvedOptions().timeZone}. Старт произойдёт по расписанию; можно запустить раньше вручную. Опоздавшие попадут в очередь допуска.</p><button className="monitor-export" disabled={busy}>Создать сеанс и получить код</button></form>}
+    }}><label>Название потока<input name="name" required minLength={2} maxLength={120} placeholder="Например: поток Физика · понедельник" /></label><SessionDateTimeInput label="Открыть вход в зал" name="opensAt" required defaultValue={localInput(Date.now())} shortcuts={[{ label: 'Сейчас', value: () => Date.now() }]} /><SessionDateTimeInput label="Общий старт" name="startsAt" required defaultValue={localInput(Date.now() + 10 * 60_000)} /><label>Длительность, минут<input name="durationMinutes" type="number" min={1} max={180} required defaultValue={50} /></label><p>Часовой пояс: {Intl.DateTimeFormat().resolvedOptions().timeZone}. Старт произойдёт по расписанию; можно запустить раньше вручную. Опоздавшие попадут в очередь допуска.</p><button className="monitor-export" disabled={busy}>Создать сеанс и получить код</button></form>}
     {!data && <p>Загружаем сеансы…</p>}
     {data && !session && <p>{data.sessionsRequired ? 'Без созданного сеанса вход студентам закрыт.' : 'Сеансы пока не включены для этой работы. Создание первого сеанса включит вход по коду.'}</p>}
     {data && session && <>
