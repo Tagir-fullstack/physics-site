@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/molecular-assessment",
+      "destination": "/api/mechanics-assessment?assessment=molecular"
+    },
+    {
       "source": "/((?!api/|@|src/|node_modules/|assets/|.*\\.).*)",
       "destination": "/index.html"
     }

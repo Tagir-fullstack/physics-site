@@ -554,4 +554,11 @@ return async function handler(req: VercelRequest, res: VercelResponse) {
 
 }
 
-export default createAssessmentHandler()
+const mechanicsHandler = createAssessmentHandler()
+const molecularHandler = createAssessmentHandler('molecular')
+// The public molecular URL rewrites here, keeping Hobby deployments at 12 functions.
+export default function assessmentHandler(req: VercelRequest, res: VercelResponse) {
+  if (req.query.assessment === 'molecular') return molecularHandler(req, res)
+  if (req.query.assessment !== undefined) return res.status(400).json({ error: 'Неизвестный контрольный срез.' })
+  return mechanicsHandler(req, res)
+}

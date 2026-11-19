@@ -36,3 +36,6 @@
 В текущей среде Neon недоступен (DNS/network), Chrome завершается при запуске в sandbox. Поэтому реальная инициализация периода, транзакционный жизненный цикл и визуальный прогон остаются для окружения с доступом к БД/браузеру; эти проверки не подменяются результатами фикстур.
 
 Обновление 19.11.2026: период `molecular-cut-v1` успешно добавлен в рабочую базу. Проверен реальный ответ API входа: HTTP 200, mode=session, phase=code, solutionsReleased=false; максимум периода — 4 балла. Сеансы и время публикации не назначались.
+
+
+Deployment: public `/api/molecular-assessment` rewrites to `/api/mechanics-assessment?assessment=molecular`; the same dispatch is configured in Vite. No extra Vercel function is emitted for this test. Build checks all API TypeScript with ES2020 and verifies at most 12 function entrypoints for Hobby.

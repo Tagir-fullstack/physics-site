@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { getTableName } from 'drizzle-orm'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { db, schema } from '../api/_lib/db.js'
-import handler from '../api/molecular-assessment.js'
+import handler from '../api/mechanics-assessment.js'
 import { createMolecularVariant, molecularExpected } from '../api/_lib/molecularAssessment.js'
 import { canRestartAssessment } from '../api/_lib/assessmentAccess.js'
 import { ASSESSMENT_DURATION_MS } from '../api/_lib/mechanicsAssessment.js'
@@ -39,11 +39,12 @@ Object.assign(db,{select:()=>{
 }})
 async function call(body?:Record<string,unknown>,query:Record<string,string>={},cookie=true,origin='http://localhost:5173') {
   let status=200;let payload:Record<string,unknown>={}
-  const req={method:body?'POST':'GET',body,query,cookies:cookie?{physez_exam_molecular:`${id}.${secret}`}:{},headers:{host:'localhost:5173',origin}} as unknown as VercelRequest
+  const req={method:body?'POST':'GET',body,query:{assessment:'molecular',...query},cookies:cookie?{physez_exam_molecular:`${id}.${secret}`}:{},headers:{host:'localhost:5173',origin}} as unknown as VercelRequest
   const res={setHeader(){},getHeader(){},status(s:number){status=s;return res},json(p:Record<string,unknown>){payload=p;return res}} as unknown as VercelResponse
   await handler(req,res);return {status,payload}
 }
 try {
+  assert.equal((await call(undefined,{assessment:'unknown'})).status,400)
   assert.equal(ASSESSMENT_DURATION_MS,50*60_000)
   assert.equal(canRestartAssessment('molecular',{userId:'fixture',email:'',isPremium:true}),false)
   assert.equal(canRestartAssessment('molecular',{userId:'fixture',email:'',isPremium:false,accessRole:'admin'}),true)

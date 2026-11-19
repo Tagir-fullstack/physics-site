@@ -33,7 +33,8 @@ function vercelApiDevPlugin(): Plugin {
         } else if (pathname === '/api/mechanics-assessment') {
           modulePath = '/api/mechanics-assessment.ts'
         } else if (pathname === '/api/molecular-assessment') {
-          modulePath = '/api/molecular-assessment.ts'
+          modulePath = '/api/mechanics-assessment.ts'
+          query.assessment = 'molecular'
         } else if (pathname === '/api/midterm-assessment') {
           modulePath = '/api/midterm-assessment.ts'
         } else if (pathname === '/api/teacher-platform') {
