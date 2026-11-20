@@ -521,7 +521,7 @@ export type TestQuestion = typeof testQuestions.$inferSelect
 export type TestAssignment = typeof testAssignments.$inferSelect
 export type TeacherTestAttempt = typeof teacherTestAttempts.$inferSelect
 
-// Shared cross-instance instrument quota; migration: setup-electrostatics-instrument.mjs.
+// Legacy instrument quota table retained for existing deployments; local simulation no longer uses it.
 export const electrostaticsInstrumentQuotas = pgTable('electrostatics_instrument_quotas', {
   identityHash: varchar('identity_hash', {length:64}).primaryKey(),
   tokens: doublePrecision('tokens').notNull(),

@@ -19,4 +19,4 @@ Control assessments use the shared amber tokens in `src/styles/assessment-theme.
 Exam code entry follows the existing account sign-in composition: a concise subject/release summary at left and a compact form card at right. Names share a row on desktop; stack the layout on narrow screens. Waiting/admission and active-test behavior remain in the shared gate and runner.
 
 
-Electrostatics preserves the existing lab layout and analogue Basic meter. Probe measurements are asynchronous; show pending/error status beside the meter and disable recording until a fresh reading arrives. Reference controls are offered only when the server authorizes a teacher/admin. No client solver or fallback.
+Electrostatics preserves the existing lab layout and analogue Basic meter. Calculate each selected field in a local Web Worker, then update probe readings immediately without measurement API requests. PRO retains local measurement processing and optional reference lines. Show initial calculation errors without blocking unrelated pages.

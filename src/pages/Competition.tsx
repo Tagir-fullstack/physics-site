@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import AccessibilityPanel from '../components/AccessibilityPanel'
 import LabIllustration from '../components/LabIllustration'
 import ElectroExpectedField from '../components/ElectroExpectedField'
 import { useAccessibility } from '../context/AccessibilityContext'
-import type { ElectroVariant } from '../lib/electrostatics'
-import type { ElectroDrawing } from '../lib/electrostaticsInstrument'
+import { electroVariant } from '../lib/electrostatics'
 import { LABS } from '../data/labs'
 import '../styles/thesis.css'
 import '../styles/header.css'
@@ -35,14 +34,8 @@ function Points({ items }: { items: Array<[string, string]> }) {
 }
 function PersonalField() {
   const [profile, setProfile] = useState(0)
-  const [example,setExample]=useState<{profile:number;variant:ElectroVariant;drawing:ElectroDrawing}|null>(null)
-  const [error,setError]=useState('')
-  useEffect(()=>{
-    const controller=new AbortController()
-    void fetch(`/demos/electrostatics-${profile}.json`,{signal:controller.signal}).then(async response=>{if(!response.ok)throw Error('Не удалось загрузить пример.');return response.json()}).then(data=>{if(!controller.signal.aborted){setExample({profile,...data});setError('')}}).catch(e=>{if(!controller.signal.aborted)setError(e instanceof Error?e.message:'Не удалось загрузить пример.')})
-    return()=>controller.abort()
-  },[profile])
-  return <div className="konkurs-field"><div className="konkurs-demo-tabs" aria-label="Условный профиль">{['А', 'Б', 'В'].map((name, i) => <button key={name} type="button" aria-pressed={profile === i} onClick={() => setProfile(i)}>Студент {name}</button>)}<span>Один номер — разные условия</span></div>{example?.profile===profile?<ElectroExpectedField key={profile} variant={example.variant} drawing={example.drawing}/>:<p role={error?'alert':'status'}>{error||'Загружаем пример…'}</p>}<p className="konkurs-caption">Демонстрационные профили · без данных реальных студентов</p></div>
+  const variant = useMemo(() => electroVariant(24, `competition-example-${profile}`), [profile])
+  return <div className="konkurs-field"><div className="konkurs-demo-tabs" aria-label="Условный профиль">{['А', 'Б', 'В'].map((name, i) => <button key={name} type="button" aria-pressed={profile === i} onClick={() => setProfile(i)}>Студент {name}</button>)}<span>Один номер — разные условия</span></div><ElectroExpectedField key={profile} variant={variant}/><p className="konkurs-caption">Демонстрационные профили · без данных реальных студентов</p></div>
 }
 function SlideContent({ index, print = false }: { index: number; print?: boolean }) {
   switch (index) {

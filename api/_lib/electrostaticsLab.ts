@@ -3,7 +3,6 @@ import { databaseSql } from './db.js'
 import { getClerkUser, hasPremiumAccess, isAdmin, type ClerkUser } from './auth.js'
 import { educationOwner } from './educationOwner.js'
 import { currentStudent, sameOrigin } from './studentProfile.js'
-import { assignedElectroVariant, probeReading, referenceDrawing, measuredConnections, normalPair, instrumentPoint, instrumentReading, consumeElectroQuota } from './electrostaticsInstrument.js'
 import { electroVariant } from '../../src/lib/electrostatics.js'
 import { electroStore, type ElectroScope } from './electrostaticsStore.js'
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
@@ -23,7 +22,7 @@ async function readBody(req: VercelRequest): Promise<Record<string,unknown>> {
   if(!value || typeof value!=='object' || Array.isArray(value))throw Error('BAD_BODY')
   return value
 }
-const defaults = { account:getClerkUser, profile:currentStudent, scope:monitorScope, store:electroStore, consume:consumeElectroQuota }
+const defaults = { account:getClerkUser, profile:currentStudent, scope:monitorScope, store:electroStore }
 export function createElectrostaticsHandler(deps = defaults) {
   return async (req:VercelRequest,res:VercelResponse) => {
     res.setHeader('Cache-Control','private, no-store');res.setHeader('Vary','Authorization, Cookie');res.setHeader('Referrer-Policy','no-referrer')
@@ -37,12 +36,12 @@ export function createElectrostaticsHandler(deps = defaults) {
         if(req.query.view==='expected') {
           if(typeof req.query.id!=='string' || !uuid.test(req.query.id))return res.status(400).json({error:'Выберите студента.'})
           const student=await deps.store.expectedStudent(scope,req.query.id)
-          return student ? res.status(200).json({student,variant:electroVariant(student.variantNumber,student.id),drawing:referenceDrawing(electroVariant(student.variantNumber,student.id))}):res.status(404).json({error:'Студент не найден или недоступен.'})
+          return student ? res.status(200).json({student,variant:electroVariant(student.variantNumber,student.id)}):res.status(404).json({error:'Студент не найден или недоступен.'})
         }
         if(req.query.view==='detail') {
           if(typeof req.query.id!=='string' || !uuid.test(req.query.id))return res.status(400).json({error:'Выберите работу.'})
           const detail=await deps.store.detail(scope,req.query.id)
-          return detail ? res.status(200).json({...detail,measuredEdges:measuredConnections(detail.submission.variant,detail.submission.notebook.points)}):res.status(404).json({error:'Работа не найдена или недоступна.'})
+          return detail ? res.status(200).json(detail):res.status(404).json({error:'Работа не найдена или недоступна.'})
         }
         const page=Number(req.query.page ?? 0)
         if(!Number.isSafeInteger(page)||page<0||page>10000)return res.status(400).json({error:'Некорректная страница.'})
@@ -52,47 +51,10 @@ export function createElectrostaticsHandler(deps = defaults) {
         if((sort!=='name'&&sort!=='variant')||(direction!=='asc'&&direction!=='desc'))return res.status(400).json({error:'Некорректная сортировка.'})
         return res.status(200).json(await deps.store.list(scope,page,query,group,status,sort,direction))
       }
-      // Parameters always come from the authenticated profile, never posted geometry/IDs.
-      const instrumentVariant = async (practice: unknown) => {
-        const profile=await deps.profile(req,account)
-        if(!profile?.variantNumber)return null
-        if(practice!==undefined && (!Number.isSafeInteger(practice)||Number(practice)<1||Number(practice)>1000000))throw Error('BAD_PRACTICE')
-        if(practice!==undefined && !hasPremiumAccess(account))throw Error('PRACTICE_FORBIDDEN')
-        return assignedElectroVariant(practice===undefined?profile.variantNumber:Number(practice),profile.id)
-      }
-      if(req.method==='GET' && req.query.view==='instrument') {
-        const practice=req.query.practice===undefined?undefined:typeof req.query.practice==='string'&&/^[1-9][0-9]{0,6}$/.test(req.query.practice)?Number(req.query.practice):NaN
-        const variant=await instrumentVariant(practice)
-        if(!variant)return res.status(401).json({error:'Откройте свой профиль студента.'})
-        return res.status(200).json({variant,canReference:Boolean(await deps.scope(account))})
-      }
       if(req.method==='POST') {
         if(!sameOrigin(req) || !req.headers.authorization?.startsWith('Bearer '))return res.status(403).json({error:'Нужна подтверждённая сессия этого сайта.'})
         let body:Record<string,unknown>
         try { body=await readBody(req) } catch { return res.status(400).json({error:'Неверный формат или слишком большой объём данных.'}) }
-        if(['probe','reference','connections','pair'].includes(String(body.action))) {
-          const keys=body.action==='probe'?['action','practice','point']:body.action==='reference'?['action','practice']:['action','practice','points']
-          if(Object.keys(body).some(key=>!keys.includes(key)))return res.status(400).json({error:'Передайте только параметры измерения.'})
-          if(body.action==='reference' && !await deps.scope(account))return res.status(403).json({error:'Эталон доступен только преподавателю.'})
-          if((body.action==='connections'||body.action==='pair')&&!hasPremiumAccess(account))return res.status(403).json({error:'Обработка измерений доступна в PRO.'})
-          if(body.action==='probe'&&!instrumentPoint(body.point))return res.status(400).json({error:'Нужна одна точка пластины с шагом 0,5 мм.'})
-          if((body.action==='connections'||body.action==='pair')&&(!Array.isArray(body.points)||body.points.length>(body.action==='pair'?2:200)||(body.action==='pair'&&body.points.length!==2)))return res.status(400).json({error:'Проверьте измеренные точки.'})
-          const variant=await instrumentVariant(body.practice)
-          if(!variant)return res.status(401).json({error:'Откройте свой профиль студента.'})
-          const cost=Array.isArray(body.points)?Math.max(1,body.points.length):1
-          if(!await deps.consume(account.userId,cost)) {
-            res.setHeader('Retry-After','2')
-            return res.status(429).json({error:'Слишком много измерений. Подождите перед следующим отсчётом; дневной предел — 5000 точек.'})
-          }
-          if(body.action==='probe')return res.status(200).json({point:body.point,reading:probeReading(variant,body.point as import('../../src/lib/electrostatics.js').Point)})
-          if(body.action==='reference')return res.status(200).json({drawing:referenceDrawing(variant)})
-          const points=body.points as unknown[]
-          if(!points.every(p=>instrumentReading(p,variant)))return res.status(400).json({error:'Передайте измеренные точки выбранных потенциалов.'})
-          // Narrowed by instrumentReading, without returning gradients or unmeasured points.
-          const readings=points as import('../../src/lib/electrostatics.js').Reading[]
-          if(body.action==='pair')return res.status(200).json({aligned:Math.abs(Math.abs(readings[0].level-readings[1].level)-variant.interval)<1e-8&&normalPair(variant,readings[0],readings[1])})
-          return res.status(200).json({edges:measuredConnections(variant,readings)})
-        }
         if(body.action==='review') {
           const scope=await deps.scope(account)
           if(!scope)return res.status(403).json({error:'Нет доступа к проверке работ.'})
@@ -110,10 +72,8 @@ export function createElectrostaticsHandler(deps = defaults) {
       const scope=await deps.scope(account)
       return res.status(200).json({submission:await deps.store.mine(profile.id),monitorPath:scope ? scope.teacherId===null?'/admin/electrostatics-monitor':'/teacher/electrostatics-monitor':null})
     } catch(e) {
-      if((e as Error).message==='BAD_PRACTICE')return res.status(400).json({error:'Некорректный учебный вариант.'})
-      if((e as Error).message==='PRACTICE_FORBIDDEN')return res.status(403).json({error:'Выбор учебного варианта доступен в PRO.'})
       if((e as Error).message==='SNAPSHOT_CONFLICT')return res.status(409).json({error:'Эта отправка уже использована. Обновите страницу.'})
-      return res.status(503).json({error:(e as {code?:string}).code==='42P01'?'Хранилище результатов ещё не настроено. Черновик остаётся в браузере.':'Сервис лабораторной временно недоступен. Повторите запрос. Черновик остаётся в браузере.'})
+      return res.status(503).json({error:(e as {code?:string}).code==='42P01'?'Хранилище результатов ещё не настроено. Черновик остаётся в браузере.':'Сервис результатов временно недоступен. Черновик остаётся в браузере.'})
     }
   }
 }
