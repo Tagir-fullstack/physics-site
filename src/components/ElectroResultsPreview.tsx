@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { type FieldGrid, type ElectroVariant, fieldEstimate, axisOrigin, toDisplayPoint } from '../lib/electrostatics'
-import { measuredNeighborEdges } from '../lib/electrostaticsNeighbors'
+import { type ElectroVariant, fieldEstimate, axisOrigin, toDisplayPoint } from '../lib/electrostatics'
+import { useLocalElectroInstrument, type ElectroEdges } from '../lib/electrostaticsInstrument'
 import { potentialLevels } from '../lib/electrostatics'
 import { ELECTRO_QUESTIONS, type ElectroNotebook } from '../lib/electrostaticsNotebook'
 import Electrodes from './Electrodes'
@@ -10,13 +10,21 @@ import '../styles/electrostatics.css'
 const f=(n:number)=>n.toLocaleString('ru-RU',{maximumFractionDigits:2})
 const colours=['#2c78b5','#9a59ab','#2b9467','#c07827','#c64c56']
 export default function ElectroResultsPreview({variant,notebook}:{variant:ElectroVariant;notebook:ElectroNotebook}) {
-  const [grid,setGrid]=useState<FieldGrid|null>(null)
-  useEffect(()=>{const worker=new Worker(new URL('../workers/electrostatics.worker.ts',import.meta.url),{type:'module'});worker.onmessage=(e:MessageEvent<{grid?:FieldGrid}>)=>{if(e.data.grid?.converged)setGrid(e.data.grid)};worker.postMessage(variant);return()=>worker.terminate()},[variant])
+  const probe=useMemo(()=>({x:90,y:120}),[])
+  const instrument=useLocalElectroInstrument(variant,probe)
+  const request=instrument.request
+  const [edges,setEdges]=useState<ElectroEdges>([])
+  const [error,setError]=useState('')
   const levels=useMemo(()=>potentialLevels(variant),[variant])
-  const edges=useMemo(()=>levels.map(l=>grid?measuredNeighborEdges(grid,l,notebook.points.filter(p=>p.level===l)):[]),[grid,levels,notebook.points])
+  useEffect(()=>{
+    if(!instrument.ready)return
+    let active=true
+    void request('connect',{points:notebook.points}).then(data=>{if(active&&data.edges)setEdges(data.edges)}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Не удалось соединить измерения.')})
+    return()=>{active=false}
+  },[request,instrument.ready,notebook.points])
   return <div className="es-page es-monitor-preview">
-    <section className="es-panel"><h2>Картина поля студента</h2><div className="es-preview-map"><svg className="es-sheet" viewBox="-12 -12 264 204" role="img" aria-label="Измеренные точки студента и соседние соединения">
-      <g transform="matrix(0 1 1 0 0 0)"><rect width="180" height="240" className="es-sheet-bg"/>{Array.from({length:37},(_,i)=><path key={'x'+i} className="es-grid" d={`M${i*5} 0V240`}/>)}{Array.from({length:49},(_,i)=><path key={'y'+i} className="es-grid" d={`M0 ${i*5}H180`}/>)}<Electrodes variant={variant}/>{levels.map((l,i)=><g key={l} fill={colours[i%colours.length]}>{edges[i].map(([a,b],k)=><line key={k} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colours[i%colours.length]} strokeWidth=".6"/>)}{notebook.points.filter(p=>p.level===l).map((p,k)=><circle key={k} cx={p.x} cy={p.y} r="1.3"><title>{p.level} В; x={f(toDisplayPoint(p).x)}, y={f(toDisplayPoint(p).y)} мм</title></circle>)}</g>)}</g>
+    <section className="es-panel"><h2>Картина поля студента</h2>{(error||instrument.error)&&<p role="alert">{error||instrument.error}</p>}<div className="es-preview-map"><svg className="es-sheet" viewBox="-12 -12 264 204" role="img" aria-label="Измеренные точки студента и соседние соединения">
+      <g transform="matrix(0 1 1 0 0 0)"><rect width="180" height="240" className="es-sheet-bg"/>{Array.from({length:37},(_,i)=><path key={'x'+i} className="es-grid" d={`M${i*5} 0V240`}/>)}{Array.from({length:49},(_,i)=><path key={'y'+i} className="es-grid" d={`M0 ${i*5}H180`}/>)}<Electrodes variant={variant}/>{levels.map((l,i)=><g key={l} fill={colours[i%colours.length]}>{(edges[i]??[]).map(([a,b],k)=><line key={k} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colours[i%colours.length]} strokeWidth=".6"/>)}{notebook.points.filter(p=>p.level===l).map((p,k)=><circle key={k} cx={p.x} cy={p.y} r="1.3"><title>{p.level} В; x={f(toDisplayPoint(p).x)}, y={f(toDisplayPoint(p).y)} мм</title></circle>)}</g>)}</g>
       <ElectroCoordinates/>
     </svg></div><div className="es-preview-legend">{levels.map((l,i)=><span key={l} style={{color:colours[i%colours.length]}}>{l} В · {notebook.points.filter(p=>p.level===l).length} точек</span>)}</div></section>
     <details className="es-panel"><summary>Точки измерений ({notebook.points.length})</summary><div className="es-table-wrap"><table><thead><tr><th>φ заданное, В</th><th>x, мм</th><th>y, мм</th><th>φ измеренное, В</th></tr></thead><tbody>{notebook.points.map((p,i)=><tr key={i}><td>{f(p.level)}</td><td>{f(toDisplayPoint(p).x)}</td><td>{f(toDisplayPoint(p).y)}</td><td>{f(p.potential)}</td></tr>)}</tbody></table></div></details>

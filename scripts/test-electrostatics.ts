@@ -1,5 +1,6 @@
+import { solveElectrostatic, samplePotential, electricField, voltmeter, contourPath, fieldLines } from '../src/workers/electrostaticsModel'
 import assert from 'node:assert/strict'
-import { SHEET, electrodes, electrodeClearance, electrodeContains, toModelPoint, toDisplayPoint, electroVariant, solveElectrostatic, samplePotential, electricField, electrodeAt, electrodeY, potentialLevels, voltmeter, fieldEstimate, contourPath, fieldLines, type ElectroVariant } from '../src/lib/electrostatics'
+import { SHEET, electrodes, electrodeClearance, electrodeContains, toModelPoint, toDisplayPoint, electroVariant, electrodeAt, electrodeY, potentialLevels, fieldEstimate, type ElectroVariant } from '../src/lib/electrostatics'
 import { emptyElectroNotebook, validElectroNotebook } from '../src/lib/electrostaticsNotebook'
 const start = Date.now(), unique = new Set<string>(), personal = new Set<string>(), counts = new Set<number>(), rotations = new Set<number>()
 for (let n = 1; n <= 10000; n++) {

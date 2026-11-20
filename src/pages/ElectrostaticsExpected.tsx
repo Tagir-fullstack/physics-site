@@ -1,3 +1,4 @@
+import type { ElectroDrawing } from '../lib/electrostaticsInstrument'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -6,7 +7,7 @@ import { variantDescription, type ElectroVariant } from '../lib/electrostatics'
 import type { StudentProfile } from '../lib/studentProfile'
 import ElectroExpectedField from '../components/ElectroExpectedField'
 import '../styles/assessment-monitor.css'
-type Expected={student:StudentProfile;variant:ElectroVariant}
+type Expected={student:StudentProfile;variant:ElectroVariant;drawing:ElectroDrawing}
 export default function ElectrostaticsExpected() {
   const {studentId}=useParams(),{user,isLoading}=useAuth(),{authFetch}=useApiClient(),location=useLocation()
   const base=location.pathname.startsWith('/teacher/')?'/teacher/electrostatics-monitor':'/admin/electrostatics-monitor'
@@ -23,7 +24,7 @@ export default function ElectrostaticsExpected() {
     <header className="monitor-header"><div><span className="monitor-kicker">Лабораторная №6 · Эталон</span><h1>Ожидаемый рисунок</h1></div><Link className="monitor-export" to={base}>← Все студенты</Link></header>
     {!isLoading&&!user?<p>Войдите в аккаунт.</p>:!current?<p role="status">Загружаем вариант…</p>:current.error?<section className="monitor-panel"><p className="monitor-error" role="alert">{current.error}</p><button className="monitor-export" onClick={()=>setRetry(n=>n+1)}>Повторить</button></section>:current.data&&<>
       <section className="monitor-panel"><h2>{current.data.student.lastName} {current.data.student.firstName} · {current.data.student.group}</h2><p>Вариант №{current.data.variant.number} · {variantDescription(current.data.variant)} · {current.data.variant.voltage} В · Δφ = {current.data.variant.interval} В</p></section>
-      <ElectroExpectedField key={key} variant={current.data.variant}/>
+      <ElectroExpectedField key={key} variant={current.data.variant} drawing={current.data.drawing}/>
     </>}
   </div></main>
 }

@@ -3,6 +3,7 @@ import { databaseSql } from './db.js'
 import { getClerkUser, hasPremiumAccess, isAdmin, type ClerkUser } from './auth.js'
 import { educationOwner } from './educationOwner.js'
 import { currentStudent, sameOrigin } from './studentProfile.js'
+import { referenceDrawing } from './electrostaticsReference.js'
 import { electroVariant } from '../../src/lib/electrostatics.js'
 import { electroStore, type ElectroScope } from './electrostaticsStore.js'
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
@@ -36,7 +37,7 @@ export function createElectrostaticsHandler(deps = defaults) {
         if(req.query.view==='expected') {
           if(typeof req.query.id!=='string' || !uuid.test(req.query.id))return res.status(400).json({error:'Выберите студента.'})
           const student=await deps.store.expectedStudent(scope,req.query.id)
-          return student ? res.status(200).json({student,variant:electroVariant(student.variantNumber,student.id)}):res.status(404).json({error:'Студент не найден или недоступен.'})
+          return student ? res.status(200).json({student,variant:electroVariant(student.variantNumber,student.id),drawing:referenceDrawing(electroVariant(student.variantNumber,student.id))}):res.status(404).json({error:'Студент не найден или недоступен.'})
         }
         if(req.query.view==='detail') {
           if(typeof req.query.id!=='string' || !uuid.test(req.query.id))return res.status(400).json({error:'Выберите работу.'})

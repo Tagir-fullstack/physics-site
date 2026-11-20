@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import react from '@vitejs/plugin-react'
+import JavaScriptObfuscator from 'javascript-obfuscator'
 
 type DevRequest = IncomingMessage & {
   query: Record<string, string>
@@ -92,10 +93,34 @@ function vercelApiDevPlugin(): Plugin {
   }
 }
 
+// Only numerical workers are transformed: keep framework/application code stable.
+function electroWorkerProtection(): Plugin {
+  const options:NonNullable<Parameters<typeof JavaScriptObfuscator.obfuscate>[1]>={
+    target:'browser',compact:true,sourceMap:false,renameGlobals:false,
+    identifierNamesGenerator:'hexadecimal',stringArray:false,unicodeEscapeSequence:true,
+    splitStrings:false,numbersToExpressions:false,transformObjectKeys:false,
+    controlFlowFlattening:false,deadCodeInjection:false,debugProtection:false,disableConsoleOutput:false,selfDefending:false,
+    seed:218,
+  }
+  const protects=(id:string|null)=>Boolean(id&&/electrostatics\.worker\.ts$/.test(id))
+  return {
+    name:'physez-electro-worker-protection',apply:'build',enforce:'post',
+    augmentChunkHash(chunk){return protects(chunk.facadeModuleId)?'javascript-obfuscator-4.2.2:'+JSON.stringify(options):undefined},
+    generateBundle(_options,bundle){
+      for(const chunk of Object.values(bundle)){
+        if(chunk.type!=='chunk'||!protects(chunk.facadeModuleId))continue
+        chunk.code=JavaScriptObfuscator.obfuscate(chunk.code,options).getObfuscatedCode();chunk.map=null
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vercelApiDevPlugin(), react()],
+  worker:{plugins:()=>[electroWorkerProtection()]},
   build: {
+    sourcemap:false,
     rollupOptions: {
       output: {
         manualChunks: {

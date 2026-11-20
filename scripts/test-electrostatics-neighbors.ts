@@ -1,6 +1,7 @@
+import { type FieldGrid } from '../src/workers/electrostaticsModel'
 import assert from 'node:assert/strict'
-import { SHEET, type FieldGrid, type Point } from '../src/lib/electrostatics'
-import { measuredNeighborEdges } from '../src/lib/electrostaticsNeighbors'
+import { SHEET, type Point } from '../src/lib/electrostatics'
+import { measuredNeighborEdges } from '../src/workers/electrostaticsNeighbors'
 const grid = (fn: (x: number, y: number) => number): FieldGrid => {
   const nx = SHEET.width / 2 + 1, ny = SHEET.height / 2 + 1, potential = new Float64Array(nx * ny)
   for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) potential[y * nx + x] = fn(x * 2, y * 2)

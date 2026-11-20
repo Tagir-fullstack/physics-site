@@ -1,4 +1,5 @@
-import { contourSegments, type FieldGrid, type Point } from './electrostatics'
+import { contourSegments, type FieldGrid } from './electrostaticsModel.js'
+import type { Point } from '../lib/electrostatics.js'
 
 type Component = { path: Point[]; closed: boolean }
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)

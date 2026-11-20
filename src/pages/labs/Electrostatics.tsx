@@ -8,8 +8,9 @@ import ElectroCoordinates from '../../components/ElectroCoordinates'
 import AxisPlot from '../../components/ElectroAxisPlot'
 import ElectroVariantControls from '../../components/ElectroVariantControls'
 import { activeElectroPractice, type ElectroPracticeSelection } from '../../lib/electrostaticsSelection'
-import { variantDescription, axisOrigin, electrodes, toDisplayPoint, toModelPoint, electroVariant, electrodeAt, potentialLevels, electricField, voltmeter, contourPath, fieldLines, fieldEstimate, type FieldGrid, type ElectroVariant, type Point } from '../../lib/electrostatics'
-import { measuredNeighborEdges } from '../../lib/electrostaticsNeighbors'
+import { variantDescription, axisOrigin, electrodes, toDisplayPoint, toModelPoint, electroVariant, electrodeAt, potentialLevels, fieldEstimate, type ElectroVariant, type Point } from '../../lib/electrostatics'
+import { useLocalElectroInstrument, type ElectroEdges } from '../../lib/electrostaticsInstrument'
+import { installElectroConsoleDecoy } from '../../lib/electrostaticsConsoleDecoy'
 import { emptyElectroNotebook, validElectroNotebook, ELECTRO_QUESTIONS as questions, type ElectroNotebook } from '../../lib/electrostaticsNotebook'
 import '../../styles/electrostatics.css'
 
@@ -64,23 +65,26 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
   const [notebook, setNotebook] = useState<ElectroNotebook>(() => { if (!isPremium) return emptyElectroNotebook(); try { const data: unknown = JSON.parse(localStorage.getItem(key) || 'null'); return validElectroNotebook(data, v) ? data : emptyElectroNotebook() } catch { return emptyElectroNotebook() } })
   const [saveError, setSaveError] = useState(''), [notice, setNotice] = useState(''), [power, setPower] = useState(false)
   const [probe, setProbe] = useState<Point>({ x: 90, y: 120 }), [level, setLevel] = useState(potentialLevels(v)[0])
-  const [grid, setGrid] = useState<FieldGrid | null>(null), [error, setError] = useState('')
-  const [reference, setReference] = useState(false), [showField, setShowField] = useState(false), [join, setJoin] = useState(false)
+  const instrument=useLocalElectroInstrument(v,probe)
+  const instrumentRequest=instrument.request
+  const [connections,setConnections]=useState<{key:string;edges:ElectroEdges}|null>(null)
+  const [pairBusy,setPairBusy]=useState(false)
+  const [join,setJoin]=useState(false)
   const [checks, setChecks] = useState<number[]>([]), [pairA, setPairA] = useState(''), [pairB, setPairB] = useState('')
   const map = useRef<SVGSVGElement>(null)
   const levels = useMemo(() => potentialLevels(v), [v])
   useEffect(() => { if (!isPremium) return; const timer = window.setTimeout(() => { try { localStorage.setItem(key, JSON.stringify(notebook)); setSaveError('') } catch { setSaveError('Черновик не сохранён: хранилище браузера недоступно. Скачайте отчёт перед уходом.') } }, 0); return () => window.clearTimeout(timer) }, [key, notebook, isPremium])
-  useEffect(() => {
-    const worker = new Worker(new URL('../../workers/electrostatics.worker.ts', import.meta.url), { type: 'module' })
-    worker.onmessage = (e: MessageEvent<{ grid?: FieldGrid; error?: string }>) => { if (e.data.grid?.converged) setGrid(e.data.grid); else setError(e.data.error || 'Расчёт не сошёлся. Перезагрузите страницу.') }
-    worker.onerror = () => setError('Не удалось запустить расчёт поля. Перезагрузите страницу.')
-    worker.postMessage(v); return () => worker.terminate()
-  }, [v])
-  const contours = useMemo(() => isPremium && grid && reference ? levels.map(l => contourPath(grid, l)) : [], [grid, reference, levels, isPremium])
-  const measuredEdges = useMemo(() => isPremium && grid && join ? levels.map(level => measuredNeighborEdges(grid, level, notebook.points.filter(p => p.level === level))) : [], [grid, join, levels, notebook.points, isPremium])
-  const lines = useMemo(() => isPremium && grid && showField ? fieldLines(grid, v) : [], [grid, showField, v, isPremium])
-  if (!grid) return <section className="es-panel"><p role={error ? 'alert' : 'status'}>{error || 'Рассчитываем поле выбранной пластины…'}</p></section>
-  const reading = voltmeter(grid, v, probe), onElectrode = electrodeAt(v, probe), selected = notebook.points.filter(p => p.level === level)
+  useEffect(()=>installElectroConsoleDecoy(window,v),[v])
+  const pointsKey=JSON.stringify(notebook.points)
+  useEffect(()=>{
+    if(!instrument.ready||!isPremium||!join)return
+    let active=true
+    void instrumentRequest('connect',{points:notebook.points}).then(data=>{if(active&&data.edges)setConnections({key:pointsKey,edges:data.edges})}).catch(e=>{if(active)setNotice(e instanceof Error?e.message:'Не удалось соединить точки.')})
+    return()=>{active=false}
+  },[instrument.ready,instrumentRequest,isPremium,join,notebook.points,pointsKey])
+  const measuredEdges=connections?.key===pointsKey?connections.edges:[]
+  if(!instrument.ready)return <section className="es-panel"><p role={instrument.error?'alert':'status'}>{instrument.error||'Рассчитываем поле выбранной пластины…'}</p></section>
+  const reading=instrument.value,onElectrode=electrodeAt(v,probe),selected=notebook.points.filter(p=>p.level===level)
   const ready = power && checks.includes(0) && checks.includes(1)
   const tolerance = .1
   const move = (p: Point) => {
@@ -94,6 +98,7 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
   const record = () => {
     if (!isPremium) return
     if (!power) { setNotice('Включите питание перед записью точки.'); return }
+    if (!instrument.current) { setNotice('Дождитесь показания прибора.'); return }
     if (onElectrode !== null) { setNotice('Ищите точки в проводящем слое, вне электродов.'); return }
     if (Math.abs(reading - level) > tolerance + 1e-8) { setNotice(`Найдите ${fmt(level)} В с допуском ±${fmt(tolerance)} В.`); return }
     if (selected.some(p => Math.hypot(p.x - probe.x, p.y - probe.y) < 3)) { setNotice('Эта точка уже записана или слишком близка к другой. Распределяйте точки по всей линии.'); return }
@@ -101,19 +106,25 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
     setNotebook(n => ({ ...n, points: [...n.points, { ...probe, potential: reading, level }] })); setNotice(`Точка ${selected.length + 1} для ${fmt(level)} В записана.`)
   }
   const axisRecord = () => {
+    if(!instrument.current){setNotice('Дождитесь показания прибора.');return}
     if (!power || Math.abs(probe.x - 90) > .5) { setNotice('Для графика установите y = 0 мм и включите питание.'); return }
     if (notebook.axis.length >= 100 || notebook.axis.some(p => Math.abs(p.y - probe.y) < 1)) { setNotice('Такая точка оси уже есть или достигнут предел 100 отсчётов.'); return }
     setNotebook(n => ({ ...n, axis: [...n.axis, { ...probe, potential: reading }] })); setNotice('Отсчёт добавлен в график φ(r).')
   }
-  const addPair = () => {
-    const a = notebook.points[Number(pairA)], b = notebook.points[Number(pairB)]
-    if (pairA === '' || pairB === '' || !a || !b || Math.abs(Math.abs(a.level - b.level) - v.interval) > 1e-8) { setNotice('Выберите две точки с соседних эквипотенциальных линий.'); return }
-    const estimate = fieldEstimate(a, b), e = electricField(grid, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 })
-    if (!estimate || e.magnitude < .01) { setNotice('Выберите две разные точки в области ненулевого поля.'); return }
-    const alignment = Math.abs((b.x - a.x) * e.x + (b.y - a.y) * e.y) / (estimate.distanceMm * e.magnitude)
-    if (alignment < .95) { setNotice('Отрезок заметно отклонён от нормали. Выберите более близкие точки вдоль силовой линии, иначе отношение даёт лишь проекцию E.'); return }
-    if (notebook.pairs.length >= 40) { setNotice('Достигнут предел 40 участков.'); return }
-    setNotebook(n => ({ ...n, pairs: [...n.pairs, { a: { ...a }, b: { ...b }, answer: '' }] })); setNotice('Участок записан. Рассчитайте E, переведя миллиметры в метры.')
+  const addPair = async () => {
+    if(pairBusy)return
+    const a=notebook.points[Number(pairA)],b=notebook.points[Number(pairB)]
+    if(pairA===''||pairB===''||!a||!b||Math.abs(Math.abs(a.level-b.level)-v.interval)>1e-8){setNotice('Выберите две точки с соседних эквипотенциальных линий.');return}
+    if(!fieldEstimate(a,b)){setNotice('Выберите две разные точки.');return}
+    if(notebook.pairs.length>=40){setNotice('Достигнут предел 40 участков.');return}
+    setPairBusy(true)
+    try{
+      const result=await instrumentRequest('pair',{points:[a,b]})
+      if(!result.aligned){setNotice('Отрезок заметно отклонён от нормали. Выберите более близкие точки вдоль силовой линии.');return}
+      setNotebook(n=>n.points.includes(a)&&n.points.includes(b)?({...n,pairs:[...n.pairs,{a:{...a},b:{...b},answer:''}]}):n)
+      setNotice('Участок записан. Рассчитайте E, переведя миллиметры в метры.')
+    }catch(e){setNotice(e instanceof Error?e.message:'Не удалось проверить участок.')}
+    finally{setPairBusy(false)}
   }
   const exportReport = () => {
     const cell = (value: unknown) => { const text = typeof value === 'string' && /^[=+@\-\t\r]/.test(value) ? "'" + value : String(value ?? ''); return '"' + text.replace(/"/g, '""') + '"' }
@@ -135,7 +146,7 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
         <defs><marker id="es-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L6 3L0 6" fill="var(--es-field-colour,#52765c)"/></marker></defs>
         <g transform="matrix(0 1 1 0 0 0)"><rect width="180" height="240" rx="1" className="es-sheet-bg"/>
         {Array.from({ length: 37 }, (_, i) => <path className="es-grid" key={`x${i}`} d={`M${i * 5} 0V240`}/>)}{Array.from({ length: 49 }, (_, i) => <path className="es-grid" key={`y${i}`} d={`M0 ${i * 5}H180`}/>)}
-        {power && contours.map((d, i) => <path key={i} className="es-contour" d={d} stroke={colours[i % colours.length]}/>)}{power && lines.map((d, i) => <path key={i} className="es-field-line" d={d} markerEnd="url(#es-arrow)"/>)}
+
         </g><ElectroCoordinates/><g transform="matrix(0 1 1 0 0 0)">
         <Electrodes variant={v}/>
         {isPremium && levels.map((l, i) => { const ps = notebook.points.filter(p => p.level === l); return <g key={l} fill={colours[i % colours.length]}>{join && measuredEdges[i]?.map(([a, b], edge) => <line key={edge} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colours[i % colours.length]} strokeWidth=".7"/>)}{ps.map((p, n) => <circle key={n} cx={p.x} cy={p.y} r="1.4"><title>{fmt(l)} В; ({fmt(toDisplayPoint(p).x)}; {fmt(toDisplayPoint(p).y)}) мм</title></circle>)}{ps[0] && <text transform="matrix(0 1 1 0 0 0)" x={ps[0].y + 2} y={ps[0].x - 2}>{fmt(l)} В</text>}</g> })}
@@ -152,20 +163,18 @@ function Experiment({ variant: v, student, practice, variantControls }: { varian
       {isPremium && <div className="es-coordinates">{(['x', 'y'] as const).map(axis => <label key={axis}>{axis}, мм<input type="number" step="0.5" min={axis === 'x' ? -120 : -90} max={axis === 'x' ? 120 : 90} value={toDisplayPoint(probe)[axis]} onChange={e => { if (e.target.value !== '' && Number.isFinite(e.target.valueAsNumber)) move(toModelPoint({ ...toDisplayPoint(probe), [axis]: e.target.valueAsNumber })) }}/></label>)}</div>}
       {isPremium && <>
       <label>Искомый потенциал<select value={level} onChange={e => setLevel(Number(e.target.value))}>{levels.map(l => <option key={l} value={l}>{fmt(l)} В · {notebook.points.filter(p => p.level === l).length}/7 точек</option>)}</select></label>
-      <div className="es-line-progress"><span>{Math.min(selected.length, 7)} из 7 точек для {fmt(level)} В</span><progress max="7" value={Math.min(selected.length, 7)} aria-label={`Точек для линии ${level} В`}/></div><button className="es-primary" onClick={record} disabled={!power}>Записать точку {fmt(level)} В</button>
+      <div className="es-line-progress"><span>{Math.min(selected.length, 7)} из 7 точек для {fmt(level)} В</span><progress max="7" value={Math.min(selected.length, 7)} aria-label={`Точек для линии ${level} В`}/></div><button className="es-primary" onClick={record} disabled={!power||!instrument.current}>Записать точку {fmt(level)} В</button>
       <p className="es-notice" role="status">{notice || (!power ? 'Включите питание, затем проверьте потенциалы электродов.' : ready ? 'Найдите точки выбранного потенциала.' : 'Проверьте электроды 0 В и U.')}</p>
       <p className="es-hint">Допуск ±0,1 В. На одной линии нужно не меньше 7 разнесённых точек.</p>
-      <div className="es-button-row"><button onClick={() => move({ x: 90, y: probe.y })}>Зонд на ось y = 0</button><button onClick={axisRecord} disabled={!power}>В график φ(r)</button></div>
-      <details className="es-display-options"><summary>Отображение поля</summary>      <div className="es-options"><label><input type="checkbox" checked={join} onChange={e => setJoin(e.target.checked)}/> Соединить соседние измеренные точки</label><label><input type="checkbox" checked={reference} onChange={e => setReference(e.target.checked)}/> Эталонные эквипотенциали</label><label><input type="checkbox" checked={showField} onChange={e => setShowField(e.target.checked)}/> Эталонные силовые линии</label></div>
-      {(reference || showField) && <p className="es-hint">Справочная численная модель — не ваши измерения. При экспорте карты эти линии тоже попадут в рисунок.</p>}
-</details>
+      <div className="es-button-row"><button onClick={() => move({ x: 90, y: probe.y })}>Зонд на ось y = 0</button><button onClick={axisRecord} disabled={!power||!instrument.current}>В график φ(r)</button></div>
+      <details className="es-display-options"><summary>Отображение измерений</summary><div className="es-options"><label><input type="checkbox" checked={join} onChange={e=>setJoin(e.target.checked)}/> Соединить соседние измеренные точки</label></div></details>
       </>}
     </aside></div>}</Workspace>
     {isPremium && <>
     <details className="es-panel es-method" id="es-method"><summary>Методика · как выполнить работу</summary><ol className="es-steps"><li>Проверьте потенциалы электродов 0 В и U и запишите U = {v.voltage} В.</li><li>Для каждого уровня {levels.join('; ')} В найдите минимум 7 точек. Располагайте их вдоль всей линии, а не рядом друг с другом.</li><li>На первой и последней линии найдите ещё 2–3 точки за пределами области между электродами. Если линия замкнута, исследуйте её продолжение вокруг электрода.</li><li>Соединяйте точки последовательно вдоль эквипотенциали. Постройте перпендикулярные им силовые линии со стрелками от большего φ к меньшему.</li><li>На оси y = 0 мм снимите не меньше 7 отсчётов для графика φ(r). Затем выберите точки соседних линий вдоль нормали и рассчитайте E.</li></ol><p className="es-hint">Пластина 240 × 180 мм — размеры виртуальной модели. На экспортируемой SVG-карте 1 мм координат соответствует 1 мм при печати в масштабе 100%. Внешние края модели изолированы.</p></details>
     <details className="es-panel es-measurements" id="es-measurements"><summary className="es-panel-heading"><SectionTitle step="3">Измерения эквипотенциалей</SectionTitle><span>{notebook.points.length} точек · {levels.filter(l => notebook.points.filter(p => p.level === l).length >= 7).length}/{levels.length} линий измерено</span></summary><div className="es-table-wrap es-measurements-scroll"><table><thead><tr><th>φ заданное, В</th><th>x, мм</th><th>y, мм</th><th>φ измеренное, В</th><th><span className="es-action-label">Удалить</span></th></tr></thead><tbody>{notebook.points.map((p, i) => <tr key={i}><td>{fmt(p.level)}</td><td>{fmt(toDisplayPoint(p).x)}</td><td>{fmt(toDisplayPoint(p).y)}</td><td>{fmt(p.potential)}</td><td><button className="es-delete-point" title="Удалить точку" aria-label={`Удалить точку ${i + 1}`} onClick={() => { setNotebook(n => ({ ...n, points: n.points.filter((_, k) => k !== i), pairs: n.pairs.filter(pair => ![pair.a,pair.b].some(point => point.x === p.x && point.y === p.y && point.level === p.level)) })); setPairA(''); setPairB('') }}>×</button></td></tr>)}</tbody></table></div>{!notebook.points.length && <p className="es-hint">Здесь появятся точки, которые вы запишете зондом.</p>}</details>
     <section className="es-panel" id="es-graph"><div className="es-panel-heading"><SectionTitle step="4">График φ(r)</SectionTitle><span>{notebook.axis.length} отсчётов на центральной оси</span></div><AxisPlot notebook={notebook} variant={v}/><div className="es-table-wrap"><table><thead><tr><th>r, мм</th><th>φ, В</th><th>Действие</th></tr></thead><tbody>{notebook.axis.map((p, i) => <tr key={i}><td>{fmt(axisOrigin(v) - p.y)}</td><td>{fmt(p.potential)}</td><td><button onClick={() => setNotebook(n => ({ ...n, axis: n.axis.filter((_, k) => k !== i) }))}>Удалить</button></td></tr>)}</tbody></table></div><p className="es-hint">r отсчитывается влево от проекции центра нулевого электрода на горизонтальную ось y = 0 мм. Более крутой участок графика соответствует большей напряжённости.</p></section>
-    <section className="es-panel" id="es-field"><SectionTitle step="5">Напряжённость поля</SectionTitle><p>E ≈ |φ₂ − φ₁| / Δl. Расстояние измеряют по нормали между соседними линиями; 1 мм = 0,001 м.</p><div className="es-pair-controls">{[{ name: 'Точка A', value: pairA, set: setPairA }, { name: 'Точка B', value: pairB, set: setPairB }].map(control => <label key={control.name}>{control.name}<select value={control.value} onChange={e => control.set(e.target.value)}><option value="">Выберите точку</option>{notebook.points.map((p, i) => <option key={i} value={i}>№{i + 1}: {p.level} В; ({fmt(toDisplayPoint(p).x)}; {fmt(toDisplayPoint(p).y)}) мм</option>)}</select></label>)}<button onClick={addPair}>Добавить участок</button></div><div className="es-table-wrap"><table><thead><tr><th>φA → φB, В</th><th>Δl, мм</th><th>Ваше E, В/м</th><th>Проверка расчёта</th><th>Действие</th></tr></thead><tbody>{notebook.pairs.map((p, i) => { const expected = fieldEstimate(p.a, p.b)!, answer = Number(p.answer.replace(',', '.')); return <tr key={i}><td>{fmt(p.a.potential)} → {fmt(p.b.potential)}</td><td>{fmt(expected.distanceMm, 2)}</td><td><input aria-label={`Напряжённость на участке ${i + 1}, В на метр`} inputMode="decimal" maxLength={30} value={p.answer} onChange={e => setNotebook(n => ({ ...n, pairs: n.pairs.map((q, k) => k === i ? { ...q, answer: e.target.value } : q) }))}/></td><td>{!p.answer.trim() ? 'Введите результат' : Number.isFinite(answer) && Math.abs(answer - expected.field) <= Math.max(1, expected.field * .05) ? 'Расчёт верен (±5%)' : 'Проверьте формулу и единицы'}</td><td><button onClick={() => setNotebook(n => ({ ...n, pairs: n.pairs.filter((_, k) => k !== i) }))}>Удалить</button></td></tr> })}</tbody></table></div><p className="es-hint">Это средняя оценка E на участке. Для неоднородного поля используйте близкие линии и короткий участок, почти прямой. Проверка расчёта не заменяет оценку правильности выбора точек.</p></section>
+    <section className="es-panel" id="es-field"><SectionTitle step="5">Напряжённость поля</SectionTitle><p>E ≈ |φ₂ − φ₁| / Δl. Расстояние измеряют по нормали между соседними линиями; 1 мм = 0,001 м.</p><div className="es-pair-controls">{[{ name: 'Точка A', value: pairA, set: setPairA }, { name: 'Точка B', value: pairB, set: setPairB }].map(control => <label key={control.name}>{control.name}<select value={control.value} onChange={e => control.set(e.target.value)}><option value="">Выберите точку</option>{notebook.points.map((p, i) => <option key={i} value={i}>№{i + 1}: {p.level} В; ({fmt(toDisplayPoint(p).x)}; {fmt(toDisplayPoint(p).y)}) мм</option>)}</select></label>)}<button onClick={()=>void addPair()} disabled={pairBusy}>{pairBusy?'Проверяем…':'Добавить участок'}</button></div><div className="es-table-wrap"><table><thead><tr><th>φA → φB, В</th><th>Δl, мм</th><th>Ваше E, В/м</th><th>Проверка расчёта</th><th>Действие</th></tr></thead><tbody>{notebook.pairs.map((p, i) => { const expected = fieldEstimate(p.a, p.b)!, answer = Number(p.answer.replace(',', '.')); return <tr key={i}><td>{fmt(p.a.potential)} → {fmt(p.b.potential)}</td><td>{fmt(expected.distanceMm, 2)}</td><td><input aria-label={`Напряжённость на участке ${i + 1}, В на метр`} inputMode="decimal" maxLength={30} value={p.answer} onChange={e => setNotebook(n => ({ ...n, pairs: n.pairs.map((q, k) => k === i ? { ...q, answer: e.target.value } : q) }))}/></td><td>{!p.answer.trim() ? 'Введите результат' : Number.isFinite(answer) && Math.abs(answer - expected.field) <= Math.max(1, expected.field * .05) ? 'Расчёт верен (±5%)' : 'Проверьте формулу и единицы'}</td><td><button onClick={() => setNotebook(n => ({ ...n, pairs: n.pairs.filter((_, k) => k !== i) }))}>Удалить</button></td></tr> })}</tbody></table></div><p className="es-hint">Это средняя оценка E на участке. Для неоднородного поля используйте близкие линии и короткий участок, почти прямой. Проверка расчёта не заменяет оценку правильности выбора точек.</p></section>
     <section className="es-panel"><SectionTitle step="6">Вывод и контрольные вопросы</SectionTitle><label>Где поле сильнее и как это видно по линиям и графику?<textarea maxLength={10000} value={notebook.conclusion} onChange={e => setNotebook(n => ({ ...n, conclusion: e.target.value }))}/></label><details><summary>Контрольные вопросы из методички</summary>{questions.map((q, i) => <label key={q}>{i + 1}. {q}<textarea maxLength={3000} value={notebook.answers[i]} onChange={e => setNotebook(n => ({ ...n, answers: n.answers.map((a, k) => k === i ? e.target.value : a) }))}/></label>)}</details></section>
     <section className="es-panel" id="es-export"><SectionTitle step="7">Сохранение и материалы</SectionTitle><p role="status">{saveError || 'Черновик сохраняется только в этом браузере. Работу оформляйте на миллиметровой бумаге.'}</p><div className="es-button-row"><button onClick={exportReport}>Скачать отчёт CSV</button><button onClick={exportMap}>Скачать карту SVG · масштаб 1:1</button><button onClick={() => { if (window.confirm('Удалить все измерения и ответы текущего варианта из этого браузера?')) { setNotebook(emptyElectroNotebook()); setNotice('Черновик очищен.'); setPairA(''); setPairB('') } }}>Очистить черновик</button></div><details><summary>Теория и ограничения модели</summary><p>φ — потенциал относительно нулевого электрода. E = −grad φ: поле направлено в сторону убывания потенциала и перпендикулярно эквипотенциалям. Работа вдоль эквипотенциали равна нулю.</p><p>Как в методичке, используется аналогия со слабопроводящей пластиной. Виртуальная модель решает двумерное уравнение Лапласа при постоянных потенциалах электродов и нулевом нормальном токе на внешнем крае. Сетка расчёта — 2 мм, координатная сетка — 5 мм. Это не модель двух точечных зарядов в свободном трёхмерном пространстве.</p><p>Отсчёт округляется до 0,1 В; случайный шум не добавляется. Поле вблизи границ электродов чувствительно к разрешению сетки. В методичке встречается опечатка в определении grad φ; здесь применяется стандартное E = −grad φ.</p></details></section>
     </>}
